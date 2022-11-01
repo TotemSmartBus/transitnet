@@ -8,6 +8,7 @@ import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -51,7 +52,7 @@ public class RealtimeDataStore {
                 entity.setDistanceFromOrigin((double) v.getDistanceFromOrigin());
                 entity.setRecordedTime(v.getRecordedTime().toString());
                 return entity;
-            }).toList();
+            }).collect(Collectors.toList());
             List<RealTimeDataEntity> result = realTimeDataDao.saveAll(list);
             log.info(String.format("async saved %d vehicles' information.", result.size()));
         }

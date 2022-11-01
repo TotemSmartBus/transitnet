@@ -88,7 +88,8 @@ public class RealtimeService {
 
     @Deprecated
     public List<Vehicle> GetLatest(long time) {
-        return _vehiclesById.values().stream().toList();
+//        return _vehiclesById.values().stream().toList();
+        return null;
     }
 
     @Deprecated
