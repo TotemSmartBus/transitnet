@@ -61,3 +61,6 @@ hs_err_pid*
 
 # macOS file
 .DS_Store
+
+nohup.out
+
