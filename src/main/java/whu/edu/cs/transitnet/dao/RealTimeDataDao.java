@@ -7,6 +7,7 @@ import whu.edu.cs.transitnet.vo.RealTimePointEntity;
 
 import java.util.List;
 
+
 public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, String> {
     List<RealTimeDataEntity> findAll();
 
@@ -53,4 +54,6 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "FROM real_time_data_temp " +
             "WHERE trip_id = ?1 AND recorded_time >= ?2 AND recorded_time < ?3 ORDER BY recorded_time", nativeQuery = true)
     List<RealTimeDataEntity> findAllPointsByTripIdByTimeSpan(String tripId, String startTime, String endTime);
+
+    <S extends RealTimeDataEntity> List<S> saveAll(Iterable<S> list);
 }

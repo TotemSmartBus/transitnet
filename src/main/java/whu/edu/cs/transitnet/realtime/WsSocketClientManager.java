@@ -8,13 +8,13 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class WsSocketManager {
+public class WsSocketClientManager {
     private static ConcurrentHashMap<String, WebSocketSession> SESSION_POOL = new ConcurrentHashMap<>();
 
     /**
      * 向所有客户端广播更新内容
      *
-     * @param msg
+     * @param msg 广播的消息内容
      */
     public static void broadcast(String msg) {
         SESSION_POOL.forEach((s, webSocketSession) -> {

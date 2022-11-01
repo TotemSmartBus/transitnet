@@ -27,8 +27,14 @@ import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.Position;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
+import org.gavaghan.geodesy.Ellipsoid;
+import org.gavaghan.geodesy.GeodeticCalculator;
+import org.gavaghan.geodesy.GlobalCoordinates;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
 @Slf4j
 @Service
@@ -68,6 +74,12 @@ public class RealtimeService {
     private boolean _dynamicRefreshInterval = true;
 
     private long _mostRecentRefresh = -1;
+
+    @Autowired
+    RealtimeDataStore storeService;
+
+    @Autowired
+    GeodeticCalculator geodeticCalculator;
 
     @Deprecated
     public Queue<List<Vehicle>> GetAll() {
@@ -178,17 +190,40 @@ public class RealtimeService {
             }
             Position position = vehicle.getPosition();
             Vehicle v = new Vehicle();
-            v.setId(vehicleId);
+            v.setRouteID(vehicle.getTrip().getRouteId());
+            // TODO direction 是如何计算的？
+            v.setDirection("");
+            v.setTripID(vehicle.getTrip().getTripId());
+            v.setAgencyID(AgencyName);
+            v.setOriginStop(v.getOriginStop());
             v.setLat(position.getLatitude());
             v.setLon(position.getLongitude());
+            v.setBearing(position.getBearing());
+            v.setId(vehicleId);
             v.setLastUpdate(currentTime);
-            // set speed
-            v.setSpeed(position.getSpeed());
-            v.setAgencyID(AgencyName);
-            v.setRouteID(vehicle.getTrip().getRouteId());
-            v.setTripID(vehicle.getTrip().getTripId());
-            v.setNextStop(vehicle.getStopId());
-            v.setRecordedTime(LocalDateTime.ofEpochSecond(vehicle.getTimestamp() / 1000, 0, ZoneOffset.ofHours(TimeZone)));
+            // TODO: 未知字段
+            v.setNextStop("");
+            v.setAimedArrivalTime(LocalDateTime.ofEpochSecond(vehicle.getTimestamp(), 0, ZoneOffset.ofHours(TimeZone)));
+            v.setRecordedTime(LocalDateTime.ofEpochSecond(vehicle.getTimestamp(), 0, ZoneOffset.ofHours(TimeZone)));
+            // 计算速度
+            if (position.getSpeed() == 0.0) {
+                if (_vehiclesById.containsKey(v.getId())) {
+                    Vehicle lastPoint = _vehiclesById.get(v.getId());
+                    GlobalCoordinates source = new GlobalCoordinates(lastPoint.getLat(), lastPoint.getLon());
+                    GlobalCoordinates target = new GlobalCoordinates(v.getLat(), v.getLon());
+                    // 默认应该都使用 WGS84 坐标系下计算距离
+                    double distance = geodeticCalculator.calculateGeodeticCurve(Ellipsoid.WGS84, source, target).getEllipsoidalDistance();
+                    double speedByMeter = distance / _refreshInterval;
+                    double speedByKilometer = speedByMeter * 3.6;
+                    v.setSpeed((float) speedByKilometer);
+                } else {
+                    // 无法得知速度，只能设置为 0
+                    v.setSpeed(0.0f);
+                }
+            } else {
+                v.setSpeed(position.getSpeed());
+            }
+
             Vehicle existing = _vehiclesById.get(vehicleId);
             if (existing == null || existing.getLat() != v.getLat()
                     || existing.getLon() != v.getLon()) {
@@ -204,8 +239,8 @@ public class RealtimeService {
         if (update) {
             log.info("vehicles updated: " + vehicles.size());
             updateTimeSerial(vehicles);
-
-            WsSocketManager.broadcast(JSON.toJSONString(vehicles));
+            storeService.store(vehicles);
+            WsSocketClientManager.broadcast(JSON.toJSONString(vehicles));
         }
 
         return update;
@@ -238,7 +273,6 @@ public class RealtimeService {
         long t = System.currentTimeMillis();
         if (_mostRecentRefresh != -1) {
             int refreshInterval = (int) ((t - _mostRecentRefresh) / 1000);
-//            _refreshInterval = Math.max(10, refreshInterval);
             log.info("refresh interval: " + _refreshInterval + "s");
         }
         _mostRecentRefresh = t;
@@ -254,46 +288,4 @@ public class RealtimeService {
             }
         }
     }
-
-//    private class IncrementalWebSocket implements OnBinaryMessage {
-//
-//        @Override
-//        public void onOpen(Connection connection) {
-//
-//        }
-//
-//        @Override
-//        public void onMessage(byte[] buf, int offset, int length) {
-//            if (offset != 0 || buf.length != length) {
-//                byte trimmed[] = new byte[length];
-//                System.arraycopy(buf, offset, trimmed, 0, length);
-//                buf = trimmed;
-//            }
-//            FeedMessage message = parseMessage(buf);
-//            FeedHeader header = message.getHeader();
-//            switch (header.getIncrementality()) {
-//                case FULL_DATASET:
-//                    processDataset(message);
-//                    break;
-//                case DIFFERENTIAL:
-//                    processDataset(message);
-//                    break;
-//                default:
-//                    _log.warn("unknown incrementality: " + header.getIncrementality());
-//            }
-//        }
-//
-//        @Override
-//        public void onClose(int closeCode, String message) {
-//            _log.warn("realtime socket is closing!!!");
-//        }
-//
-//        private FeedMessage parseMessage(byte[] buf) {
-//            try {
-//                return FeedMessage.parseFrom(buf);
-//            } catch (InvalidProtocolBufferException ex) {
-//                throw new IllegalStateException(ex);
-//            }
-//        }
-//    }
 }
