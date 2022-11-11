@@ -214,7 +214,8 @@ public class RealtimeService {
                     GlobalCoordinates target = new GlobalCoordinates(v.getLat(), v.getLon());
                     // 默认应该都使用 WGS84 坐标系下计算距离
                     double distance = geodeticCalculator.calculateGeodeticCurve(Ellipsoid.WGS84, source, target).getEllipsoidalDistance();
-                    double speedByMeter = distance / _refreshInterval;
+                    long time_spend = vehicle.getTimestamp() - lastPoint.getRecordedTime().toEpochSecond(ZoneOffset.ofHours(TimeZone));
+                    double speedByMeter = distance / time_spend;
                     double speedByKilometer = speedByMeter * 3.6;
                     v.setSpeed((float) speedByKilometer);
                 } else {
