@@ -18,7 +18,7 @@ public class Vehicle {
     /*
     预计到达时间
      */
-    private LocalDateTime aimedArrivalTime;
+    private long aimedArrivalTime;
     /*
     TODO
      */
@@ -58,7 +58,7 @@ public class Vehicle {
      */
     private int presentableDistance;
 
-    private LocalDateTime recordedTime;
+    private long recordedTime;
 
     /*
     当前轨迹的 ID
@@ -121,11 +121,11 @@ public class Vehicle {
         this.agencyID = agencyID;
     }
 
-    public LocalDateTime getAimedArrivalTime() {
+    public long getAimedArrivalTime() {
         return aimedArrivalTime;
     }
 
-    public void setAimedArrivalTime(LocalDateTime aimedArrivalTime) {
+    public void setAimedArrivalTime(long aimedArrivalTime) {
         this.aimedArrivalTime = aimedArrivalTime;
     }
 
@@ -185,11 +185,11 @@ public class Vehicle {
         this.presentableDistance = presentableDistance;
     }
 
-    public LocalDateTime getRecordedTime() {
+    public long getRecordedTime() {
         return recordedTime;
     }
 
-    public void setRecordedTime(LocalDateTime recordedTime) {
+    public void setRecordedTime(long recordedTime) {
         this.recordedTime = recordedTime;
     }
 

@@ -204,8 +204,9 @@ public class RealtimeService {
             v.setLastUpdate(currentTime);
             // TODO: 未知字段
             v.setNextStop("");
-            v.setAimedArrivalTime(LocalDateTime.ofEpochSecond(vehicle.getTimestamp(), 0, ZoneOffset.ofHours(TimeZone)));
-            v.setRecordedTime(LocalDateTime.ofEpochSecond(vehicle.getTimestamp(), 0, ZoneOffset.ofHours(TimeZone)));
+            v.setAimedArrivalTime(0l);
+
+            v.setRecordedTime(vehicle.getTimestamp());
             // 计算速度
             if (position.getSpeed() == 0.0) {
                 if (_vehiclesById.containsKey(v.getId())) {
@@ -214,7 +215,7 @@ public class RealtimeService {
                     GlobalCoordinates target = new GlobalCoordinates(v.getLat(), v.getLon());
                     // 默认应该都使用 WGS84 坐标系下计算距离
                     double distance = geodeticCalculator.calculateGeodeticCurve(Ellipsoid.WGS84, source, target).getEllipsoidalDistance();
-                    long time_spend = vehicle.getTimestamp() - lastPoint.getRecordedTime().toEpochSecond(ZoneOffset.ofHours(TimeZone));
+                    long time_spend = vehicle.getTimestamp() - lastPoint.getRecordedTime();
                     double speedByMeter = distance / time_spend;
                     double speedByKilometer = speedByMeter * 3.6;
                     v.setSpeed((float) speedByKilometer);
