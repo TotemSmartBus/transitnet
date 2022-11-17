@@ -3,9 +3,6 @@ package whu.edu.cs.transitnet.service.index;
 import edu.whu.hytra.EngineFactory;
 import edu.whu.hytra.EngineParam;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
@@ -21,14 +18,9 @@ public class RealtimeDataIndex {
     // 查询只能得到 PointID，需要反向找到对应的 vehicle
     private LinkedList<HashMap<Integer, Vehicle>> pointToVehicle = new LinkedList<>();
 
-    @Value("${transitnet.realtime.timezone}")
-    private int timezone;
+    public EngineFactory engineFactory;
 
-    @Autowired
-    private EngineFactory engineFactory;
-
-    @Bean
-    public EngineFactory engineFactory() {
+    public RealtimeDataIndex() {
         EngineParam params = new EngineParam(
                 "nyc",
                 new double[]{40.502873, -74.252339, 40.93372, -73.701241},
@@ -37,10 +29,10 @@ public class RealtimeDataIndex {
                 30,
                 (int) 1.2e7
         );
-        return new EngineFactory(params);
+        engineFactory = new EngineFactory(params);
     }
 
-    public void index(List<Vehicle> list) {
+    public void update(List<Vehicle> list) {
         Thread t = new Thread(new IndexUpdater(list));
         t.start();
     }
@@ -48,18 +40,34 @@ public class RealtimeDataIndex {
     public List<Vehicle> search(double lat, double lon, int k) {
         List<Integer> pidList = engineFactory.searchRealtime(lat, lon, k);
         List<Vehicle> result = new ArrayList<>(pidList.size());
-        HashMap<Integer, Vehicle> newestMap = pointToVehicle.getLast();
-        HashMap<Integer, Vehicle> newestButOneMap = pointToVehicle.get(pointToVehicle.size() - 2);
-        for (Integer i : pidList) {
-            if (newestMap.containsKey(i)) {
-                result.add(newestMap.get(i));
-            } else if (newestButOneMap.containsKey(i)) {
-                result.add(newestButOneMap.get(i));
-            } else {
-                log.warn("kNN 搜索到的 PID 索引在最新 2 个时间分片上不存在，是否数据已经更新了？");
-            }
+        switch (pointToVehicle.size()) {
+            case 0:
+                log.warn("Search for kNN, but no data.");
+                return new ArrayList<>();
+            case 1:
+                HashMap<Integer, Vehicle> newestMap = pointToVehicle.getLast();
+                for (Integer i : pidList) {
+                    if (newestMap.containsKey(i)) {
+                        result.add(newestMap.get(i));
+                    } else {
+                        log.warn("kNN 搜索到的 PID 索引在最新 2 个时间分片上不存在，是否数据已经更新了？");
+                    }
+                }
+                return result;
+            default:
+                newestMap = pointToVehicle.getLast();
+                HashMap<Integer, Vehicle> newestButOneMap = pointToVehicle.get(pointToVehicle.size() - 2);
+                for (Integer i : pidList) {
+                    if (newestMap.containsKey(i)) {
+                        result.add(newestMap.get(i));
+                    } else if (newestButOneMap.containsKey(i)) {
+                        result.add(newestButOneMap.get(i));
+                    } else {
+                        log.warn("kNN 搜索到的 PID 索引在最新 2 个时间分片上不存在，是否数据已经更新了？");
+                    }
+                }
+                return result;
         }
-        return result;
     }
 
     class IndexUpdater implements Runnable {
@@ -79,7 +87,7 @@ public class RealtimeDataIndex {
                 return j;
             }).collect(Collectors.toList());
             pointToVehicle.add(pointMap);
-            // 只保存最新 10 个时间分片防止内存占用过多
+            // 只保存最新 10 个原始时间分片防止内存占用过多
             if (pointToVehicle.size() > 10) {
                 pointToVehicle.poll();
             }

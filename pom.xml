@@ -38,6 +38,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- GIS 的库 -->
         <dependency>
             <groupId>org.gavaghan</groupId>
             <artifactId>geodesy</artifactId>

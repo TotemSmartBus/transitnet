@@ -3,8 +3,6 @@ package whu.edu.cs.transitnet.realtime;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -32,8 +30,8 @@ import org.gavaghan.geodesy.GeodeticCalculator;
 import org.gavaghan.geodesy.GlobalCoordinates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
 @Slf4j
@@ -77,6 +75,9 @@ public class RealtimeService {
 
     @Autowired
     RealtimeDataStore storeService;
+
+    @Autowired
+    RealtimeDataIndex indexService;
 
     @Autowired
     GeodeticCalculator geodeticCalculator;
@@ -240,10 +241,14 @@ public class RealtimeService {
         }
 
         if (update) {
-            log.info("vehicles updated: " + vehicles.size());
+            log.info("vehicles updating: " + vehicles.size());
+            long t0 = System.currentTimeMillis();
             updateTimeSerial(vehicles);
+            indexService.update(vehicles);
             storeService.store(vehicles);
             WsSocketClientManager.broadcast(JSON.toJSONString(vehicles));
+            long t1 = System.currentTimeMillis();
+            log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
         }
 
         return update;

@@ -1,8 +1,11 @@
 package whu.edu.cs.transitnet.controller;
 
+import whu.edu.cs.transitnet.realtime.Vehicle;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import whu.edu.cs.transitnet.service.RealTimeDataService;
+import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.vo.RealTimeDataVo;
 import whu.edu.cs.transitnet.vo.SpeedDateVo;
 import whu.edu.cs.transitnet.vo.SpeedQueryVo;
@@ -11,13 +14,19 @@ import javax.annotation.Resource;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class RealTimeDataController {
     @Resource
     RealTimeDataService realTimeDataService;
+
+    @Autowired
+    RealtimeDataIndex indexService;
+
     /**
      * Get RealTimeDataVo by curTime, the last five minutes
+     *
      * @param curTime
      * @return List<RealTimeDataVo>
      */
@@ -31,6 +40,7 @@ public class RealTimeDataController {
 
     /**
      * Get vehicle list by recordedTime
+     *
      * @param recordedTime
      * @return List<String>
      */
@@ -43,6 +53,7 @@ public class RealTimeDataController {
 
     /**
      * Get the
+     *
      * @param vehicleId
      * @param curTime
      * @return
@@ -86,5 +97,12 @@ public class RealTimeDataController {
         List<String> tripList = speedQueryVo.getIdList();
         Date date = Date.valueOf(speedQueryVo.getDateStr());
         return realTimeDataService.getSpeedDateListByTripId(tripList, date);
+    }
+
+    @GetMapping("/api/realtime/query")
+    @ResponseBody
+    public List<String> QueryKNNVehicles(@RequestParam("lat") double lat, @RequestParam("lon") double lon, @RequestParam(value = "k", defaultValue = "10") int k) {
+        List<Vehicle> vehicles = indexService.search(lat, lon, k);
+        return vehicles.stream().map(i -> i.getId()).collect(Collectors.toList());
     }
 }
