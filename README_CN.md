@@ -1,6 +1,8 @@
 # Transitnet
 支持实时公交数据可视化的后端项目，目前支持数据实时预览、数据查询等功能。
 
+> 请使用 jdk11 编译运行
+
 English Document：[README.md](README.md)
 ## 部署
 
@@ -18,7 +20,10 @@ English Document：[README.md](README.md)
 
 4. Kaggle 上的离线版本的数据：https://www.kaggle.com/datasets/haoxingxiao/new-york-city-realtime-bus-data
 
-### 3. 打包与执行
+### 3. 准备依赖的项目程序
+需要 hytra 项目包,
+
+### 4. 打包与执行
 
 给项目打包 jar 文件：
 

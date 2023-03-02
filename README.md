@@ -2,6 +2,8 @@
 
 A back-end of transit network visualization platform supports data query, speed data calculation and so on.
 
+> Please use jdk 11 to compile and run.
+
 中文文档：[README_CN.md](README_CN.md)
 ## Getting started
 
