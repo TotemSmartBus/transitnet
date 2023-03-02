@@ -205,7 +205,7 @@ public class RealtimeService {
             v.setLastUpdate(currentTime);
             // TODO: 未知字段
             v.setNextStop("");
-            v.setAimedArrivalTime(0l);
+            v.setAimedArrivalTime(0L);
 
             v.setRecordedTime(vehicle.getTimestamp());
             // 计算速度
