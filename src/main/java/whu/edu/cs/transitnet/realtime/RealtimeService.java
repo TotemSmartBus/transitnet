@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.persistence.Entity;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;

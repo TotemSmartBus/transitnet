@@ -14,4 +14,6 @@ public interface StopsDao extends JpaRepository<StopsEntity, String> {
             + "se.stopLat, se.stopLon) FROM StopsEntity se left join StopTimesEntity ste on se.stopId = ste.stopId "
             + "WHERE ste.tripId = ?1 ORDER BY ste.stopSequence")
     List<StopsVo> findAllByTripId(String tripId);
+
+
 }
