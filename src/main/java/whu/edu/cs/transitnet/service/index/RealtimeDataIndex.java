@@ -3,6 +3,7 @@ package whu.edu.cs.transitnet.service.index;
 import edu.whu.hytra.EngineFactory;
 import edu.whu.hytra.EngineParam;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
@@ -19,19 +20,9 @@ public class RealtimeDataIndex {
     // 查询只能得到 PointID，需要反向找到对应的 vehicle
     private LinkedList<HashMap<Integer, Vehicle>> pointToVehicle = new LinkedList<>();
 
-    public EngineFactory engineFactory;
+    @Autowired
+    private HytraEngineManager engine;
 
-    public RealtimeDataIndex() {
-        EngineParam params = new EngineParam(
-                "nyc",
-                new double[]{40.502873, -74.252339, 40.93372, -73.701241},
-                6,
-                "@",
-                30,
-                (int) 1.2e7
-        );
-        engineFactory = new EngineFactory(params);
-    }
 
     public void update(List<Vehicle> list) {
         Thread t = new Thread(new IndexUpdater(list));
@@ -39,7 +30,7 @@ public class RealtimeDataIndex {
     }
 
     public List<Vehicle> search(double lat, double lon, int k) {
-        List<Integer> pidList = engineFactory.searchRealtime(lat, lon, k);
+        List<Integer> pidList = engine.searchRealtime(lat, lon, k);
         List<Vehicle> result = new ArrayList<>(pidList.size());
         switch (pointToVehicle.size()) {
             case 0:
@@ -96,7 +87,7 @@ public class RealtimeDataIndex {
 
         @Override
         public void run() {
-            engineFactory.updateIndex(newIndex);
+            engine.updateIndex(newIndex);
         }
     }
 }
