@@ -30,7 +30,7 @@ public class HytraHistoricalIndex {
 
     private final Logger log = LoggerFactory.getLogger("Cron");
 
-    @Scheduled(cron = "0 0 0 * * ? ")
+    @Scheduled(cron = "${scheduled.historicalIndex}")
     public void buildHistoricalIndex() {
         System.out.println("[cron]Running cron");
         // 1. 获取日期 key
@@ -77,8 +77,8 @@ public class HytraHistoricalIndex {
         }
         long tAfterIndexWrite = System.currentTimeMillis();
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
-        log.info("[cron]Total time is {}", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexGenerate) / 1000.0));
-        System.out.printf("[cron]Total time is %.2f%n", (tAfterIndexWrite - tBeforeIndexGenerate) / 1000.0);
+        log.info("[cron]Total time is {}", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
+        System.out.printf("[cron]Total time is %.2f%n", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
     }
 
     private Date getDate() {
