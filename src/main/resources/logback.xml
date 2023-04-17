@@ -1,7 +1,7 @@
 <configuration>
     <property name="LOG_PATTERN" value="%date{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
     <property name="FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日HH时}.log"/>
-    <property name="CRON_FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日}-cron.log"/>
+    <property name="CRON_FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日HH时}-cron.log"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -27,9 +27,6 @@
             <fileNamePattern>${CRON_FILE_PATTERN}</fileNamePattern>
             <!-- 保存 30 天 -->
             <maxHistory>30</maxHistory>
-            <!--            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">-->
-            <!--                <maxFileSize>10MB</maxFileSize>-->
-            <!--            </timeBasedFileNamingAndTriggeringPolicy>-->
         </rollingPolicy>
 
         <encoder>
