@@ -41,7 +41,7 @@
         <appender-ref ref="cron-logger"/>
     </logger>
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+<!--        <appender-ref ref="CONSOLE"/>-->
         <appender-ref ref="FILE"/>
     </root>
 </configuration>
