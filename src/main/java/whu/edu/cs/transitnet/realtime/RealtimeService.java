@@ -47,17 +47,8 @@ public class RealtimeService {
 
 
     @Value("${transitnet.realtime.timezone}")
-    private int TimeZone = 8;
+    private int timezone = 8;
     private ScheduledExecutorService _executor;
-
-    private WebSocketClientFactory _webSocketFactory;
-
-    private WebSocketClient _webSocketClient;
-
-    /*
-    连接数据源的 socket 连接，当协议为 ws 协议时使用。
-     */
-    private Future<Connection> _webSocketConnection;
 
     private final Map<String, String> _vehicleIdsByEntityIds = new HashMap<>();
 
@@ -68,7 +59,7 @@ public class RealtimeService {
 
     private final RefreshTask _refreshTask = new RefreshTask();
 
-    private int _refreshInterval = 20;
+    private final int _refreshInterval = 20;
 
     private boolean _dynamicRefreshInterval = true;
 
@@ -83,63 +74,22 @@ public class RealtimeService {
     @Autowired
     GeodeticCalculator geodeticCalculator;
 
-    @Deprecated
-    public Queue<List<Vehicle>> GetAll() {
-        return timeSerial;
-    }
-
-    @Deprecated
-    public List<Vehicle> GetLatest(long time) {
-//        return _vehiclesById.values().stream().toList();
-        return null;
-    }
-
-    @Deprecated
-    public List<List<Vehicle>> GetUpdate(long time) {
-        return timeSerial.stream().filter(t -> t.get(0).getLastUpdate() > time).collect(Collectors.toList());
-
-    }
-
     @PostConstruct
-    public void start() throws Exception {
-        String scheme = _vehiclePositionsUri.getScheme();
-        if (scheme.equals("ws") || scheme.equals("wss")) {
-//            _webSocketFactory = new WebSocketClientFactory();
-//            _webSocketFactory.start();
-//            _webSocketClient = _webSocketFactory.newWebSocketClient();
-//            _webSocketClient.setMaxBinaryMessageSize(16384000);
-//            _incrementalWebSocket = new IncrementalWebSocket();
-//            _webSocketConnection = _webSocketClient.open(_vehiclePositionsUri,
-//                    _incrementalWebSocket);
-        } else {
-            _executor = Executors.newSingleThreadScheduledExecutor();
-            _executor.schedule(_refreshTask, 0, TimeUnit.SECONDS);
-        }
+    public void start() {
+        _executor = Executors.newSingleThreadScheduledExecutor();
+        _executor.schedule(_refreshTask, 0, TimeUnit.SECONDS);
         log.info("executor is running...");
-    }
-
-    @PreDestroy
-    public void stop() throws Exception {
-        if (_webSocketConnection != null) {
-            _webSocketConnection.cancel(false);
-        }
-        if (_webSocketClient != null) {
-            _webSocketClient = null;
-        }
-        if (_webSocketFactory != null) {
-//            _webSocketFactory();
-            _webSocketFactory = null;
-        }
-        if (_executor != null) {
-            _executor.shutdownNow();
-        }
-        log.info("executor is shutdown...");
     }
 
     public List<Vehicle> getAllVehicles() {
         return new ArrayList<>(_vehiclesById.values());
     }
 
+    public long getCurrentTimestamp() {
+        TimeZone zone = TimeZone.getTimeZone(String.format("GMT%s%d:00", timezone>=0?"+":"", timezone));
+        Calendar can = Calendar.getInstance(zone);
+        return can.getTimeInMillis();
+    }
     private void refresh() throws IOException {
 
         log.info("refreshing vehicle positions");
@@ -247,7 +197,6 @@ public class RealtimeService {
             updateTimeSerial(vehicles);
             indexService.update(vehicles);
             storeService.store(vehicles);
-            WsSocketClientManager.broadcast(JSON.toJSONString(vehicles));
             long t1 = System.currentTimeMillis();
             log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
         }
@@ -257,8 +206,7 @@ public class RealtimeService {
 
     private void updateTimeSerial(List<Vehicle> vehicles) {
         if (timeSerial.size() > 10) {
-            List<Vehicle> outOfDate = timeSerial.poll();
-            // TODO record this out of date time piece to database
+            timeSerial.poll();
         }
         timeSerial.offer(vehicles);
     }

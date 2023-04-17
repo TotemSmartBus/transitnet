@@ -2,6 +2,7 @@ package whu.edu.cs.transitnet.service.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.RealTimeDataDao;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
@@ -17,6 +18,9 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class RealtimeDataStore {
+
+    @Value("${transitnet.storage.enable}")
+    private boolean storageEnable;
 
     @Autowired
     private RealTimeDataDao realTimeDataDao;
@@ -37,6 +41,10 @@ public class RealtimeDataStore {
 
         @Override
         public void run() {
+            if (!storageEnable) {
+                log.info("The storage process is disabled, skip for saving data.");
+                return;
+            }
             log.info(String.format("async saving %d vehicles' information.", vehicleList.size()));
 
             List<RealTimeDataEntity> list = vehicleList.stream().map((Vehicle v) -> {

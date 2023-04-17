@@ -18,24 +18,17 @@ public class RealTimeController {
     @Autowired
     RealtimeService realtimeService;
 
-    @RequestMapping("/realtime/all")
-    @ResponseBody
-    @Deprecated
-    Queue<List<Vehicle>> getAllRealtimeData() {
-        return realtimeService.GetAll();
-    }
-
-    @RequestMapping("/realtime/update")
-    @ResponseBody
-    @Deprecated
-    List<List<Vehicle>> getUpdateRealtimeData(@RequestParam(name = "time") long millisec) {
-        return realtimeService.GetUpdate(millisec);
-    }
-
     @CrossOrigin
     @RequestMapping("/api/realtime/latest")
     @ResponseBody
     List<Vehicle> getLatestRealtimeData() {
         return realtimeService.getAllVehicles();
+    }
+
+    @CrossOrigin
+    @RequestMapping("/api/timestemp")
+    @ResponseBody
+    Long getCurrentServerTimestamp() {
+        return realtimeService.getCurrentTimestamp();
     }
 }

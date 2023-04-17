@@ -14,7 +14,7 @@ public class HytraSerivce {
             Socket socket = new Socket("127.0.0.1", 9200);
             return new SocketStorageManager(socket);
         } catch (Exception e) {
-            System.err.println(e);
+            System.err.println(e.getMessage());
             return null;
         }
     }

@@ -1,25 +1,25 @@
 package whu.edu.cs.transitnet.lsm;
 
 import edu.whu.hytra.core.SocketStorageManager;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.net.Socket;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @MapperScan("whu.edu.cs.transitnet.*")
+@Slf4j
 public class LsmTreeTest {
 
     @Autowired
     private SocketStorageManager manager;
 
+    // 简单的读写测试
     @Test
     public void WriteAndReadTest() throws Exception {
         String key = "123";
@@ -31,11 +31,20 @@ public class LsmTreeTest {
             String result2 = manager.get(key);
             String[] results = result2.split(",");
             Assert.assertArrayEquals(new String[]{"123", "1234"}, results);
+            String status = manager.status();
+            log.info("LSM status is " + status);
         } catch (Exception e) {
             System.out.println(e);
             throw e;
         }
 
+    }
+
+    // 简单的读取状态测试
+    @Test
+    public void statusTest() throws Exception {
+        String status = manager.status();
+        System.out.println(status);
     }
 
 }

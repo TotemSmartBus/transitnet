@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class RealtimeDataIndex {
+
     // 查询只能得到 PointID，需要反向找到对应的 vehicle
     private LinkedList<HashMap<Integer, Vehicle>> pointToVehicle = new LinkedList<>();
 
