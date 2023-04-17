@@ -103,6 +103,6 @@ public class RealTimeDataController {
     @ResponseBody
     public List<String> QueryKNNVehicles(@RequestParam("lat") double lat, @RequestParam("lon") double lon, @RequestParam(value = "k", defaultValue = "10") int k) {
         List<Vehicle> vehicles = indexService.search(lat, lon, k);
-        return vehicles.stream().map(i -> i.getId()).collect(Collectors.toList());
+        return vehicles.stream().map(Vehicle::getId).collect(Collectors.toList());
     }
 }

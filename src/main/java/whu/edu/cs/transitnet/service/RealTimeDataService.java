@@ -24,6 +24,9 @@ public class RealTimeDataService {
     @Autowired
     RealTimeDataDao realTimeDataDao;
 
+    @Autowired
+    private SimpleDateFormat formatter;
+
     long TIMESTEP = 1000 * 60 * 15;
     long TIMEDATE = 1000 * 60 * 60 * 24;
     long LASTTIMESPAN = 1000 * 60 * 5;
@@ -37,8 +40,8 @@ public class RealTimeDataService {
     public List<RealTimeDataVo> getRealTimeDataVoLastByRecordedTime(Timestamp curTime) {
         Timestamp end = curTime;
         Timestamp start = new Timestamp(curTime.getTime() - LASTTIMESPAN);
-        String startTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(start);
-        String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(end);
+        String startTime = formatter.format(start);
+        String endTime = formatter.format(end);
         List<RealTimeDataEntity> realTimeDataEntities = realTimeDataDao.findAllLastByRecordedTimeSpan(startTime, endTime);
         List<RealTimePointEntity> realTimePointEntities = realTimeDataDao.findAllVehiclePointsByTimeSpan(startTime, endTime);
         List<RealTimeDataVo> realTimeDataVos = new ArrayList<>();
