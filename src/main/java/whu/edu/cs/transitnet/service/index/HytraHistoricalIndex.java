@@ -38,11 +38,12 @@ public class HytraHistoricalIndex {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         // 2. 用 generator 从内存索引中构建 LSM 索引和配置
         String dateKey = dateFormat.format(date);
+        String datetimeKey = formatter.format(date);
         String configPath = "/tmp";
         long tBeforeConfigGenerate = System.currentTimeMillis();
         try {
             String path = System.getProperty("user.dir");
-            configPath = Generator.generateConfig().saveTo(path, dateKey + ".index");
+            configPath = Generator.generateConfig().saveTo(path, datetimeKey + ".index");
         } catch (IOException e) {
             log.error("[cron]Error while write config to file:" + configPath, e);
         }
@@ -63,6 +64,7 @@ public class HytraHistoricalIndex {
         log.info("[cron]Write config for {}s", String.format("%.2f", (tAfterConfigWrite - tBeforeConfigWrite) / 1000.0));
         // 4. 写入数据
         long tBeforeIndexWrite = System.currentTimeMillis();
+        log.info(String.format("[cron]Writing %d indexes", indexMap.size()));
         indexMap.forEach((key, value) -> {
             try {
                 storageManager.put(key, String.valueOf(value));
@@ -77,8 +79,8 @@ public class HytraHistoricalIndex {
         }
         long tAfterIndexWrite = System.currentTimeMillis();
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
-        log.info("[cron]Total time is {}", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
-        System.out.printf("[cron]Total time is %.2f%n", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
+        log.info("[cron]Total time is {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
+        System.out.printf("[cron]Total time is %.2fs", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
     }
 
     private Date getDate() {
