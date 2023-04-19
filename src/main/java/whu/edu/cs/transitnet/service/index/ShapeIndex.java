@@ -1,12 +1,11 @@
 package whu.edu.cs.transitnet.service.index;
 
 
-import edu.whu.hyk.model.Point;
-import edu.whu.hytra.EngineFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
+import whu.edu.cs.transitnet.dao.TripsDao;
+import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.vo.ShapePointVo;
 
 import java.util.*;
@@ -28,9 +27,16 @@ public class ShapeIndex {
 
     private HashMap<GridId, ArrayList<ShapeId>> gridShapeList;
 
+    // shape_id - trip_id
+    private HashMap<ShapeId, ArrayList<TripId>> shapeTripList;
+
 
     @Autowired
     ShapesDao shapesDao;
+
+    @Autowired
+    TripsDao tripsDao;
+
     public ShapeIndex() {
         List<String> shapeIds = shapesDao.findAllShapeId();
 
@@ -40,6 +46,7 @@ public class ShapeIndex {
             List<ShapePointVo> shapePointVos = shapesDao.findAllByShapeId(shape);
 
             ShapeId shapeId = new ShapeId(shape);
+
             // point - grid 做映射
             for(ShapePointVo shapePointVo : shapePointVos) {
                 GridId gridId = getGridID(shapePointVo.getLat(), shapePointVo.getLng());
@@ -68,9 +75,16 @@ public class ShapeIndex {
                     gridShapeList.put(gridId, shapeIds1);
                 }
             }
+
+            // shape_id - trip_id
+            List<TripsEntity> tripsEntities = tripsDao.findAllByShapeId(shape);
+            ArrayList<TripId> tripIds = new ArrayList<>();
+            for (TripsEntity tripsEntity : tripsEntities) {
+                tripIds.add(new TripId(tripsEntity.getTripId()));
+            }
+            shapeTripList.put(shapeId, tripIds);
         }
     }
-        // TODO 构建 2 个索引
 
     // point - grid 做映射
     private GridId getGridID(double lat, double lon) {
@@ -262,6 +276,49 @@ public class ShapeIndex {
             if (o == null || getClass() != o.getClass()) return false;
             ShapeId shapeId = (ShapeId) o;
             return Objects.equals(content, shapeId.content);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(content);
+        }
+    }
+
+    public class TripId implements CharSequence {
+        private final String content;
+
+
+        public TripId(String content) {
+            this.content = content;
+        }
+
+
+        @Override
+        public int length() {
+            return content.length();
+        }
+
+        @Override
+        public char charAt(int index) {
+            return content.charAt(index);
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end) {
+            return content.subSequence(start, end);
+        }
+
+        @Override
+        public String toString() {
+            return content;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TripId tripId = (TripId) o;
+            return Objects.equals(content, tripId.content);
         }
 
         @Override

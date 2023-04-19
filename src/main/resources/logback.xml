@@ -1,7 +1,10 @@
 <configuration>
     <property name="LOG_PATTERN" value="%date{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
-    <property name="FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日HH时}.log"/>
-    <property name="CRON_FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日}-cron.log"/>
+<!--    <property name="FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日HH时}.log"/>-->
+<!--    <property name="CRON_FILE_PATTERN" value="/tmp/log/transitnet/%d{MM月dd日}-cron.log"/>-->
+    <property name="FILE_PATTERN" value="/tmp/log/transitnet/%d{yyyy-mm-dd}.log"/>
+    <property name="CRON_FILE_PATTERN" value="/tmp/log/transitnet/%d{yyyy-mm-dd}-cron.log"/>
+
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -41,7 +44,7 @@
         <appender-ref ref="cron-logger"/>
     </logger>
     <root level="INFO">
-<!--        <appender-ref ref="CONSOLE"/>-->
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 </configuration>
