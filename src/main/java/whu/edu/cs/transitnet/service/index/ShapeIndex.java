@@ -1,6 +1,7 @@
 package whu.edu.cs.transitnet.service.index;
 
 
+import com.github.davidmoten.guavamini.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
@@ -88,10 +89,7 @@ public class ShapeIndex {
 
     // point - grid 做映射
     private GridId getGridID(double lat, double lon) {
-        // TODO
-//        int resolution = ???
-//        int
-//        return gridID;
+
         int resolution = hytraEngineManager.getParams().getResolution();
         double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
         double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double)resolution);
@@ -135,8 +133,19 @@ public class ShapeIndex {
         return sum;
     }
 
+    public int bitToint(String bits) {
+        int sum = 0;
+        int length = bits.length();
 
-    public void getTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
+        for(int i = 0; i < length; ++i) {
+            sum = (int)((double)sum + (double)Integer.parseInt(String.valueOf(bits.charAt(i))) * Math.pow(2.0D, (double)(length - i - 1)));
+        }
+
+        return sum;
+    }
+
+
+    public ArrayList<ShapeId> getTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
          HashSet<ShapeId> shapeCandidates = new HashSet<>();
         // 1. 过滤所有有交集的shape
         for (GridId grid : userPassedGrids) {
@@ -145,12 +154,14 @@ public class ShapeIndex {
         // 2. 返回相似度最大的前k的shapeId
         int theta = 5;
         List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey()))
-                .sorted((a, b) -> getSimilarity(a.getValue(), userPassedGrids, theta) >= getSimilarity(b.getValue(), userPassedGrids, theta) ? -1 : 1)
+                .sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids, theta) >= getGridSimilarity(b.getValue(), userPassedGrids, theta) ? -1 : 1)
                 .limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        return Lists.newArrayList(topShapes);
 
     }
 
-    public double getSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2, int theta) {
+    public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2, int theta) {
         if (grids1 == null || grids2 == null || grids1.size() == 0 || grids2.size() == 0) {
             return 0;
         }
@@ -284,7 +295,7 @@ public class ShapeIndex {
         }
     }
 
-    public class TripId implements CharSequence {
+    public static class TripId implements CharSequence {
         private final String content;
 
 
@@ -319,6 +330,47 @@ public class ShapeIndex {
             if (o == null || getClass() != o.getClass()) return false;
             TripId tripId = (TripId) o;
             return Objects.equals(content, tripId.content);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(content);
+        }
+    }
+
+    public class CubeId implements CharSequence {
+        private final String content;
+
+        public CubeId(String content) {
+            this.content = content;
+        }
+
+        @Override
+        public int length() {
+            return content.length();
+        }
+
+        @Override
+        public char charAt(int index) {
+            return content.charAt(index);
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end) {
+            return content.subSequence(start, end);
+        }
+
+        @Override
+        public String toString() {
+            return content;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CubeId cubeId = (CubeId) o;
+            return Objects.equals(content, cubeId.content);
         }
 
         @Override

@@ -19,8 +19,11 @@ public class ScheduleIndex {
     @Autowired
     TripsDao tripsDao;
 
+    @Autowired
+    ShapeIndex shapeIndex;
+
     // trip_id - start_time - end_time
-    private HashMap<TripId, ArrayList<Time>> tripStartEndList;
+    private HashMap<ShapeIndex.TripId, ArrayList<Time>> tripStartEndList;
 
 
     public ScheduleIndex() {
@@ -29,7 +32,7 @@ public class ScheduleIndex {
 
         for(TripsEntity tripsEntity : tripsEntities) {
             String trip = tripsEntity.getTripId();
-            TripId tripId = new TripId(trip);
+            ShapeIndex.TripId tripId = new ShapeIndex.TripId(trip);
 
             // 取出该 trip_id 下的到站时间序列
             List<TripTimesVo> tripTimesVos = stopTimesDao.findAllByTripId(trip);
@@ -43,46 +46,46 @@ public class ScheduleIndex {
 //        System.out.println(stopTimesEntities);
     }
 
-    public class TripId implements CharSequence {
-        private final String content;
-
-
-        public TripId(String content) {
-            this.content = content;
-        }
-
-
-        @Override
-        public int length() {
-            return content.length();
-        }
-
-        @Override
-        public char charAt(int index) {
-            return content.charAt(index);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return content.subSequence(start, end);
-        }
-
-        @Override
-        public String toString() {
-            return content;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TripId tripId = (TripId) o;
-            return Objects.equals(content, tripId.content);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(content);
-        }
-    }
+//    public class TripId implements CharSequence {
+//        private final String content;
+//
+//
+//        public TripId(String content) {
+//            this.content = content;
+//        }
+//
+//
+//        @Override
+//        public int length() {
+//            return content.length();
+//        }
+//
+//        @Override
+//        public char charAt(int index) {
+//            return content.charAt(index);
+//        }
+//
+//        @Override
+//        public CharSequence subSequence(int start, int end) {
+//            return content.subSequence(start, end);
+//        }
+//
+//        @Override
+//        public String toString() {
+//            return content;
+//        }
+//
+//        @Override
+//        public boolean equals(Object o) {
+//            if (this == o) return true;
+//            if (o == null || getClass() != o.getClass()) return false;
+//            TripId tripId = (TripId) o;
+//            return Objects.equals(content, tripId.content);
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            return Objects.hash(content);
+//        }
+//    }
 }
