@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.StopTimesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
-import whu.edu.cs.transitnet.pojo.StopTimesEntity;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.vo.TripTimesVo;
 

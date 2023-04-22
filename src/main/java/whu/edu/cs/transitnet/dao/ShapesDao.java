@@ -26,5 +26,6 @@ public interface ShapesDao extends JpaRepository<ShapesEntity, ShapesEntityPK> {
 
     @Query(value = "SELECT DISTINCT shape_id FROM shapes", nativeQuery = true)
     List<String> findAllShapeId();
+
     ShapesEntity findByShapeIdAndShapePtSequence(String shapeId, String shapePtSequence);
 }

@@ -3,14 +3,12 @@ package whu.edu.cs.transitnet.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.service.index.HytraEngineManager;
-import whu.edu.cs.transitnet.service.index.ScheduleIndex;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
 
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class UserKNNService {
@@ -23,7 +21,7 @@ public class UserKNNService {
     // 给定用户轨迹 <lat, lon, timestamp>
     // ArrayList<Point> user_tra;
     int k = 10;
-    int resolution = hytraEngineManager.getParams().getResolution();
+
 
     // TODO hashmap初始化
 
@@ -47,7 +45,7 @@ public class UserKNNService {
     private HashMap<ShapeIndex.TripId, ArrayList<ShapeIndex.CubeId>> tripCubeList = new HashMap<>();
 
     // 先获取Top-k的shape
-    ArrayList<ShapeIndex.ShapeId> topkShapeList = shapeIndex.getTopKShapes(userGridList, k);
+//    ArrayList<ShapeIndex.ShapeId> topkShapeList = shapeIndex.getTopKShapes(userGridList, k);
     // 再获取下面的所有trip
     ArrayList<ShapeIndex.TripId> tripListByShape = new ArrayList<>();
 
@@ -91,6 +89,7 @@ public class UserKNNService {
 
     // DTW
     public double DynamicTimeWarping(ArrayList<ShapeIndex.CubeId> T1, ArrayList<ShapeIndex.CubeId> T2) {
+        int resolution = hytraEngineManager.getParams().getResolution();
 
 
         if (T1.size() == 0 && T2.size() == 0) return 0;
@@ -120,6 +119,7 @@ public class UserKNNService {
 
     // EDR
     public double EditDistanceonRealSequence(ArrayList<ShapeIndex.CubeId> T1, ArrayList<ShapeIndex.CubeId> T2) {
+        int resolution = hytraEngineManager.getParams().getResolution();
 
         if (T1 == null || T1.size() == 0) {
             if (T2 != null) return T2.size();
@@ -158,6 +158,7 @@ public class UserKNNService {
     // ERP
     // g: cube0
     public double EditDistanceWithRealPenalty(List<ShapeIndex.CubeId> T1, List<ShapeIndex.CubeId> T2, ShapeIndex.CubeId g) {
+        int resolution = hytraEngineManager.getParams().getResolution();
 
         int xyz[] = decodeZ3(Integer.parseInt(g.toString()), resolution);
 

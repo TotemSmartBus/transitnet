@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
+import whu.edu.cs.transitnet.service.index.HytraEngineManager;
+import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.vo.ShapePointVo;
 
 import java.util.*;
@@ -39,6 +41,7 @@ public class ShapeIndex {
     TripsDao tripsDao;
 
     public ShapeIndex() {
+
         List<String> shapeIds = shapesDao.findAllShapeId();
 
         // 遍历每一个 shapeId

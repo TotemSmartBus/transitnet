@@ -1,11 +1,7 @@
 package whu.edu.cs.transitnet;
 
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class GridIdTest {
     @Autowired
