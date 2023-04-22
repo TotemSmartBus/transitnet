@@ -3,11 +3,10 @@ package whu.edu.cs.transitnet.service.index;
 import edu.whu.hyk.Engine;
 import edu.whu.hyk.merge.Generator;
 import edu.whu.hytra.core.StorageManager;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,9 @@ import java.util.HashMap;
 @EnableScheduling
 public class HytraHistoricalIndex {
 
+    @Value("${transitnet.index.enable}")
+    private boolean indexEnable;
+
     @Autowired
     private StorageManager storageManager;
 
@@ -32,7 +34,11 @@ public class HytraHistoricalIndex {
 
     @Scheduled(cron = "${scheduled.historicalIndex}")
     public void buildHistoricalIndex() {
-        System.out.println("[cron]Running cron");
+        log.info("[cron]Running cron");
+        if(!indexEnable) {
+            log.info("[cron]Index is not enabled, skipped.");
+            return;
+        }
         // 1. 获取日期 key
         Date date = getDate();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -65,6 +71,14 @@ public class HytraHistoricalIndex {
         // 4. 写入数据
         long tBeforeIndexWrite = System.currentTimeMillis();
         log.info(String.format("[cron]Writing %d indexes", indexMap.size()));
+        // matrix
+        // 5. 查询 LSM 状态
+        try {
+            String status = storageManager.status();
+            log.info("[cron]LSM-Status is " + status);
+        } catch (Exception e) {
+            log.error("[cron]Error while get status of LSM-Tree", e);
+        }
         indexMap.forEach((key, value) -> {
             try {
                 storageManager.put(key, String.valueOf(value));
@@ -72,11 +86,6 @@ public class HytraHistoricalIndex {
                 log.error(String.format("[cron]Error while write index for [%s, %d]", key, value), e);
             }
         });
-        try {
-//            storageManager.close();
-        } catch (Exception e) {
-            log.warn("[cron]Error when close socket", e);
-        }
         long tAfterIndexWrite = System.currentTimeMillis();
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
         log.info("[cron]Total time is {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
