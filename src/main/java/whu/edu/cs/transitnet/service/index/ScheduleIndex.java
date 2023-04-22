@@ -7,6 +7,7 @@ import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.vo.TripTimesVo;
 
+import javax.annotation.PostConstruct;
 import java.sql.Time;
 import java.util.*;
 
@@ -25,7 +26,8 @@ public class ScheduleIndex {
     private HashMap<ShapeIndex.TripId, ArrayList<Time>> tripStartEndList;
 
 
-    public ScheduleIndex() {
+    @PostConstruct
+    public void init() {
         // 取出所有 trip_id
         List<TripsEntity> tripsEntities = tripsDao.findAll();
 

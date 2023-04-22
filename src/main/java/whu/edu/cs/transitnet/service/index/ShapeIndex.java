@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
-import whu.edu.cs.transitnet.service.index.HytraEngineManager;
-import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.vo.ShapePointVo;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,18 +40,25 @@ public class ShapeIndex {
     TripsDao tripsDao;
 
     public ShapeIndex() {
+        shapeGridList = new HashMap<>();
+        gridShapeList = new HashMap<>();
+        shapeTripList = new HashMap<>();
+    }
+
+    @PostConstruct
+    public void init() {
 
         List<String> shapeIds = shapesDao.findAllShapeId();
 
         // 遍历每一个 shapeId
-        for(String shape : shapeIds) {
+        for (String shape : shapeIds) {
             // 取出每一个 shapeId 对应的点序列
             List<ShapePointVo> shapePointVos = shapesDao.findAllByShapeId(shape);
 
             ShapeId shapeId = new ShapeId(shape);
 
             // point - grid 做映射
-            for(ShapePointVo shapePointVo : shapePointVos) {
+            for (ShapePointVo shapePointVo : shapePointVos) {
                 GridId gridId = getGridID(shapePointVo.getLat(), shapePointVo.getLng());
 
                 // 构建 shape - grid 索引
@@ -65,7 +71,7 @@ public class ShapeIndex {
                     gridIds.add(gridId);
                     shapeGridList.put(shapeId, gridIds);
                 } else {
-                        // 什么也不做
+                    // 什么也不做
                 }
 
                 // 构建 grid - shape 索引
@@ -95,11 +101,11 @@ public class ShapeIndex {
 
         int resolution = hytraEngineManager.getParams().getResolution();
         double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
-        double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double)resolution);
-        double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double)resolution);
+        double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double) resolution);
+        double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double) resolution);
 
-        int i = (int)((lat - spatialDomain[0]) / deltaX);
-        int j = (int)((lon - spatialDomain[1]) / deltaY);
+        int i = (int) ((lat - spatialDomain[0]) / deltaX);
+        int j = (int) ((lon - spatialDomain[1]) / deltaY);
         int gridId = combine2(i, j, resolution);
 
         return new GridId(String.valueOf(gridId));
@@ -110,7 +116,7 @@ public class ShapeIndex {
         int[] a = new int[lengtho];
 
         int[] b;
-        for(b = new int[lengtho]; length-- >= 1; bid /= 2) {
+        for (b = new int[lengtho]; length-- >= 1; bid /= 2) {
             a[length] = aid % 2;
             aid /= 2;
             b[length] = bid % 2;
@@ -118,7 +124,7 @@ public class ShapeIndex {
 
         int[] com = new int[2 * lengtho];
 
-        for(int i = 0; i < lengtho; ++i) {
+        for (int i = 0; i < lengtho; ++i) {
             com[2 * i] = a[i];
             com[2 * i + 1] = b[i];
         }
@@ -129,8 +135,8 @@ public class ShapeIndex {
     public int bitToint(int[] a, int length) {
         int sum = 0;
 
-        for(int i = 0; i < length; ++i) {
-            sum = (int)((double)sum + (double)a[i] * Math.pow(2.0D, (double)(length - i - 1)));
+        for (int i = 0; i < length; ++i) {
+            sum = (int) ((double) sum + (double) a[i] * Math.pow(2.0D, (double) (length - i - 1)));
         }
 
         return sum;
@@ -140,8 +146,8 @@ public class ShapeIndex {
         int sum = 0;
         int length = bits.length();
 
-        for(int i = 0; i < length; ++i) {
-            sum = (int)((double)sum + (double)Integer.parseInt(String.valueOf(bits.charAt(i))) * Math.pow(2.0D, (double)(length - i - 1)));
+        for (int i = 0; i < length; ++i) {
+            sum = (int) ((double) sum + (double) Integer.parseInt(String.valueOf(bits.charAt(i))) * Math.pow(2.0D, (double) (length - i - 1)));
         }
 
         return sum;
@@ -149,16 +155,14 @@ public class ShapeIndex {
 
 
     public ArrayList<ShapeId> getTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
-         HashSet<ShapeId> shapeCandidates = new HashSet<>();
+        HashSet<ShapeId> shapeCandidates = new HashSet<>();
         // 1. 过滤所有有交集的shape
         for (GridId grid : userPassedGrids) {
             shapeCandidates.addAll(gridShapeList.get(grid));
         }
         // 2. 返回相似度最大的前k的shapeId
         int theta = 5;
-        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey()))
-                .sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids, theta) >= getGridSimilarity(b.getValue(), userPassedGrids, theta) ? -1 : 1)
-                .limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids, theta) >= getGridSimilarity(b.getValue(), userPassedGrids, theta) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
 
         return Lists.newArrayList(topShapes);
 
@@ -178,7 +182,7 @@ public class ShapeIndex {
             if (grids1.get(i).toString().equals(grids2.get(0).toString())) {
                 dp[i][0] = 1;
             } else {
-                dp[i][0] = dp[i-1][0];
+                dp[i][0] = dp[i - 1][0];
             }
         }
 
@@ -186,7 +190,7 @@ public class ShapeIndex {
             if (grids2.get(j).toString().equals(grids1.get(0).toString())) {
                 dp[0][j] = 1;
             } else {
-                dp[0][j] = dp[0][j-1];
+                dp[0][j] = dp[0][j - 1];
             }
         }
 
@@ -194,9 +198,9 @@ public class ShapeIndex {
             for (int j = 1; j < grids2.size(); j++) {
                 if (Math.abs(i - j) <= theta) {
                     if (grids1.get(i).toString().equals(grids2.get(j).toString())) {
-                        dp[i][j] = 1 + dp[i-1][j-1];
+                        dp[i][j] = 1 + dp[i - 1][j - 1];
                     } else {
-                        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
                     }
                 }
 
