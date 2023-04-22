@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.dao.RealTimeDataDao;
 import whu.edu.cs.transitnet.pojo.IndexEntity;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
-import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.utils.TimeUtil;
 import whu.edu.cs.transitnet.vo.RealTimeDataVo;
 import whu.edu.cs.transitnet.vo.RealTimePointEntity;
@@ -174,8 +173,8 @@ public class RealTimeDataService {
     }
 
     public List<String> getRealTimeTripOptionsByDate(String routeId, Date date) {
-        Timestamp startTime = new Timestamp(date.getTime());
-        Timestamp endTime = new Timestamp(startTime.getTime() + TIMEDATE);
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        Timestamp startTime = new Timestamp(endTime.getTime() - TIMEDATE);
         String startTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(startTime);
         String endTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(endTime);
         return realTimeDataDao.findAllTripsByDate(routeId, startTimeString, endTimeString);
