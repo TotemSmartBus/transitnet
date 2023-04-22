@@ -1,6 +1,6 @@
 package whu.edu.cs.transitnet.realtime;
 
-import java.time.LocalDateTime;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * 标准格式的 gtfs 的实时数据结构
@@ -63,11 +63,13 @@ public class Vehicle {
     /*
     当前轨迹的 ID
      */
+    @SerializedName("routeId")
     private String routeID;
 
     /*
     当前行程的 ID
      */
+    @SerializedName("tripId")
     private String tripID;
 
     private float speed;

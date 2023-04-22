@@ -1,15 +1,15 @@
 package whu.edu.cs.transitnet;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 
 @SpringBootApplication
 public class TransitnetApplication {
     public static void main(String[] args) {
         try {
-            SpringApplication.run(TransitnetApplication.class, args);
+            ConfigurableApplicationContext ctx = SpringApplication.run(TransitnetApplication.class, args);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.printf("Error while start:" + e);

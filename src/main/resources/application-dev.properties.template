@@ -1,15 +1,20 @@
+# jdbc driver
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+# jdbc database configure
 spring.datasource.url=jdbc:mysql://academicis.fun:30025/transitnet?characterEncoding=UTF-8&serverTimezone=GMT
+# database username
 spring.datasource.username=transitnet
+# database password
 spring.datasource.password=transitnet
 
 # route base uri path
 transitnet.realtime.baseuri=api/
 # should the data insert into database
 transitnet.storage.enable=false
+# should the index insert into lsm-tree by socket
 transitnet.index.enable=false
 
-scheduled.historicalIndex = 0/20 * * * * ? 
+# the scheduler when data inserted into the storage engine
+scheduled.historicalIndex = 0/20 * * * * ?
 
-mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 
