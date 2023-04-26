@@ -45,7 +45,8 @@ public class RealtimeService {
 
     private final RefreshTask _refreshTask = new RefreshTask();
 
-    private final int _refreshInterval = 20;
+    /** GTFS 采样的时间间隔，由于原始数据使用了 30s 间隔，这里也用 30s **/
+    private final int _refreshInterval = 30;
 
     private boolean _dynamicRefreshInterval = true;
 
