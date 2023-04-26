@@ -9,19 +9,19 @@ import java.util.List;
 /**
  * 查询结果 VO
  **/
-public class QueryResultVo {
+public class SimilarityQueryResultVo {
 
     @Getter
     @Setter
     @SerializedName("routes")
     /**
      * 查询到的路线
-     **/ private List<String> routes;
+     **/ private List<SimilarityQueryResultItem> routes;
 
     @Getter
     @Setter
     @SerializedName("buses")
     /**
      * 查询到的公交
-     **/ private List<String> buses;
+     **/ private List<SimilarityQueryResultItem> buses;
 }
