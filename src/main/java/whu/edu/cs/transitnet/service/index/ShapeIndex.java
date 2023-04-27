@@ -2,14 +2,17 @@ package whu.edu.cs.transitnet.service.index;
 
 
 import com.github.davidmoten.guavamini.Lists;
+import org.locationtech.jts.triangulate.tri.Tri;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
+import whu.edu.cs.transitnet.service.EncodeService;
 import whu.edu.cs.transitnet.vo.ShapePointVo;
 
 import javax.annotation.PostConstruct;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,8 @@ public class ShapeIndex {
     @Autowired
     HytraEngineManager hytraEngineManager;
 
+    @Autowired
+    EncodeService encodeService;
 
     // shape - grid 的映射关系
     // arraylist 有序
@@ -48,43 +53,126 @@ public class ShapeIndex {
     @PostConstruct
     public void init() {
 
-        List<String> shapeIds = shapesDao.findAllShapeId();
+        int resolution = hytraEngineManager.getParams().getResolution();
+        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + ".txt");
+        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution + ".txt");
+        File shapeTripFile = new File("./src/main/" + "shape_trip"+ ".txt");
 
-        // 遍历每一个 shapeId
-        for (String shape : shapeIds) {
-            // 取出每一个 shapeId 对应的点序列
-            List<ShapePointVo> shapePointVos = shapesDao.findAllByShapeId(shape);
+        if (shapeGridFile.exists() && gridShapeFile.exists() && shapeTripFile.exists()) {
+            // 读取文件
+            System.out.println("======================");
+            System.out.println("[SHAPEINDEX] FILE EXISTS...");
+            System.out.println("======================");
+            System.out.println("[SHAPEINDEX] Start Deserializing HashMap..");
 
-            ShapeId shapeId = new ShapeId(shape);
+            Long starttime = System.currentTimeMillis();
 
-            // point - grid 做映射
-            for (ShapePointVo shapePointVo : shapePointVos) {
-                GridId gridId = getGridID(shapePointVo.getLat(), shapePointVo.getLng());
 
-                // 构建 shape - grid 索引
-                ArrayList<GridId> gridIds = new ArrayList<>();
-                if (!shapeGridList.containsKey(shapeId)) {
-                    gridIds.add(gridId);
-                    shapeGridList.put(shapeId, gridIds);
-                } else if (shapeGridList.get(shapeId).lastIndexOf(gridId) != (shapeGridList.get(shapeId).size() - 1)) {
-                    gridIds = shapeGridList.get(shapeId);
-                    gridIds.add(gridId);
-                    shapeGridList.put(shapeId, gridIds);
-                } else {
-                    // 什么也不做
-                }
+            try {
+                FileInputStream fileInput1 = new FileInputStream(
+                        shapeGridFile);
+                FileInputStream fileInput2 = new FileInputStream(
+                        gridShapeFile);
+                FileInputStream fileInput3 = new FileInputStream(
+                        shapeTripFile);
 
-                // 构建 grid - shape 索引
-                ArrayList<ShapeId> shapeIds1 = new ArrayList<>();
-                if (!gridShapeList.containsKey(gridId)) {
-                    shapeIds1.add(shapeId);
-                    gridShapeList.put(gridId, shapeIds1);
-                } else if (!gridShapeList.get(gridId).contains(shapeId)) {
-                    shapeIds1 = gridShapeList.get(gridId);
-                    shapeIds1.add(shapeId);
-                    gridShapeList.put(gridId, shapeIds1);
-                }
+
+                ObjectInputStream objectInput1
+                        = new ObjectInputStream(fileInput1);
+                ObjectInputStream objectInput2
+                        = new ObjectInputStream(fileInput2);
+                ObjectInputStream objectInput3
+                        = new ObjectInputStream(fileInput3);
+
+                shapeGridList = (HashMap)objectInput1.readObject();
+                gridShapeList = (HashMap)objectInput2.readObject();
+                shapeTripList = (HashMap)objectInput3.readObject();
+
+                objectInput1.close();
+                fileInput1.close();
+                objectInput2.close();
+                fileInput2.close();
+                objectInput3.close();
+                fileInput3.close();
             }
+
+            catch (IOException obj1) {
+                obj1.printStackTrace();
+                return;
+            }
+
+            catch (ClassNotFoundException obj2) {
+                System.out.println("[SHAPEINDEX] Class not found");
+                obj2.printStackTrace();
+                return;
+            }
+
+            Long endtime = System.currentTimeMillis();
+
+            System.out.println("======================");
+            System.out.println("[SHAPEINDEX] Deserializing HashMap DONE!");
+            System.out.println("[SHAPEINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
+
+
+            // Displaying content in "newHashMap.txt" using
+            // Iterator
+//            Set set = shapeGridList.entrySet();
+//            Iterator iterator = set.iterator();
+//
+//            while (iterator.hasNext()) {
+//                Map.Entry entry = (Map.Entry)iterator.next();
+//
+//                System.out.print("key : " + entry.getKey()
+//                        + " & Value : ");
+//                System.out.println(entry.getValue());
+//            }
+
+        } else {
+            System.out.println("=============================");
+            System.out.println("[SHAPEINDEX] File Not Exists... Start fetching data from database...");
+
+            Long startTime = System.currentTimeMillis();
+            List<String> shapeIds = shapesDao.findAllShapeId();
+            Long endTime = System.currentTimeMillis();
+            System.out.println("=============================");
+            System.out.println("[SHAPEINDEX] findAllShapeId time: " + (endTime - startTime) / 1000 + "s");
+
+            Long startTime1 = System.currentTimeMillis();
+            // 遍历每一个 shapeId
+            for (String shape : shapeIds) {
+                // 取出每一个 shapeId 对应的点序列
+                List<ShapePointVo> shapePointVos = shapesDao.findAllByShapeId(shape);
+
+                ShapeId shapeId = new ShapeId(shape);
+
+                // point - grid 做映射
+                for (ShapePointVo shapePointVo : shapePointVos) {
+                    GridId gridId = encodeService.getGridID(shapePointVo.getLat(), shapePointVo.getLng());
+
+                    // 构建 shape - grid 索引
+                    ArrayList<GridId> gridIds = new ArrayList<>();
+                    if (!shapeGridList.containsKey(shapeId)) {
+                        gridIds.add(gridId);
+                        shapeGridList.put(shapeId, gridIds);
+                    } else if (shapeGridList.get(shapeId).lastIndexOf(gridId) != (shapeGridList.get(shapeId).size() - 1)) {
+                        gridIds = shapeGridList.get(shapeId);
+                        gridIds.add(gridId);
+                        shapeGridList.put(shapeId, gridIds);
+                    } else {
+                        // 什么也不做
+                    }
+
+                    // 构建 grid - shape 索引
+                    ArrayList<ShapeId> shapeIds1 = new ArrayList<>();
+                    if (!gridShapeList.containsKey(gridId)) {
+                        shapeIds1.add(shapeId);
+                        gridShapeList.put(gridId, shapeIds1);
+                    } else if (!gridShapeList.get(gridId).contains(shapeId)) {
+                        shapeIds1 = gridShapeList.get(gridId);
+                        shapeIds1.add(shapeId);
+                        gridShapeList.put(gridId, shapeIds1);
+                    }
+                }
 
             // shape_id - trip_id
             List<TripsEntity> tripsEntities = tripsDao.findAllByShapeId(shape);
@@ -93,65 +181,50 @@ public class ShapeIndex {
                 tripIds.add(new TripId(tripsEntity.getTripId()));
             }
             shapeTripList.put(shapeId, tripIds);
-        }
-    }
+            }
 
-    // point - grid 做映射
-    private GridId getGridID(double lat, double lon) {
+            // try catch block
+            try {
+                FileOutputStream myFileOutStream1
+                        = new FileOutputStream(shapeGridFile);
+                FileOutputStream myFileOutStream2
+                        = new FileOutputStream(gridShapeFile);
+                FileOutputStream myFileOutStream3
+                        = new FileOutputStream(shapeTripFile);
 
-        int resolution = hytraEngineManager.getParams().getResolution();
-        double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
-        double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double) resolution);
-        double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double) resolution);
+                ObjectOutputStream myObjectOutStream1
+                        = new ObjectOutputStream(myFileOutStream1);
+                ObjectOutputStream myObjectOutStream2
+                        = new ObjectOutputStream(myFileOutStream2);
+                ObjectOutputStream myObjectOutStream3
+                        = new ObjectOutputStream(myFileOutStream3);
 
-        int i = (int) ((lat - spatialDomain[0]) / deltaX);
-        int j = (int) ((lon - spatialDomain[1]) / deltaY);
-        int gridId = combine2(i, j, resolution);
+                myObjectOutStream1.writeObject(shapeGridList);
+                myObjectOutStream2.writeObject(gridShapeList);
+                myObjectOutStream3.writeObject(shapeTripList);
 
-        return new GridId(String.valueOf(gridId));
-    }
+                // closing FileOutputStream and
+                // ObjectOutputStream
+                myObjectOutStream1.close();
+                myFileOutStream1.close();
+                myObjectOutStream2.close();
+                myFileOutStream2.close();
+                myObjectOutStream3.close();
+                myFileOutStream3.close();
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-    public int combine2(int aid, int bid, int lengtho) {
-        int length = lengtho;
-        int[] a = new int[lengtho];
-
-        int[] b;
-        for (b = new int[lengtho]; length-- >= 1; bid /= 2) {
-            a[length] = aid % 2;
-            aid /= 2;
-            b[length] = bid % 2;
-        }
-
-        int[] com = new int[2 * lengtho];
-
-        for (int i = 0; i < lengtho; ++i) {
-            com[2 * i] = a[i];
-            com[2 * i + 1] = b[i];
-        }
-
-        return bitToint(com, 2 * lengtho);
-    }
-
-    public int bitToint(int[] a, int length) {
-        int sum = 0;
-
-        for (int i = 0; i < length; ++i) {
-            sum = (int) ((double) sum + (double) a[i] * Math.pow(2.0D, (double) (length - i - 1)));
+            Long endTime1 = System.currentTimeMillis();
+            System.out.println("=============================");
+            System.out.println("[SHAPEINDEX] index construction and serialization time: " + (endTime1 - startTime1) / 1000 + "s");
         }
 
-        return sum;
     }
 
-    public int bitToint(String bits) {
-        int sum = 0;
-        int length = bits.length();
-
-        for (int i = 0; i < length; ++i) {
-            sum = (int) ((double) sum + (double) Integer.parseInt(String.valueOf(bits.charAt(i))) * Math.pow(2.0D, (double) (length - i - 1)));
-        }
-
-        return sum;
-    }
 
 
     public ArrayList<ShapeId> getTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
@@ -161,14 +234,15 @@ public class ShapeIndex {
             shapeCandidates.addAll(gridShapeList.get(grid));
         }
         // 2. 返回相似度最大的前k的shapeId
-        int theta = 5;
-        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids, theta) >= getGridSimilarity(b.getValue(), userPassedGrids, theta) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+//        int theta = 5;
+        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids) >= getGridSimilarity(b.getValue(), userPassedGrids) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
 
         return Lists.newArrayList(topShapes);
 
     }
 
-    public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2, int theta) {
+//    public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2, int theta) {
+    public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2) {
         if (grids1 == null || grids2 == null || grids1.size() == 0 || grids2.size() == 0) {
             return 0;
         }
@@ -176,10 +250,10 @@ public class ShapeIndex {
         int[][] dp = new int[grids1.size()][grids2.size()]; // dp数组
         int maxSimilarity = 0; // 相似度
 
-        if (grids1.get(0).toString().equals(grids2.get(0).toString())) dp[0][0] = 1;
+        if (grids1.get(0).equals(grids2.get(0))) dp[0][0] = 1;
 
         for (int i = 1; i < grids1.size(); i++) {
-            if (grids1.get(i).toString().equals(grids2.get(0).toString())) {
+            if (grids1.get(i).equals(grids2.get(0))) {
                 dp[i][0] = 1;
             } else {
                 dp[i][0] = dp[i - 1][0];
@@ -187,7 +261,7 @@ public class ShapeIndex {
         }
 
         for (int j = 1; j < grids2.size(); j++) {
-            if (grids2.get(j).toString().equals(grids1.get(0).toString())) {
+            if (grids2.get(j).equals(grids1.get(0))) {
                 dp[0][j] = 1;
             } else {
                 dp[0][j] = dp[0][j - 1];
@@ -196,8 +270,9 @@ public class ShapeIndex {
 
         for (int i = 1; i < grids1.size(); i++) {
             for (int j = 1; j < grids2.size(); j++) {
-                if (Math.abs(i - j) <= theta) {
-                    if (grids1.get(i).toString().equals(grids2.get(j).toString())) {
+//                if (Math.abs(i - j) <= theta) {
+                if (Math.abs(i - j) <= Integer.MAX_VALUE) {
+                    if (grids1.get(i).equals(grids2.get(j))) {
                         dp[i][j] = 1 + dp[i - 1][j - 1];
                     } else {
                         dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
@@ -215,174 +290,17 @@ public class ShapeIndex {
         return maxSimilarity;
     }
 
+    public ArrayList<TripId> getTripsOfTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
+        ArrayList<ShapeId> topKShapes = getTopKShapes(userPassedGrids, k);
+        ArrayList<TripId> tripIds = new ArrayList<>();
 
-    public static class GridId implements CharSequence {
-        public String getContent() {
-            return content;
+        for (ShapeId shapeId : topKShapes) {
+            tripIds.addAll(shapeTripList.get(shapeId));
         }
 
-        private final String content;
-
-        public GridId(String str) {
-            content = str;
-        }
-
-        @Override
-        public int length() {
-            return content.length();
-        }
-
-        @Override
-        public char charAt(int index) {
-            return content.charAt(index);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return content.subSequence(start, end);
-        }
-
-        @Override
-        public String toString() {
-            return content;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            GridId gridId = (GridId) o;
-            return Objects.equals(content, gridId.content);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(content);
-        }
+        List<TripId> tripIds1 = tripIds.stream().distinct().collect(Collectors.toList());
+        return Lists.newArrayList(tripIds1);
     }
 
-    public class ShapeId implements CharSequence {
-        private final String content;
 
-        public ShapeId(String str) {
-            content = str;
-        }
-
-        @Override
-        public int length() {
-            return content.length();
-        }
-
-        @Override
-        public char charAt(int index) {
-            return content.charAt(index);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return content.subSequence(start, end);
-        }
-
-        @Override
-        public String toString() {
-            return content;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ShapeId shapeId = (ShapeId) o;
-            return Objects.equals(content, shapeId.content);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(content);
-        }
-    }
-
-    public static class TripId implements CharSequence {
-        private final String content;
-
-
-        public TripId(String content) {
-            this.content = content;
-        }
-
-
-        @Override
-        public int length() {
-            return content.length();
-        }
-
-        @Override
-        public char charAt(int index) {
-            return content.charAt(index);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return content.subSequence(start, end);
-        }
-
-        @Override
-        public String toString() {
-            return content;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TripId tripId = (TripId) o;
-            return Objects.equals(content, tripId.content);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(content);
-        }
-    }
-
-    public class CubeId implements CharSequence {
-        private final String content;
-
-        public CubeId(String content) {
-            this.content = content;
-        }
-
-        @Override
-        public int length() {
-            return content.length();
-        }
-
-        @Override
-        public char charAt(int index) {
-            return content.charAt(index);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return content.subSequence(start, end);
-        }
-
-        @Override
-        public String toString() {
-            return content;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CubeId cubeId = (CubeId) o;
-            return Objects.equals(content, cubeId.content);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(content);
-        }
-    }
 }

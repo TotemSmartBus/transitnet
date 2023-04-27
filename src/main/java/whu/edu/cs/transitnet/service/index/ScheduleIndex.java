@@ -8,6 +8,7 @@ import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.vo.TripTimesVo;
 
 import javax.annotation.PostConstruct;
+import java.io.*;
 import java.sql.Time;
 import java.util.*;
 
@@ -22,71 +23,139 @@ public class ScheduleIndex {
     @Autowired
     ShapeIndex shapeIndex;
 
-    // trip_id - start_time - end_time
-    private HashMap<ShapeIndex.TripId, ArrayList<Time>> tripStartEndList;
+    public HashMap<TripId, ArrayList<Time>> getTripStartEndList() {
+        return tripStartEndList;
+    }
 
+    // trip_id - start_time - end_time
+    private HashMap<TripId, ArrayList<Time>> tripStartEndList;
+
+    public ScheduleIndex() {
+        tripStartEndList = new HashMap<>();
+    }
 
     @PostConstruct
     public void init() {
-        // 取出所有 trip_id
-        List<TripsEntity> tripsEntities = tripsDao.findAll();
 
-        for(TripsEntity tripsEntity : tripsEntities) {
-            String trip = tripsEntity.getTripId();
-            ShapeIndex.TripId tripId = new ShapeIndex.TripId(trip);
+        File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");
 
-            // 取出该 trip_id 下的到站时间序列
-            List<TripTimesVo> tripTimesVos = stopTimesDao.findAllByTripId(trip);
-            ArrayList<Time> startEndTime = new ArrayList<>();
-            startEndTime.add(tripTimesVos.get(0).getArrivalTime());
-            startEndTime.add(tripTimesVos.get(tripTimesVos.size() - 1).getArrivalTime());
+        if(tripScheduleFile.exists()) {
+            // 读取文件
+            System.out.println("======================");
+            System.out.println("[SCHEDULEINDEX] FILE EXISTS...");
+            System.out.println("======================");
+            System.out.println("[SCHEDULEINDEX] Start Deserializing HashMap..");
 
-            tripStartEndList.put(tripId, startEndTime);
-        }
+            Long starttime = System.currentTimeMillis();
+
+
+            try {
+                FileInputStream fileInput1 = new FileInputStream(
+                        tripScheduleFile);
+
+
+                ObjectInputStream objectInput1
+                        = new ObjectInputStream(fileInput1);
+
+                tripStartEndList = (HashMap)objectInput1.readObject();
+
+                objectInput1.close();
+                fileInput1.close();
+            }
+
+            catch (IOException obj1) {
+                obj1.printStackTrace();
+                return;
+            }
+
+            catch (ClassNotFoundException obj2) {
+                System.out.println("[SCHEDULEINDEX] Class not found");
+                obj2.printStackTrace();
+                return;
+            }
+
+            Long endtime = System.currentTimeMillis();
+
+            System.out.println("======================");
+            System.out.println("[SCHEDULEINDEX] Deserializing HashMap DONE!");
+            System.out.println("[SCHEDULEINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
+
+            // Displaying content in "newHashMap.txt" using
+            // Iterator
+            Set set = tripStartEndList.entrySet();
+            Iterator iterator = set.iterator();
+
+            int i = 1;
+            while (iterator.hasNext() && i < 4) {
+                i++;
+                Map.Entry entry = (Map.Entry)iterator.next();
+
+                System.out.print("key : " + entry.getKey()
+                        + " & Value : ");
+                System.out.println(entry.getValue());
+            }
+        } else {
+            System.out.println("=============================");
+            System.out.println("[SCHEDULEINDEX] File Not Exists... Start fetching data from database...");
+
+
+            Long startTime1 = System.currentTimeMillis();
+
+            // 取出所有 trip_id
+            List<TripsEntity> tripsEntities = tripsDao.findAll();
+
+            System.out.println("=============================");
+            System.out.println("[SCHEDULEINDEX] Size of Trips: " + tripsEntities.size());
+
+            int num = 0;
+            for(TripsEntity tripsEntity : tripsEntities) {
+                String trip = tripsEntity.getTripId();
+                TripId tripId = new TripId(trip);
+
+                num++;
+                System.out.println("=============================");
+                System.out.println("[SCHEDULEINDEX] Number of Scanned Trips: " + num);
+
+                // 取出该 trip_id 下的到站时间序列
+                List<TripTimesVo> tripTimesVos = stopTimesDao.findAllByTripId(trip);
+                if (tripTimesVos.size() >1) {
+                    ArrayList<Time> startEndTime = new ArrayList<>();
+                    startEndTime.add(tripTimesVos.get(0).getArrivalTime());
+                    startEndTime.add(tripTimesVos.get(tripTimesVos.size() - 1).getArrivalTime());
+
+                    tripStartEndList.put(tripId, startEndTime);
+                }
+            }
 //        List<StopTimesEntity> stopTimesEntities = stopTimesDao.FindAllByTridId("35671183-BPPB3-BP_B3-Weekday-02");
 //        System.out.println(stopTimesEntities);
+
+            // try catch block
+            try {
+                FileOutputStream myFileOutStream1
+                        = new FileOutputStream(tripScheduleFile);
+
+                ObjectOutputStream myObjectOutStream1
+                        = new ObjectOutputStream(myFileOutStream1);
+
+                myObjectOutStream1.writeObject(tripStartEndList);
+
+                // closing FileOutputStream and
+                // ObjectOutputStream
+                myObjectOutStream1.close();
+                myFileOutStream1.close();
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            Long endTime1 = System.currentTimeMillis();
+            System.out.println("=============================");
+            System.out.println("[SCHEDULEINDEX] index construction and serialization time: " + (endTime1 - startTime1) / 1000 / 60 + "min");
+        }
+
+
     }
 
-//    public class TripId implements CharSequence {
-//        private final String content;
-//
-//
-//        public TripId(String content) {
-//            this.content = content;
-//        }
-//
-//
-//        @Override
-//        public int length() {
-//            return content.length();
-//        }
-//
-//        @Override
-//        public char charAt(int index) {
-//            return content.charAt(index);
-//        }
-//
-//        @Override
-//        public CharSequence subSequence(int start, int end) {
-//            return content.subSequence(start, end);
-//        }
-//
-//        @Override
-//        public String toString() {
-//            return content;
-//        }
-//
-//        @Override
-//        public boolean equals(Object o) {
-//            if (this == o) return true;
-//            if (o == null || getClass() != o.getClass()) return false;
-//            TripId tripId = (TripId) o;
-//            return Objects.equals(content, tripId.content);
-//        }
-//
-//        @Override
-//        public int hashCode() {
-//            return Objects.hash(content);
-//        }
-//    }
 }

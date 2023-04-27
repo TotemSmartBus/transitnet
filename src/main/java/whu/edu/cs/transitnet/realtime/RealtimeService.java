@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
+import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
 import javax.annotation.PostConstruct;
@@ -40,12 +41,19 @@ public class RealtimeService {
 
     private final Map<String, Vehicle> _vehiclesById = new ConcurrentHashMap<>();
 
+    public Map<TripId, ArrayList<Vehicle>> get_vehiclesByTripId() {
+        return _vehiclesByTripId;
+    }
+
+    // 获取所有轨迹信息
+    private final Map<TripId, ArrayList<Vehicle>> _vehiclesByTripId = new HashMap<>();
+
     // 位置信息时间序列
     private final Queue<List<Vehicle>> timeSerial = new LinkedList<>();
 
     private final RefreshTask _refreshTask = new RefreshTask();
 
-    private final int _refreshInterval = 20;
+    private final int _refreshInterval = 30;
 
     private boolean _dynamicRefreshInterval = true;
 
@@ -145,6 +153,16 @@ public class RealtimeService {
             v.setAimedArrivalTime(0L);
 
             v.setRecordedTime(vehicle.getTimestamp());
+
+            ArrayList<Vehicle> vs = new ArrayList<>();
+            TripId tripId = new TripId(v.getTripID());
+            if(_vehiclesByTripId.containsKey(tripId)) {
+                vs = _vehiclesByTripId.get(tripId);
+            }
+            vs.add(v);
+            _vehiclesByTripId.put(tripId, vs);
+
+
             // 计算速度
             if (position.getSpeed() == 0.0) {
                 if (_vehiclesById.containsKey(v.getId())) {

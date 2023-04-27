@@ -11,8 +11,8 @@ import java.util.List;
 public interface SplitShapeDao extends JpaRepository<SplitShapeEntity, SplitShapeEntityPK> {
     List<SplitShapeEntity> findAll();
 
-    List<SplitShapeEntity> findAllByShapeId(String shapeId);
-    List<SplitShapeEntity> findAllByShapeIdOrderByPtId(String shapeId);
+//    List<SplitShapeEntity> findAllByShapeId(String shapeId);
+//    List<SplitShapeEntity> findAllByShapeIdOrderByPtId(String shapeId);
 
     @Query("SELECT new whu.edu.cs.transitnet.vo.ShapePointVo(sse.ptId, sse.lat, sse.lon) FROM SplitShapeEntity sse " +
             "WHERE sse.shapeId = ?1 AND sse.splitId = ?2 " +
