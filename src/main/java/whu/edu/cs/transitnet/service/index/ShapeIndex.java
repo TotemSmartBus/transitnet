@@ -135,7 +135,7 @@ public class ShapeIndex {
             List<String> shapeIds = shapesDao.findAllShapeId();
             Long endTime = System.currentTimeMillis();
             System.out.println("=============================");
-            System.out.println("[SHAPEINDEX] findAllShapeId time: " + (endTime - startTime) / 1000 + "s");
+            System.out.println("[SHAPEINDEX] findAllShapeId time: " + (endTime - startTime) / 1000 / 60 + "min");
 
             Long startTime1 = System.currentTimeMillis();
             // 遍历每一个 shapeId
@@ -226,18 +226,46 @@ public class ShapeIndex {
     }
 
 
+    public ArrayList<TripId> getTripIdsByShapeId(ShapeId id) {
+        ArrayList<TripId> tripIds = shapeTripList.get(id);
+        return tripIds;
+    }
 
-    public ArrayList<ShapeId> getTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
+    public ArrayList<ShapeId> getTopKShapes(ShapeId userShapeId, ArrayList<GridId> userPassedGrids, int k) {
         HashSet<ShapeId> shapeCandidates = new HashSet<>();
         // 1. 过滤所有有交集的shape
         for (GridId grid : userPassedGrids) {
             shapeCandidates.addAll(gridShapeList.get(grid));
         }
         // 2. 返回相似度最大的前k的shapeId
-//        int theta = 5;
-        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids) >= getGridSimilarity(b.getValue(), userPassedGrids) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+        int theta = 5;
 
-        return Lists.newArrayList(topShapes);
+        HashMap<ShapeId, Double> shapeSimMap = new HashMap<>();
+
+//        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids) >= getGridSimilarity(b.getValue(), userPassedGrids) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).map(Map.Entry::getKey).collect(Collectors.toList());
+        Collections.sort(topShapes, new Comparator<ShapeId>() {
+            @Override
+            public int compare(ShapeId a, ShapeId b) { // 从大到小
+                Double t = getGridSimilarity(shapeGridList.get(a), userPassedGrids) - getGridSimilarity(shapeGridList.get(b), userPassedGrids);
+                int flag = -1;
+                if (t < 0) flag = 1;
+                if (t == 0) flag = 0;
+                return flag;
+            }
+        });
+
+        for (ShapeId shapeId : topShapes) {
+            Double sim = getGridSimilarity(shapeGridList.get(shapeId), userPassedGrids);
+            shapeSimMap.put(shapeId, sim);
+        }
+
+        System.out.println("=============================");
+
+        System.out.println(shapeGridList.get(userShapeId));
+        System.out.println("[SHAPEINDEX] " + shapeSimMap);
+        System.out.println("[SHAPEINDEX] " + topShapes);
+        return Lists.newArrayList(topShapes.subList(0, theta));
 
     }
 
@@ -290,8 +318,8 @@ public class ShapeIndex {
         return maxSimilarity;
     }
 
-    public ArrayList<TripId> getTripsOfTopKShapes(ArrayList<GridId> userPassedGrids, int k) {
-        ArrayList<ShapeId> topKShapes = getTopKShapes(userPassedGrids, k);
+    public ArrayList<TripId> getTripsOfTopKShapes(ShapeId userShapeId, ArrayList<GridId> userPassedGrids, int k) {
+        ArrayList<ShapeId> topKShapes = getTopKShapes(userShapeId, userPassedGrids, k);
         ArrayList<TripId> tripIds = new ArrayList<>();
 
         for (ShapeId shapeId : topKShapes) {

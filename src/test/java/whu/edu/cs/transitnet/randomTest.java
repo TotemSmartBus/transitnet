@@ -3,9 +3,12 @@ package whu.edu.cs.transitnet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
+import whu.edu.cs.transitnet.service.UserKNNService;
+import whu.edu.cs.transitnet.service.index.CubeId;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -19,13 +22,58 @@ import java.util.*;
 @MapperScan("whu.edu.cs.transitnet.*")
 public class randomTest {
 
+    @Autowired
+    UserKNNService userKNNService;
+
     @Test
-    public void timeCompareTest() {
-        Time a = Time.valueOf("08:02:00");
-        Time b = Time.valueOf("21:00:00");
-        System.out.println(a.before(b));
-        System.out.println(a.after(b));
+    public void EDRTest() {
+        ArrayList<CubeId> cubeIds = new ArrayList<>();
+        cubeIds.add(new CubeId("119785"));
+        cubeIds.add(new CubeId("119675"));
+        cubeIds.add(new CubeId("119647"));
+
+        ArrayList<CubeId> cubeIds1 = new ArrayList<>();
+        cubeIds1.add(new CubeId("119785"));
+        cubeIds1.add(new CubeId("119675"));
+        cubeIds1.add(new CubeId("119647"));
+
+        Double a = userKNNService.EditDistanceonRealSequence(cubeIds, cubeIds1);
+
+        System.out.println(a);
     }
+
+//    @Test
+//    public void sortTest () {
+//        List<Double> list = new ArrayList<>();
+//        list.add(2.0);
+//        list.add(3.4);
+//        list.add(2.5);
+//        list.add(3.4);
+//        list.add(3.4);
+//        list.add(6.7);
+//        list.add(5.6);
+//
+//        Collections.sort(list, new Comparator<Double>() {
+//            @Override
+//            public int compare(Double a, Double b) { // 从小到大
+//                Double t = a-b;
+//                int flag = -1;
+//                if (t <= 0) flag = 1;
+//                return flag;
+//            }
+//        });
+//        List<Double> list1= list.subList(0, 5);
+//        System.out.println(list);
+//        System.out.println(list1);
+//    }
+
+//    @Test
+//    public void timeCompareTest() {
+//        Time a = Time.valueOf("08:02:00");
+//        Time b = Time.valueOf("21:00:00");
+//        System.out.println(a.before(b));
+//        System.out.println(a.after(b));
+//    }
 //    public void listAddAllTest() {
 //                List<Integer> list1 = new ArrayList<>();
 //                List<Integer> list2 = new ArrayList<>();

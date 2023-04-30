@@ -20,4 +20,6 @@ public interface StopTimesDao extends JpaRepository<StopTimesEntity, String> {
             + "WHERE ste.tripId = ?1 AND ste.arrivalTime < '24:00:00' "
             + "ORDER BY ste.stopSequence")
     List<TripTimesVo> findAllByTripId(String tripId);
+
+
 }

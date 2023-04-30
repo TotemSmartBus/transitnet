@@ -8,10 +8,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import whu.edu.cs.transitnet.dao.StopsDao;
 import whu.edu.cs.transitnet.pojo.StopsEntity;
+import whu.edu.cs.transitnet.realtime.RealtimeService;
+import whu.edu.cs.transitnet.realtime.Vehicle;
 import whu.edu.cs.transitnet.service.StopsService;
+import whu.edu.cs.transitnet.service.index.ScheduleIndex;
+import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.vo.StopsVo;
 
-import java.util.List;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -19,17 +25,42 @@ import java.util.List;
 public class TimeTest {
 
     @Autowired
-    StopsDao stopsDao;
+    RealtimeService realtimeService;
 
+    @Autowired
+    ScheduleIndex scheduleIndex;
+
+    // 测试看实时取到的tripid的时间范围和schedule的时间是不是一致的
     @Test
-    public void timeFormatTest() {
+    public void timeTest() throws InterruptedException {
+        HashMap<TripId, ArrayList<Time>> tripStartEndList = new HashMap<>();
+        tripStartEndList = scheduleIndex.getTripStartEndList();
 
-        String tripId = "YU_D1-Sunday-141000_MISC_777";
-        List<StopsVo> stopsVos = stopsDao.findAllByTripId(tripId);
+        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new HashMap<>();
+        Thread.sleep(300000);
+        vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
 
-        System.out.println(stopsVos.size());
-//
-//        List<StopsEntity> stopsEntities = stopsDao.findAll();
-//        System.out.println(stopsEntities.size());
+
+        Date d = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+
+        Time startTime;
+        Time endTime;
+
+        Set<TripId> tripIdSet = vehiclesByTripId.keySet();
+        for (TripId tripId : tripIdSet) {
+            ArrayList<Vehicle> vehicles = vehiclesByTripId.get(tripId);
+            ArrayList<String> times = new ArrayList<>();
+            for (Vehicle vehicle : vehicles) {
+                d.setTime(vehicle.getRecordedTime() * 1000);
+                String date_hour_min_sec  = sdf.format(d);
+                times.add(date_hour_min_sec);
+            }
+            startTime = Time.valueOf(times.get(0));
+            endTime = Time.valueOf(times.get(times.size() - 1));
+            System.out.println("[TIMETEST] " + tripId + ": [" + startTime + ", " + endTime + "] " + tripStartEndList.get(tripId));
+        }
+
     }
 }

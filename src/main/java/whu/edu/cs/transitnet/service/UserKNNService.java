@@ -6,6 +6,8 @@ import org.locationtech.jts.triangulate.tri.Tri;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.TransitnetApplication;
+import whu.edu.cs.transitnet.dao.TripsDao;
+import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 import whu.edu.cs.transitnet.service.index.*;
@@ -37,7 +39,7 @@ public class UserKNNService {
     ScheduleIndex scheduleIndex;
     // 给定用户轨迹 <lat, lon, timestamp>
     // ArrayList<Point> user_tra;
-    int k = 10;
+    int k = 5;
 
 
     // TODO hashmap初始化
@@ -58,6 +60,7 @@ public class UserKNNService {
         return userEndTime;
     }
 
+    TripId userTripId;
     // user - grid
     ArrayList<GridId> userGridList = new ArrayList<>();
     // user - cube
@@ -85,9 +88,20 @@ public class UserKNNService {
         TripId[] keys = vehiclesByTripId.keySet().toArray(new TripId[0]); //将map里的key值取出，并放进数组里
         int random = (int) (Math.random()*(keys.length)); //生成随机数
         TripId randomKey = keys[random]; //随机取key值
-        System.out.println(randomKey);   //输出随机的key值
 
-        ArrayList<Vehicle> vehicles = vehiclesByTripId.get(randomKey);
+        System.out.println("============================================");
+        System.out.println("[USERKNNSERVICE] randomKey: " + randomKey);   //输出随机的key值
+
+        userTripId = randomKey;
+//        userTripId = new TripId("EN_B3-Sunday-051800_Q56_456");
+
+
+
+        ArrayList<Vehicle> vehicles = vehiclesByTripId.get(userTripId);
+
+//        System.out.println(Arrays.asList(keys).contains("[USERKNNSERVICE] if vehicle set contains usertripid: " + new TripId("QV_B3-Sunday-044200_Q46_601")));
+//        ArrayList<Vehicle> vehicles = vehiclesByTripId.get(new TripId("QV_B3-Sunday-044200_Q46_601"));
+
 
         ArrayList<String> times = new ArrayList<>();
         ArrayList<GridId> grids = new ArrayList<>();
@@ -95,6 +109,7 @@ public class UserKNNService {
 
         Date d = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
 
 
         for (Vehicle vehicle : vehicles) {
@@ -111,6 +126,7 @@ public class UserKNNService {
 
             d.setTime(vehicle.getRecordedTime() * 1000);
             String date_hour_min_sec  = sdf.format(d);
+
             times.add(date_hour_min_sec);
 //            String[] hour_min_sec = date_hour_min_sec.split(":");   // 取的是时分秒
 //            double t = (double)(Integer.parseInt(hour_min_sec[0]) * 3600 + Integer.parseInt(hour_min_sec[1]) * 60 + Integer.parseInt(hour_min_sec[2])); // 转化成秒
@@ -120,8 +136,8 @@ public class UserKNNService {
         userStartTime = Time.valueOf(times.get(0));
         userEndTime = Time.valueOf(times.get(times.size() - 1));
 
-        System.out.println("============================================");
-        System.out.println("[USERKNNSERVICE] userId(TripId): " + randomKey);
+
+        System.out.println("[USERKNNSERVICE] userId(TripId): " + userTripId);
         System.out.println("[USERKNNSERVICE] times: " + times);
         System.out.println("[USERKNNSERVICE] grids: " + grids);
         System.out.println("[USERKNNSERVICE] userGridList: " + userGridList);
@@ -149,19 +165,41 @@ public class UserKNNService {
     // 再根据schedule找到和用户轨迹时间有重叠的trip
 
 
+    @Autowired
+    TripsDao tripsDao;
     // schedule做筛选
     // user: [start_time, end_time]
     public ArrayList<TripId> filterTripList(ArrayList<GridId> userGridList, Time userStartTime, Time userEndTime) {
         ArrayList<TripId> filteredTripList = new ArrayList<>();
 
+        // 插一嘴，把虚拟的usertripid对应的shape的trips也加进去
+        List<TripsEntity> tripsEntityList = tripsDao.findAllByTripId(userTripId.toString());
+        ShapeId shapeId = new ShapeId(tripsEntityList.get(0).getShapeId());
+
         // top-k shapes -> trips of top-k shapes
-        ArrayList<TripId> tripIds = shapeIndex.getTripsOfTopKShapes(userGridList, k);
+        ArrayList<TripId> tripIds = shapeIndex.getTripsOfTopKShapes(shapeId, userGridList, k);
+
+        // 插一嘴，把虚拟的usertripid对应的shape的trips也加进去
+        for (TripsEntity tripsEntity : tripsEntityList) {
+            ArrayList<TripId> tripIds1 = shapeIndex.getTripIdsByShapeId(new ShapeId(tripsEntity.getShapeId()));
+            for (TripId tripId : tripIds1) {
+                if(!tripIds.contains(tripId)) tripIds.add(tripId);
+            }
+        }
+
+
         tripStartEndList = scheduleIndex.getTripStartEndList();
+        System.out.println("[USERKNNSERVICE] userStartTime: " + userStartTime);
+        System.out.println("[USERKNNSERVICE] userEndTime: " + userEndTime);
+        System.out.println("[USERKNNSERVICE] userTripId start and end time: " + tripStartEndList.get(userTripId));
+
+        System.out.println("[USERKNNSERVICE] size of trips of top-k shapes: " + tripIds.size());
+        System.out.println("[USERKNNSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
 
         for (TripId tripId : tripIds) {
             ArrayList<Time> times = tripStartEndList.get(tripId);
 
-            if (times != null && times.get(1).after(userStartTime) && times.get(0).before(userEndTime)) {
+            if (times != null && times.get(0).before(userEndTime) && times.get(1).after(userStartTime)) {
                 filteredTripList.add(tripId);
             }
         }
@@ -176,13 +214,17 @@ public class UserKNNService {
         getUserTra(); // 先构建用户轨迹的索引表；获取用户轨迹起始时间和结束时间
         ArrayList<TripId> filteredTripList = filterTripList(userGridList, userStartTime, userEndTime); // 获取所有要判断的tripid
 //        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
+        System.out.println("[USERKNNSERVICE] " + "if the filtered list contains usertripid: " +filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.get(tripId) != null && !vehiclesByTripId.get(tripId).isEmpty()) {
                 ArrayList<Vehicle> vehicles = vehiclesByTripId.get(tripId);
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
                     CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime());
-                    cubeIds.add(cubeId);
+                    if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
+                        cubeIds.add(cubeId);
+                    }
+//                    cubeIds.add(cubeId);
                 }
                 tripCubeList.put(tripId, cubeIds);
             }
@@ -196,22 +238,109 @@ public class UserKNNService {
     int theta = 5;
 
     // trip_id - similarity
-    HashMap<TripId, Double> tripSimList = new HashMap<>();
+    HashMap<TripId, Double> tripSimListDTW = new HashMap<>();
+    HashMap<TripId, Double> tripSimListEDR = new HashMap<>();
+    HashMap<TripId, Double> tripSimListERP = new HashMap<>();
 
     // 获取 Top-k trip
     public void getTopKTrips(int k) throws InterruptedException {
+
+        Long startTime = System.currentTimeMillis();
 //    public void getTopKTrips(ArrayList<CubeId> userCubeList, HashMap<TripId, ArrayList<CubeId>> tripCubeList, int k) throws InterruptedException {
         getTripIdCubeList();
 
         Set<TripId> keySet = tripCubeList.keySet();
         for (TripId tripId : keySet) {
             double sim = DynamicTimeWarping(userCubeList, tripCubeList.get(tripId));
-            tripSimList.put(tripId, sim);
+            tripSimListDTW.put(tripId, sim);
+
+            double sim1 = EditDistanceonRealSequence(userCubeList, tripCubeList.get(tripId));
+            tripSimListEDR.put(tripId, sim1);
+
+            double sim2 = EditDistanceWithRealPenalty(userCubeList, tripCubeList.get(tripId), new CubeId("1"));
+            tripSimListERP.put(tripId, sim2);
         }
 
         // 给 filteredTripList 排序就是最后结果
-        List<TripId> topTrips = tripSimList.entrySet().stream().sorted((a, b) -> a.getValue() >= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+//        List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+//        List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+//        List<TripId> topTripsERP = tripSimListERP.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        Collections.sort(topTripsDTW, new Comparator<TripId>() {
+            @Override
+            public int compare(TripId a, TripId b) { // 从小到大
+                Double t = tripSimListDTW.get(a) - tripSimListDTW.get(b);
+                int flag = 1;
+                if (t < 0) flag = -1;
+                if (t == 0) flag = 0;
+                return flag;
+            }
+        });
+        List<TripId> topkTripsDTW = new ArrayList<>();
+        if(topTripsDTW.size() >= k) {
+            topkTripsDTW = topTripsDTW.subList(0, k);
+        } else {
+            topkTripsDTW = topTripsDTW;
+        }
+
+        List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        Collections.sort(topTripsEDR, new Comparator<TripId>() {
+            @Override
+            public int compare(TripId a, TripId b) { // 从小到大
+                Double t = tripSimListEDR.get(a) - tripSimListEDR.get(b);
+                int flag = 1;
+                if (t < 0) flag = -1;
+                if (t == 0) flag = 0;
+                return flag;
+            }
+        });
+        List<TripId> topkTripsEDR = new ArrayList<>();
+        if(topTripsEDR.size() >= k) {
+            topkTripsEDR = topTripsEDR.subList(0, k);
+        } else {
+            topkTripsEDR = topTripsEDR;
+        }
+
+
+        List<TripId> topTripsERP = tripSimListERP.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        Collections.sort(topTripsERP, new Comparator<TripId>() {
+            @Override
+            public int compare(TripId a, TripId b) { // 从小到大
+                Double t = tripSimListERP.get(a) - tripSimListERP.get(b);
+                int flag = 1;
+                if (t < 0) flag = -1;
+                if (t == 0) flag = 0;
+                return flag;
+            }
+        });
+        List<TripId> topkTripsERP = new ArrayList<>();
+        if(topTripsERP.size() >= k) {
+            topkTripsERP = topTripsERP.subList(0, k);
+        } else {
+            topkTripsERP = topTripsERP;
+        }
+
+
+        Long endTime = System.currentTimeMillis();
+        System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime - 300000) / 1000 + "s");
+
+        System.out.println("================================");
+        for (TripId tripId : topkTripsDTW) {
+            System.out.println("DTW " + tripId + ": " + tripSimListDTW.get(tripId));
+        }
+
+        System.out.println("================================");
+        for (TripId tripId : topkTripsEDR) {
+            System.out.println("EDR " + tripId + ": " + tripSimListEDR.get(tripId));
+        }
+
+        System.out.println("================================");
+        for (TripId tripId : topkTripsERP) {
+            System.out.println("ERP " + tripId + ": " + tripSimListERP.get(tripId));
+        }
     }
+
 
 //    // cube 做相似度计算
 //    public double getCubeSimilarity(ArrayList<ShapeIndex.CubeId> cubes1, ArrayList<ShapeIndex.CubeId> cubes2, int theta) {
@@ -242,8 +371,12 @@ public class UserKNNService {
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), resolution);
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(i - 1).toString()), resolution);
+                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+//                System.out.println(getDistances(xyz1[0], xyz1[2], xyz1[4], xyz1[1], xyz1[3], xyz1[5]));
+//                System.out.println((xyz1[0]-xyz1[1]) + " " + (xyz1[2] - xyz1[3]) + " " + (xyz1[4] - xyz1[5]));
+                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
+//                System.out.println(getDistances(xyz2[0], xyz2[2], xyz2[4], xyz2[1], xyz2[3], xyz2[5]));
+//                System.out.println((xyz2[0]-xyz2[1]) + " " + (xyz2[2] - xyz2[3]) + " " + (xyz2[4] - xyz2[5]));
 //                dpInts[i][j] = distFunc.apply(T1.get(i - 1), T2.get(j - 1)) + min(dpInts[i - 1][j - 1], dpInts[i - 1][j], dpInts[i][j - 1]);
                 dpInts[i][j] = getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) + min(dpInts[i - 1][j - 1], dpInts[i - 1][j], dpInts[i][j - 1]);
             }
@@ -280,11 +413,11 @@ public class UserKNNService {
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), resolution);
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(i - 1).toString()), resolution);
+                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
                 int subCost = 1;
-                // TODO 确定阈值
-                if (getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) <= 50) {
+                // TODO 确定阈值 根号3
+                if (getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) <= Math.sqrt(3.0)) {
                     subCost = 0;
                 }
                 dpInts[i][j] = min(dpInts[i - 1][j - 1] + subCost, dpInts[i - 1][j] + 1, dpInts[i][j - 1] + 1);
@@ -299,13 +432,13 @@ public class UserKNNService {
     public double EditDistanceWithRealPenalty(List<CubeId> T1, List<CubeId> T2, CubeId g) {
         int resolution = hytraEngineManager.getParams().getResolution();
 
-        int xyz[] = decodeService.decodeZ3(Integer.parseInt(g.toString()), resolution);
+        int xyz[] = decodeService.decodeZ3(Integer.parseInt(g.toString()), 0);
 
         if (T1 == null || T1.size() == 0) {
             double res = 0.0;
             if (T2 != null) {
                 for (CubeId t : T2) {
-                    int xyz2[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), resolution);
+                    int xyz2[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
                     res += getDistances(xyz2[0], xyz2[2], xyz2[4], xyz[0], xyz[2], xyz[4]);
                 }
             }
@@ -315,7 +448,7 @@ public class UserKNNService {
         if (T2 == null || T2.size() == 0) {
             double res = 0.0;
             for (CubeId t : T1) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), resolution);
+                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
                 res += getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]);
             }
             return res;
@@ -324,19 +457,19 @@ public class UserKNNService {
         double[][] dpInts = new double[T1.size() + 1][T2.size() + 1];
 
         for (int i = 1; i <= T1.size(); ++i) {
-            int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), resolution);
+            int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
             dpInts[i][0] = getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]) + dpInts[i - 1][0];
         }
 
         for (int j = 1; j <= T2.size(); ++j) {
-            int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), resolution);
+            int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
             dpInts[0][j] = getDistances(xyz2[0], xyz2[2], xyz2[4], xyz[0], xyz[2], xyz[4]) + dpInts[0][j - 1];
         }
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), resolution);
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), resolution);
+                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
 
                 dpInts[i][j] = min(dpInts[i - 1][j - 1] + getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]),
                         dpInts[i - 1][j] + getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]),

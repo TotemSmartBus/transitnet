@@ -8,6 +8,7 @@ import whu.edu.cs.transitnet.service.index.HytraEngineManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 @Service
 public class EncodeService {
@@ -84,6 +85,7 @@ public class EncodeService {
 //        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 //        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         String date_hour_min_sec  = sdf.format(d);
 
         String[] date_time = date_hour_min_sec.split(" "); // 取的是当天日期
