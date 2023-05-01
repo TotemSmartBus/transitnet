@@ -16,31 +16,32 @@ import java.io.IOException;
 import java.security.KeyStore;
 import java.sql.Time;
 import java.util.*;
+import java.util.stream.Collectors;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@MapperScan("whu.edu.cs.transitnet.*")
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
+//@MapperScan("whu.edu.cs.transitnet.*")
 public class randomTest {
 
-    @Autowired
-    UserKNNService userKNNService;
-
-    @Test
-    public void EDRTest() {
-        ArrayList<CubeId> cubeIds = new ArrayList<>();
-        cubeIds.add(new CubeId("119785"));
-        cubeIds.add(new CubeId("119675"));
-        cubeIds.add(new CubeId("119647"));
-
-        ArrayList<CubeId> cubeIds1 = new ArrayList<>();
-        cubeIds1.add(new CubeId("119785"));
-        cubeIds1.add(new CubeId("119675"));
-        cubeIds1.add(new CubeId("119647"));
-
-        Double a = userKNNService.EditDistanceonRealSequence(cubeIds, cubeIds1);
-
-        System.out.println(a);
-    }
+//    @Autowired
+//    UserKNNService userKNNService;
+//
+//    @Test
+//    public void EDRTest() {
+//        ArrayList<CubeId> cubeIds = new ArrayList<>();
+//        cubeIds.add(new CubeId("119785"));
+//        cubeIds.add(new CubeId("119675"));
+//        cubeIds.add(new CubeId("119647"));
+//
+//        ArrayList<CubeId> cubeIds1 = new ArrayList<>();
+//        cubeIds1.add(new CubeId("119785"));
+//        cubeIds1.add(new CubeId("119675"));
+//        cubeIds1.add(new CubeId("119647"));
+//
+//        Double a = userKNNService.EditDistanceonRealSequence(cubeIds, cubeIds1);
+//
+//        System.out.println(a);
+//    }
 
 //    @Test
 //    public void sortTest () {
@@ -74,24 +75,35 @@ public class randomTest {
 //        System.out.println(a.before(b));
 //        System.out.println(a.after(b));
 //    }
-//    public void listAddAllTest() {
-//                List<Integer> list1 = new ArrayList<>();
-//                List<Integer> list2 = new ArrayList<>();
-//                list1.add(1);
-//                list1.add(2);
-//                list1.add(3);
-//                list1.add(4);
-//                list2.add(3);
-//                list2.add(4);
-//                list2.add(7);
-//                list2.add(8);
-//                List<Integer> list = new ArrayList<>();
-//                list.addAll(list1);
-//                list.addAll(list2);
-//                System.out.println(list1);
-//                System.out.println(list2);
-//                System.out.println(list);
-//    }
+
+    @Test
+    public void listAddAllTest() {
+        List<Integer> list1 = new ArrayList<>();
+        List<Integer> list2 = new ArrayList<>();
+        list1.add(1);
+        list1.add(2);
+        list1.add(1);
+        list1.add(4);
+        list2.add(1);
+        list2.add(4);
+        list2.add(7);
+        list2.add(8);
+        List<Integer> list = new ArrayList<>(list1);
+        list.retainAll(list2);
+        List<Integer> mylist = list.stream().distinct().collect(Collectors.toList());
+        System.out.println(list1);
+        System.out.println(list2);
+        System.out.println(list);
+        System.out.println(mylist);
+        System.out.println("========");
+
+        List<Integer> listt = new ArrayList<>(list2);
+        listt.retainAll(list1);
+        System.out.println(list1);
+        System.out.println(list2);
+        System.out.println(listt);
+
+    }
 }
 
 

@@ -238,7 +238,7 @@ public class ShapeIndex {
             shapeCandidates.addAll(gridShapeList.get(grid));
         }
         // 2. 返回相似度最大的前k的shapeId
-        int theta = 5;
+//        int theta = 5;
 
         HashMap<ShapeId, Double> shapeSimMap = new HashMap<>();
 
@@ -265,7 +265,11 @@ public class ShapeIndex {
         System.out.println(shapeGridList.get(userShapeId));
         System.out.println("[SHAPEINDEX] " + shapeSimMap);
         System.out.println("[SHAPEINDEX] " + topShapes);
-        return Lists.newArrayList(topShapes.subList(0, theta));
+        if (topShapes.size() >= k) {
+            return Lists.newArrayList(topShapes.subList(0, k));
+        } else {
+            return Lists.newArrayList(topShapes);
+        }
 
     }
 

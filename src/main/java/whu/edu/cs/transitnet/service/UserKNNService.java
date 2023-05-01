@@ -39,7 +39,7 @@ public class UserKNNService {
     ScheduleIndex scheduleIndex;
     // 给定用户轨迹 <lat, lon, timestamp>
     // ArrayList<Point> user_tra;
-    int k = 5;
+    int k = 5; // 这个k指的是取前k个shape
 
 
     // TODO hashmap初始化
@@ -93,7 +93,7 @@ public class UserKNNService {
         System.out.println("[USERKNNSERVICE] randomKey: " + randomKey);   //输出随机的key值
 
         userTripId = randomKey;
-//        userTripId = new TripId("EN_B3-Sunday-051800_Q56_456");
+//        userTripId = new TripId("35672205-BPPB3-BP_B3-Weekday-02-SDon");
 
 
 
@@ -235,14 +235,18 @@ public class UserKNNService {
 
     // tripCubeList 和 userCubeList 做相似度查询
 
-    int theta = 5;
+//    int theta = 5;
 
     // trip_id - similarity
+    HashMap<TripId, Double> tripSimListLOCS = new HashMap<>();
+    HashMap<TripId, Integer> tripSimListLOC = new HashMap<>();
+
     HashMap<TripId, Double> tripSimListDTW = new HashMap<>();
     HashMap<TripId, Double> tripSimListEDR = new HashMap<>();
     HashMap<TripId, Double> tripSimListERP = new HashMap<>();
 
-    // 获取 Top-k trip
+
+    // 获取 Top-k trip （用户自己指定k，不是前面定义的变量k）
     public void getTopKTrips(int k) throws InterruptedException {
 
         Long startTime = System.currentTimeMillis();
@@ -251,14 +255,24 @@ public class UserKNNService {
 
         Set<TripId> keySet = tripCubeList.keySet();
         for (TripId tripId : keySet) {
-            double sim = DynamicTimeWarping(userCubeList, tripCubeList.get(tripId));
-            tripSimListDTW.put(tripId, sim);
+            double sim = LongestOverlappedCubeSeries(userCubeList, tripCubeList.get(tripId), Integer.MAX_VALUE);
+            tripSimListLOCS.put(tripId, sim);
 
-            double sim1 = EditDistanceonRealSequence(userCubeList, tripCubeList.get(tripId));
-            tripSimListEDR.put(tripId, sim1);
+            List<CubeId> intersection0 = new ArrayList<>(userCubeList);
+            intersection0.retainAll(tripCubeList.get(tripId));
+            List<CubeId> intersection1 = intersection0.stream().distinct().collect(Collectors.toList());
+            tripSimListLOC.put(tripId, intersection1.size());
 
-            double sim2 = EditDistanceWithRealPenalty(userCubeList, tripCubeList.get(tripId), new CubeId("1"));
-            tripSimListERP.put(tripId, sim2);
+            double sim1 = DynamicTimeWarping(userCubeList, tripCubeList.get(tripId));
+            tripSimListDTW.put(tripId, sim1);
+
+            double sim2 = EditDistanceonRealSequence(userCubeList, tripCubeList.get(tripId));
+            tripSimListEDR.put(tripId, sim2);
+
+            double sim3 = EditDistanceWithRealPenalty(userCubeList, tripCubeList.get(tripId), new CubeId("0"));
+            tripSimListERP.put(tripId, sim3);
+
+
         }
 
         // 给 filteredTripList 排序就是最后结果
@@ -266,6 +280,35 @@ public class UserKNNService {
 //        List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
 //        List<TripId> topTripsERP = tripSimListERP.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
 
+        // topk LOCS
+        List<TripId> topTripsLOCS = tripSimListLOCS.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        Collections.sort(topTripsLOCS, new Comparator<TripId>() {
+            @Override
+            public int compare(TripId a, TripId b) { // 从大到小
+                Double t = tripSimListLOCS.get(a) - tripSimListLOCS.get(b);
+                int flag = -1;
+                if (t < 0) flag = 1;
+                if (t == 0) flag = 0;
+                return flag;
+            }
+        });
+        List<TripId> topkTripsLOCS = new ArrayList<>();
+        if(topTripsLOCS.size() >= k) {
+            topkTripsLOCS = topTripsLOCS.subList(0, k);
+        } else {
+            topkTripsLOCS = topTripsLOCS;
+        }
+
+        // topk LOC
+        List<TripId> topTripsLOC = tripSimListLOC.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).map(Map.Entry::getKey).collect(Collectors.toList());
+        List<TripId> topkTripsLOC = new ArrayList<>();
+        if(topTripsLOC.size() >= k) {
+            topkTripsLOC = topTripsLOC.subList(0, k);
+        } else {
+            topkTripsLOC = topTripsLOC;
+        }
+
+        // topk DTW
         List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
         Collections.sort(topTripsDTW, new Comparator<TripId>() {
             @Override
@@ -284,6 +327,7 @@ public class UserKNNService {
             topkTripsDTW = topTripsDTW;
         }
 
+        // topk EDR
         List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
         Collections.sort(topTripsEDR, new Comparator<TripId>() {
             @Override
@@ -303,6 +347,7 @@ public class UserKNNService {
         }
 
 
+        // topk ERP
         List<TripId> topTripsERP = tripSimListERP.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
         Collections.sort(topTripsERP, new Comparator<TripId>() {
             @Override
@@ -322,23 +367,36 @@ public class UserKNNService {
         }
 
 
+
+
         Long endTime = System.currentTimeMillis();
         System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime - 300000) / 1000 + "s");
 
         System.out.println("================================");
+        for (TripId tripId : topkTripsLOCS) {
+            System.out.println("LOCS " + tripId + ": " + tripSimListLOCS.get(tripId) + " " +tripCubeList.get(tripId));
+        }
+
+        System.out.println("================================");
+        for (TripId tripId : topkTripsLOC) {
+            System.out.println("LOC " + tripId + ": " + tripSimListLOC.get(tripId) + " " +tripCubeList.get(tripId));
+        }
+
+        System.out.println("================================");
         for (TripId tripId : topkTripsDTW) {
-            System.out.println("DTW " + tripId + ": " + tripSimListDTW.get(tripId));
+            System.out.println("DTW " + tripId + ": " + tripSimListDTW.get(tripId) + " " +tripCubeList.get(tripId));
         }
 
         System.out.println("================================");
         for (TripId tripId : topkTripsEDR) {
-            System.out.println("EDR " + tripId + ": " + tripSimListEDR.get(tripId));
+            System.out.println("EDR " + tripId + ": " + tripSimListEDR.get(tripId) + " " +tripCubeList.get(tripId));
         }
 
         System.out.println("================================");
         for (TripId tripId : topkTripsERP) {
-            System.out.println("ERP " + tripId + ": " + tripSimListERP.get(tripId));
+            System.out.println("ERP " + tripId + ": " + tripSimListERP.get(tripId) + " " +tripCubeList.get(tripId));
         }
+
     }
 
 
@@ -346,6 +404,55 @@ public class UserKNNService {
 //    public double getCubeSimilarity(ArrayList<ShapeIndex.CubeId> cubes1, ArrayList<ShapeIndex.CubeId> cubes2, int theta) {
 //
 //    }
+
+
+    // LOCS
+    public double LongestOverlappedCubeSeries(ArrayList<CubeId> T1, ArrayList<CubeId> T2, int theta) {
+        if (T1 == null || T2 == null || T1.size() == 0 || T2.size() == 0) {
+            return 0;
+        }
+
+        int[][] dp = new int[T1.size()][T2.size()]; // dp数组
+        int maxSimilarity = 0; // 相似度
+
+        if (T1.get(0).equals(T2.get(0))) dp[0][0] = 1;
+
+        for (int i = 1; i < T1.size(); i++) {
+            if (T1.get(i).equals(T2.get(0))) {
+                dp[i][0] = 1;
+            } else {
+                dp[i][0] = dp[i-1][0];
+            }
+        }
+
+        for (int j = 1; j < T2.size(); j++) {
+            if (T2.get(j).equals(T1.get(0))) {
+                dp[0][j] = 1;
+            } else {
+                dp[0][j] = dp[0][j-1];
+            }
+        }
+
+        for (int i = 1; i < T1.size(); i++) {
+            for (int j = 1; j < T2.size(); j++) {
+                if (Math.abs(i - j) <= theta) {
+                    if (T1.get(i).equals(T2.get(j))) {
+                        dp[i][j] = 1 + dp[i-1][j-1];
+                    } else {
+                        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                    }
+                }
+
+//                if (maxSimilarity < dp[i][j]) {
+//                    maxSimilarity = dp[i][j];
+//                }
+            }
+        }
+
+        maxSimilarity = dp[T1.size() - 1][T2.size() - 1];
+//        System.out.println("两条轨迹的相似度为：" + maxSimilarity);
+        return maxSimilarity;
+    }
 
     // DTW
     public double DynamicTimeWarping(ArrayList<CubeId> T1, ArrayList<CubeId> T2) {
@@ -417,6 +524,7 @@ public class UserKNNService {
                 int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
                 int subCost = 1;
                 // TODO 确定阈值 根号3
+//                if (getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) <= Double.MAX_VALUE) {
                 if (getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) <= Math.sqrt(3.0)) {
                     subCost = 0;
                 }
