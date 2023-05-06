@@ -43,7 +43,6 @@ public class ScheduleIndex {
             // 读取文件
             System.out.println("======================");
             System.out.println("[SCHEDULEINDEX] FILE EXISTS...");
-            System.out.println("======================");
             System.out.println("[SCHEDULEINDEX] Start Deserializing HashMap..");
 
             Long starttime = System.currentTimeMillis();
@@ -76,7 +75,6 @@ public class ScheduleIndex {
 
             Long endtime = System.currentTimeMillis();
 
-            System.out.println("======================");
             System.out.println("[SCHEDULEINDEX] Deserializing HashMap DONE!");
             System.out.println("[SCHEDULEINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
 
@@ -104,7 +102,6 @@ public class ScheduleIndex {
             // 取出所有 trip_id
             List<TripsEntity> tripsEntities = tripsDao.findAll();
 
-            System.out.println("=============================");
             System.out.println("[SCHEDULEINDEX] Size of Trips: " + tripsEntities.size());
 
             int num = 0;
@@ -113,7 +110,6 @@ public class ScheduleIndex {
                 TripId tripId = new TripId(trip);
 
                 num++;
-                System.out.println("=============================");
                 System.out.println("[SCHEDULEINDEX] Number of Scanned Trips: " + num);
 
                 // 取出该 trip_id 下的到站时间序列
@@ -151,7 +147,6 @@ public class ScheduleIndex {
             }
 
             Long endTime1 = System.currentTimeMillis();
-            System.out.println("=============================");
             System.out.println("[SCHEDULEINDEX] index construction and serialization time: " + (endTime1 - startTime1) / 1000 / 60 + "min");
         }
 

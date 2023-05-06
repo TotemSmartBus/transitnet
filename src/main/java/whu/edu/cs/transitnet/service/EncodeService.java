@@ -30,6 +30,21 @@ public class EncodeService {
         return new GridId(String.valueOf(gridId));
     }
 
+    // point - grid 做映射；需要传入参数 resolution
+    public GridId getGridID(double lat, double lon, int resolution) {
+
+//        int resolution = hytraEngineManager.getParams().getResolution();
+        double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
+        double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double) resolution);
+        double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double) resolution);
+
+        int i = (int) ((lat - spatialDomain[0]) / deltaX);
+        int j = (int) ((lon - spatialDomain[1]) / deltaY);
+        int gridId = combine2(i, j, resolution);
+
+        return new GridId(String.valueOf(gridId));
+    }
+
     public int combine2(int aid, int bid, int lengtho) {
         int length = lengtho;
         int[] a = new int[lengtho];

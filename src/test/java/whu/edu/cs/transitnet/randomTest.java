@@ -19,9 +19,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-//@RunWith(SpringRunner.class)
-//@SpringBootTest
-//@MapperScan("whu.edu.cs.transitnet.*")
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@MapperScan("whu.edu.cs.transitnet.*")
 public class randomTest {
 
 //    @Autowired
