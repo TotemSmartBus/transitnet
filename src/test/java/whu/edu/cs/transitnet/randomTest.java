@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,43 +69,49 @@ public class randomTest {
 //        System.out.println(list1);
 //    }
 
-//    @Test
-//    public void timeCompareTest() {
-//        Time a = Time.valueOf("08:02:00");
-//        Time b = Time.valueOf("21:00:00");
-//        System.out.println(a.before(b));
-//        System.out.println(a.after(b));
-//    }
-
     @Test
-    public void listAddAllTest() {
-        List<Integer> list1 = new ArrayList<>();
-        List<Integer> list2 = new ArrayList<>();
-        list1.add(1);
-        list1.add(2);
-        list1.add(1);
-        list1.add(4);
-        list2.add(1);
-        list2.add(4);
-        list2.add(7);
-        list2.add(8);
-        List<Integer> list = new ArrayList<>(list1);
-        list.retainAll(list2);
-        List<Integer> mylist = list.stream().distinct().collect(Collectors.toList());
-        System.out.println(list1);
-        System.out.println(list2);
-        System.out.println(list);
-        System.out.println(mylist);
-        System.out.println("========");
+    public void timeCompareTest() {
+        Time a = Time.valueOf("08:02:00");
+        Time b = Time.valueOf("21:00:00");
+        Long atol = a.getTime();
 
-        List<Integer> listt = new ArrayList<>(list2);
-        listt.retainAll(list1);
-        System.out.println(list1);
-        System.out.println(list2);
-        System.out.println(listt);
-
+        Date d = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        d.setTime(atol - 25 * 60 * 60 * 1000);
+        String str = sdf.format(d);
+        System.out.println(Time.valueOf(str));
+        System.out.println(a.after(b));
     }
-}
+
+//    @Test
+//    public void listAddAllTest() {
+//        List<Integer> list1 = new ArrayList<>();
+//        List<Integer> list2 = new ArrayList<>();
+//        list1.add(1);
+//        list1.add(2);
+//        list1.add(1);
+//        list1.add(4);
+//        list2.add(1);
+//        list2.add(4);
+//        list2.add(7);
+//        list2.add(8);
+//        List<Integer> list = new ArrayList<>(list1);
+//        list.retainAll(list2);
+//        List<Integer> mylist = list.stream().distinct().collect(Collectors.toList());
+//        System.out.println(list1);
+//        System.out.println(list2);
+//        System.out.println(list);
+//        System.out.println(mylist);
+//        System.out.println("========");
+//
+//        List<Integer> listt = new ArrayList<>(list2);
+//        listt.retainAll(list1);
+//        System.out.println(list1);
+//        System.out.println(list2);
+//        System.out.println(listt);
+//
+//    }
+//}
 
 
 //    public void fileTest() {
@@ -170,4 +177,6 @@ public class randomTest {
 //        });
 //        System.out.println(arrayList);
 //    }
+
+}
 

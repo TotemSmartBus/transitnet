@@ -17,6 +17,7 @@ import java.util.Arrays;
 @Controller
 public class QueryController {
 
+
     @CrossOrigin(origins = "*")
     @PostMapping("/api/query/line")
     @ResponseBody

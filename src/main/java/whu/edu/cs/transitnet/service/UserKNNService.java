@@ -198,10 +198,28 @@ public class UserKNNService {
 
         for (TripId tripId : tripIds) {
             ArrayList<Time> times = tripStartEndList.get(tripId);
+            if (times != null) {
+                Time start = times.get(0);
+                Time end = times.get(1);
 
-            if (times != null && times.get(0).before(userEndTime) && times.get(1).after(userStartTime)) {
-                filteredTripList.add(tripId);
+                Long startToLong = start.getTime();
+                Long endToLong = end.getTime();
+
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+
+                Date d1 = new Date();
+                d1.setTime(startToLong - 30 * 60 * 1000); // 往前推30分钟
+                String startForward = sdf.format(d1);
+
+                Date d2 = new Date();
+                d2.setTime(endToLong + 30 * 60 * 1000); // 往后推30分钟
+                String endBackward = sdf.format(d2);
+
+                if (Time.valueOf(startForward).before(userEndTime) && Time.valueOf(endBackward).after(userStartTime)) {
+                    filteredTripList.add(tripId);
+                }
             }
+
         }
 
         return filteredTripList;
@@ -213,8 +231,9 @@ public class UserKNNService {
     public void getTripIdCubeList() throws InterruptedException {
         getUserTra(); // 先构建用户轨迹的索引表；获取用户轨迹起始时间和结束时间
         ArrayList<TripId> filteredTripList = filterTripList(userGridList, userStartTime, userEndTime); // 获取所有要判断的tripid
+        System.out.println("[USERKNNSERVICE] " + "size of filtered trips: " + filteredTripList.size());
 //        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
-        System.out.println("[USERKNNSERVICE] " + "if the filtered list contains usertripid: " +filteredTripList.contains(userTripId));
+        System.out.println("[USERKNNSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.get(tripId) != null && !vehiclesByTripId.get(tripId).isEmpty()) {
                 ArrayList<Vehicle> vehicles = vehiclesByTripId.get(tripId);
@@ -370,7 +389,7 @@ public class UserKNNService {
 
 
         Long endTime = System.currentTimeMillis();
-        System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime - 300000) / 1000 + "s");
+        System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime - 300000) / 1000.0 + "s");
 
         System.out.println("================================");
         for (TripId tripId : topkTripsLOCS) {
