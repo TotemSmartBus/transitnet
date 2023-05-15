@@ -5,7 +5,7 @@ import java.sql.Time;
 import java.util.Objects;
 
 @Entity
-@Table(name = "stop_times", schema = "transitnet")
+@Table(name = "stop_times")
 @IdClass(StopTimesEntityPK.class)
 public class StopTimesEntity {
     private String tripId;

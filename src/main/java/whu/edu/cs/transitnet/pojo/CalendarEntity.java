@@ -6,7 +6,7 @@ import java.sql.Date;
 import java.util.Objects;
 
 @Entity
-@Table(name = "calendar", schema = "transitnet")
+@Table(name = "calendar")
 public class CalendarEntity {
     private String serviceId;
     private byte[] monday;

@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "calendar_dates", schema = "transitnet")
+@Table(name = "calendar_dates")
 @IdClass(CalendarDatesEntityPK.class)
 public class CalendarDatesEntity {
     private String serviceId;

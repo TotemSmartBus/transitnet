@@ -114,7 +114,6 @@ public class RealtimeService {
         List<Vehicle> vehicles = new ArrayList<>();
         boolean update = false;
         log.info(String.format("get %d vehicles info", feed.getEntityList().size()));
-        Map<String, Vehicle> newMap = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
         for (FeedEntity entity : feed.getEntityList()) {
             if (entity.hasIsDeleted() && entity.getIsDeleted()) {
                 String vehicleId = _vehicleIdsByEntityIds.get(entity.getId());
@@ -149,11 +148,10 @@ public class RealtimeService {
             v.setLon(position.getLongitude());
             v.setBearing(position.getBearing());
             v.setId(vehicleId);
-            v.setLastUpdate(currentTime);
             // TODO: 未知字段
+            v.setLastUpdate(currentTime);
             v.setNextStop("");
             v.setAimedArrivalTime(0L);
-
             v.setRecordedTime(vehicle.getTimestamp());
             // 计算速度
             if (position.getSpeed() == 0.0) {
@@ -174,27 +172,21 @@ public class RealtimeService {
             } else {
                 v.setSpeed(position.getSpeed());
             }
-
-            Vehicle existing = _vehiclesById.get(vehicleId);
-            if (existing == null || existing.getLat() != v.getLat()
-                    || existing.getLon() != v.getLon()) {
-                newMap.put(vehicleId, v);
-                update = true;
-            } else {
-                v.setLastUpdate(existing.getLastUpdate());
-            }
             vehicles.add(v);
         }
-        if (update) {
-            log.info("vehicles updating: " + vehicles.size());
-            long t0 = System.currentTimeMillis();
-            updateTimeSerial(vehicles);
-            indexService.update(vehicles);
-            storeService.store(vehicles);
-            long t1 = System.currentTimeMillis();
-            log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
-        }
-        _vehiclesById = newMap;
+        log.info("vehicles updating: " + vehicles.size());
+        long t0 = System.currentTimeMillis();
+        // update latest map
+        _vehiclesById.clear();
+        vehicles.stream().forEach(v -> _vehiclesById.put(v.getId(), v));
+        // update time serial
+        updateTimeSerial(vehicles);
+        // update indexes
+        indexService.update(vehicles);
+        // update database storage
+        storeService.store(vehicles);
+        long t1 = System.currentTimeMillis();
+        log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
         return update;
     }
 

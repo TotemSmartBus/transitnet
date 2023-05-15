@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "split_shape", schema = "transitnet")
+@Table(name = "split_shape")
 @IdClass(SplitShapeEntityPK.class)
 public class SplitShapeEntity {
     private String routeId;
