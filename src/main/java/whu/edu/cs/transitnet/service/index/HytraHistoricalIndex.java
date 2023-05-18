@@ -46,12 +46,16 @@ public class HytraHistoricalIndex {
         String dateKey = dateFormat.format(date);
         String datetimeKey = formatter.format(date);
         String configPath = "/tmp";
+//        String configPath = ""
+//        String configPath = System.getProperty("user.dir");
         long tBeforeConfigGenerate = System.currentTimeMillis();
         try {
             String path = System.getProperty("user.dir");
+            // generateConfig() 就是生成的 LSM-tree 的配置，saveTo() 就是把这个配置写成一个配置文件
             configPath = Generator.generateConfig().saveTo(path, datetimeKey + ".index");
+//            configPath = Generator.generateConfig().saveTo(path, datetimeKey + "_index.txt");
         } catch (IOException e) {
-            log.error("[cron]Error while write config to file:" + configPath, e);
+            log.error("[cron]Error while write config to file: " + configPath, e);
         }
         long tAfterConfigGenerate = System.currentTimeMillis();
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
@@ -62,6 +66,7 @@ public class HytraHistoricalIndex {
         // 3. 写入索引
         long tBeforeConfigWrite = System.currentTimeMillis();
         try {
+            // 传配置文件
             storageManager.config(dateKey, configPath);
         } catch (Exception e) {
             log.error("[cron]Error while read config from file:" + configPath, e);

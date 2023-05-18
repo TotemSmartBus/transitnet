@@ -11,6 +11,7 @@ import whu.edu.cs.transitnet.service.UserKNNService;
 import whu.edu.cs.transitnet.service.index.CubeId;
 
 import javax.annotation.Resource;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -19,10 +20,43 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@MapperScan("whu.edu.cs.transitnet.*")
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
+//@MapperScan("whu.edu.cs.transitnet.*")
 public class randomTest {
+
+    @Test
+    public void iteratorTest() {
+        ArrayList<Integer> arrayList = new ArrayList<>();
+        arrayList.add(1);
+        arrayList.add(2);
+        arrayList.add(3);
+
+        Iterator<Integer> iterator = arrayList.iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
+    }
+
+//    @Test
+//    public void linkedHashMapTest() {
+//        LinkedHashMap<Integer, Integer> linkedHashMap = new LinkedHashMap<>();
+//        linkedHashMap.put(0, 1);
+//        linkedHashMap.put(3, 2);
+//        linkedHashMap.put(4, 3);
+//        linkedHashMap.put(6, 4);
+//        linkedHashMap.put(5, 5);
+//
+//        HashMap<Integer, Integer> hashMap = new HashMap<>();
+//        hashMap.put(0, 1);
+//        hashMap.put(3, 2);
+//        hashMap.put(4, 3);
+//        hashMap.put(6, 4);
+//        hashMap.put(5, 5);
+//
+//        System.out.println(linkedHashMap.keySet().stream().limit(3).collect(Collectors.toList()));
+//        System.out.println(hashMap.keySet().stream().limit(3).collect(Collectors.toList()));
+//    }
 
 //    @Autowired
 //    UserKNNService userKNNService;
@@ -69,19 +103,19 @@ public class randomTest {
 //        System.out.println(list1);
 //    }
 
-    @Test
-    public void timeCompareTest() {
-        Time a = Time.valueOf("08:02:00");
-        Time b = Time.valueOf("21:00:00");
-        Long atol = a.getTime();
-
-        Date d = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        d.setTime(atol - 25 * 60 * 60 * 1000);
-        String str = sdf.format(d);
-        System.out.println(Time.valueOf(str));
-        System.out.println(a.after(b));
-    }
+//    @Test
+//    public void timeCompareTest() {
+//        Time a = Time.valueOf("08:02:00");
+//        Time b = Time.valueOf("21:00:00");
+//        Long atol = a.getTime();
+//
+//        Date d = new Date();
+//        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+//        d.setTime(atol - 25 * 60 * 60 * 1000);
+//        String str = sdf.format(d);
+//        System.out.println(Time.valueOf(str));
+//        System.out.println(a.after(b));
+//    }
 
 //    @Test
 //    public void listAddAllTest() {

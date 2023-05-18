@@ -293,7 +293,7 @@ public class ShapeIndex {
 
 
     // resolution = 6 时创建 txt 文件的操作
-    @PostConstruct
+//    @PostConstruct
     public void init() {
 
         int resolution = hytraEngineManager.getParams().getResolution();
@@ -478,7 +478,9 @@ public class ShapeIndex {
         HashSet<ShapeId> shapeCandidates = new HashSet<>();
         // 1. 过滤所有有交集的shape
         for (GridId grid : userPassedGrids) {
-            shapeCandidates.addAll(gridShapeList.get(grid));
+            if (gridShapeList.keySet().contains(grid)) {
+                shapeCandidates.addAll(gridShapeList.get(grid));
+            }
         }
         // 2. 返回相似度最大的前k的shapeId
 //        int theta = 5;
@@ -505,7 +507,7 @@ public class ShapeIndex {
 
         System.out.println("=============================");
 
-        System.out.println(shapeGridList.get(userShapeId));
+        System.out.println("[SHAPEINDEX] " + shapeGridList.get(userShapeId));
         System.out.println("[SHAPEINDEX] " + shapeSimMap);
         System.out.println("[SHAPEINDEX] " + topShapes);
         if (topShapes.size() >= k) {

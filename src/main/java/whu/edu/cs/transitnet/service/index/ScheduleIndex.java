@@ -34,7 +34,7 @@ public class ScheduleIndex {
         tripStartEndList = new HashMap<>();
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
 
         File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");

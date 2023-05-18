@@ -8,26 +8,29 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
 import whu.edu.cs.transitnet.realtime.Vehicle;
+import whu.edu.cs.transitnet.service.UserKNNExpService;
 import whu.edu.cs.transitnet.service.UserKNNService;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @MapperScan("whu.edu.cs.transitnet.*")
-public class KNNTest {
+public class KNNExpTest {
 
     @Autowired
-    UserKNNService userKNNService;
+    UserKNNExpService userKNNExpService;
 
     @Autowired
     ShapeIndex shapeIndex;
 
     @Test
-    public void kNNTest() throws InterruptedException {
-        int k = 30;
-        userKNNService.getTopKTrips(k);
+    public void kNNExpTest() throws InterruptedException, IOException {
+        int k = 20;
+        userKNNExpService.getTopKTrips(k);
     }
 
 }

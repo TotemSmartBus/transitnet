@@ -41,12 +41,12 @@ public class RealtimeService {
 
     private final Map<String, Vehicle> _vehiclesById = new ConcurrentHashMap<>();
 
-    public Map<TripId, ArrayList<Vehicle>> get_vehiclesByTripId() {
+    public ConcurrentHashMap<TripId, ArrayList<Vehicle>> get_vehiclesByTripId() {
         return _vehiclesByTripId;
     }
 
-    // 获取所有轨迹信息
-    private final Map<TripId, ArrayList<Vehicle>> _vehiclesByTripId = new HashMap<>();
+    // 获取所有轨迹信息；有序
+    private final ConcurrentHashMap<TripId, ArrayList<Vehicle>> _vehiclesByTripId = new ConcurrentHashMap<>();
 
     // 位置信息时间序列
     private final Queue<List<Vehicle>> timeSerial = new LinkedList<>();
@@ -199,6 +199,7 @@ public class RealtimeService {
             log.info("vehicles updating: " + vehicles.size());
             long t0 = System.currentTimeMillis();
             updateTimeSerial(vehicles);
+            // 在这里更新将要写入底层 LSM-tree 的数据
             indexService.update(vehicles);
             storeService.store(vehicles);
             long t1 = System.currentTimeMillis();
@@ -209,7 +210,7 @@ public class RealtimeService {
     }
 
     private void updateTimeSerial(List<Vehicle> vehicles) {
-        if (timeSerial.size() > 10) {
+        if (timeSerial.size() > 50) {
             timeSerial.poll();
         }
         timeSerial.offer(vehicles);
