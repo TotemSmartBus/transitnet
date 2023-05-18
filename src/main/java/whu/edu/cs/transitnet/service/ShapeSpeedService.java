@@ -21,10 +21,6 @@ public class ShapeSpeedService {
     @Autowired
     SplitShapeDao splitShapeDao;
 
-    public List<SplitShapeSpeedEntity> getAllSplitShapeSpeed() {
-        return splitShapeSpeedDao.findAll();
-    }
-
     public List<SplitShapeSpeedEntity> getAllSplitShapeSpeedByShapeId(String shapeId) {
         return splitShapeSpeedDao.findAllByShapeId(shapeId);
     }

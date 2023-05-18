@@ -1,0 +1,22 @@
+name: Java CI
+# 触发事件，此处为PR
+on: [pull_request]
+# 一个workflow可包含多个jobs，每个jobs运行在不同的虚拟机，可根据需求设置并行或者串行运行
+jobs:
+  # 该job的名称
+  build:
+    # 在ubuntu下运行
+    runs-on: ubuntu-latest
+    # 一个job可以有多个step（步骤），每个step按顺序执行，每个step可以运行一个action（动作）。
+    steps:
+      - uses: actions/checkout@v2
+      # 步骤名称
+      - name: Set up JDK 11
+        # 使用哪个action，可以在MarketPlace上查找需要的action
+        uses: actions/setup-java@v2
+        # 指定action的参数
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Build with Maven
+        run: ./mvnw build

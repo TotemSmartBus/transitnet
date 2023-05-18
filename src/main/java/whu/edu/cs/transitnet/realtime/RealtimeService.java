@@ -1,6 +1,8 @@
 package whu.edu.cs.transitnet.realtime;
 
 import com.google.transit.realtime.GtfsRealtime.*;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.gavaghan.geodesy.Ellipsoid;
 import org.gavaghan.geodesy.GeodeticCalculator;
@@ -35,11 +37,13 @@ public class RealtimeService {
 
     @Value("${transitnet.realtime.timezone}")
     private int timezone = 8;
+    @Autowired
+    private MeterRegistry meterRegistry;
     private ScheduledExecutorService _executor;
 
     private final Map<String, String> _vehicleIdsByEntityIds = new HashMap<>();
 
-    private final Map<String, Vehicle> _vehiclesById = new ConcurrentHashMap<>();
+    private Map<String, Vehicle> _vehiclesById;
 
     public ConcurrentHashMap<TripId, ArrayList<Vehicle>> get_vehiclesByTripId() {
         return _vehiclesByTripId;
@@ -49,10 +53,13 @@ public class RealtimeService {
     private final ConcurrentHashMap<TripId, ArrayList<Vehicle>> _vehiclesByTripId = new ConcurrentHashMap<>();
 
     // 位置信息时间序列
-    private final Queue<List<Vehicle>> timeSerial = new LinkedList<>();
+    private final LinkedList<List<Vehicle>> timeSerial = new LinkedList<>();
 
     private final RefreshTask _refreshTask = new RefreshTask();
 
+    /**
+     * GTFS 采样的时间间隔，由于原始数据使用了 30s 间隔，这里也用 30s
+     **/
     private final int _refreshInterval = 30;
 
     private boolean _dynamicRefreshInterval = true;
@@ -70,20 +77,22 @@ public class RealtimeService {
 
     @PostConstruct
     public void start() {
+        _vehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
         _executor = Executors.newSingleThreadScheduledExecutor();
         _executor.schedule(_refreshTask, 0, TimeUnit.SECONDS);
         log.info("executor is running...");
     }
 
     public List<Vehicle> getAllVehicles() {
-        return new ArrayList<>(_vehiclesById.values());
+        return new ArrayList<>(timeSerial.getLast());
     }
 
     public long getCurrentTimestamp() {
-        TimeZone zone = TimeZone.getTimeZone(String.format("GMT%s%d:00", timezone>=0?"+":"", timezone));
+        TimeZone zone = TimeZone.getTimeZone(String.format("GMT%s%d:00", timezone >= 0 ? "+" : "", timezone));
         Calendar can = Calendar.getInstance(zone);
         return can.getTimeInMillis();
     }
+
     private void refresh() throws IOException {
 
         log.info("refreshing vehicle positions");
@@ -120,7 +129,7 @@ public class RealtimeService {
                     log.warn("unknown entity id in deletion request: " + entity.getId());
                     continue;
                 }
-                _vehiclesById.remove(vehicleId);
+                log.debug("Vehicle {} ends trip", vehicleId);
                 continue;
             }
             if (!entity.hasVehicle()) {
@@ -147,11 +156,10 @@ public class RealtimeService {
             v.setLon(position.getLongitude());
             v.setBearing(position.getBearing());
             v.setId(vehicleId);
-            v.setLastUpdate(currentTime);
             // TODO: 未知字段
+            v.setLastUpdate(currentTime);
             v.setNextStop("");
             v.setAimedArrivalTime(0L);
-
             v.setRecordedTime(vehicle.getTimestamp());
 
             ArrayList<Vehicle> vs = new ArrayList<>();
@@ -182,30 +190,21 @@ public class RealtimeService {
             } else {
                 v.setSpeed(position.getSpeed());
             }
-
-            Vehicle existing = _vehiclesById.get(vehicleId);
-            if (existing == null || existing.getLat() != v.getLat()
-                    || existing.getLon() != v.getLon()) {
-                _vehiclesById.put(vehicleId, v);
-                update = true;
-            } else {
-                v.setLastUpdate(existing.getLastUpdate());
-            }
-
             vehicles.add(v);
         }
-
-        if (update) {
-            log.info("vehicles updating: " + vehicles.size());
-            long t0 = System.currentTimeMillis();
-            updateTimeSerial(vehicles);
-            // 在这里更新将要写入底层 LSM-tree 的数据
-            indexService.update(vehicles);
-            storeService.store(vehicles);
-            long t1 = System.currentTimeMillis();
-            log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
-        }
-
+        log.info("vehicles updating: " + vehicles.size());
+        long t0 = System.currentTimeMillis();
+        // update latest map
+        _vehiclesById.clear();
+        vehicles.stream().forEach(v -> _vehiclesById.put(v.getId(), v));
+        // update time serial
+        updateTimeSerial(vehicles);
+        // update indexes
+        indexService.update(vehicles);
+        // update database storage
+        storeService.store(vehicles);
+        long t1 = System.currentTimeMillis();
+        log.info("vehicles updated, total time cost " + (t1 - t0) + "ms");
         return update;
     }
 

@@ -32,10 +32,6 @@ public class RealTimeDataService {
     Integer firstIndex = 0;
     Integer tempIndex = 0;
 
-    public RealTimeDataEntity getRealTimeDataEntityByVehicleIdAndRecordedTime(String vehicleId, String recordedTime) {
-        return realTimeDataDao.findAllByVehicleIdAndRecordedTime(vehicleId, recordedTime);
-    }
-
     public List<RealTimeDataVo> getRealTimeDataVoLastByRecordedTime(Timestamp curTime) {
         Timestamp end = curTime;
         Timestamp start = new Timestamp(curTime.getTime() - LASTTIMESPAN);

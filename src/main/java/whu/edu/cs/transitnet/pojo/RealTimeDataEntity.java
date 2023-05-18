@@ -6,7 +6,7 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "real_time_data_temp", schema = "transitnet")
+@Table(name = "real_time_data_temp")
 @IdClass(RealTimeDataEntityPK.class)
 public class RealTimeDataEntity extends RealTimePointEntity {
     private String routeId;
