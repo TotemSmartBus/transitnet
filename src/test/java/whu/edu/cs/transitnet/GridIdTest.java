@@ -1,21 +1,6 @@
 package whu.edu.cs.transitnet;
 
-<<<<<<< HEAD
-import org.springframework.beans.factory.annotation.Autowired;
-import whu.edu.cs.transitnet.service.index.ShapeIndex;
-
-=======
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import whu.edu.cs.transitnet.service.index.ShapeIndex;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
->>>>>>> ee561d8 (construct shape-grid index and grid-shape index)
 public class GridIdTest {
-    @Autowired
-    ShapeIndex shapeIndex;
 
 //    @Test
 //    public void gridIdTest() {
