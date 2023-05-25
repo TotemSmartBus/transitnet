@@ -1,6 +1,7 @@
 package whu.edu.cs.transitnet.service.index;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.StopTimesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
@@ -14,6 +15,10 @@ import java.util.*;
 
 @Component
 public class ScheduleIndex {
+
+    @Value("${transitnet.gridindex.enable}")
+    private boolean indexEnable;
+
     @Autowired
     StopTimesDao stopTimesDao;
 
@@ -34,8 +39,13 @@ public class ScheduleIndex {
         tripStartEndList = new HashMap<>();
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
+
+        if(!indexEnable) {
+            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
+            return;
+        }
 
         File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");
 

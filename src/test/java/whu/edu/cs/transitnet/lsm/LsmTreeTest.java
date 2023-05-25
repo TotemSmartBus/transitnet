@@ -22,6 +22,7 @@ public class LsmTreeTest {
     // 简单的读写测试
     @Test
     public void WriteAndReadTest() throws Exception {
+        String date = "";
         String key = "123";
         try {
             manager.put(key, "123");
