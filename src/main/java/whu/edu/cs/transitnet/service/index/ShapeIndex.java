@@ -62,6 +62,7 @@ public class ShapeIndex {
             System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
             return;
         }
+
         int resolution = hytraEngineManager.getParams().getResolution();
         File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + ".txt");
         File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution + ".txt");

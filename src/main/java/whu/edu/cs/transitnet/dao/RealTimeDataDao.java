@@ -37,6 +37,10 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "WHERE route_id=?1 AND recorded_time >= ?2 AND recorded_time < ?3", nativeQuery = true)
     List<String> findAllTripsByDate(String routeId, String startTime, String endTime);
 
+    @Query(value = "SELECT DISTINCT trip_id FROM real_time_data_temp " +
+            "WHERE recorded_time >= ?1 AND recorded_time < ?2", nativeQuery = true)
+    List<String> findAllTripsOnlyByDate(String startTime, String endTime);
+
     @Query(value = "SELECT * " +
             "FROM real_time_data_temp " +
             "WHERE route_id = ?1 AND recorded_time >= ?2 AND recorded_time < ?3 ORDER BY recorded_time", nativeQuery = true)
