@@ -14,7 +14,6 @@ import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -75,7 +74,7 @@ public class RealtimeService {
     @Autowired
     GeodeticCalculator geodeticCalculator;
 
-    @PostConstruct
+//    @PostConstruct
     public void start() {
         _vehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
         _executor = Executors.newSingleThreadScheduledExecutor();

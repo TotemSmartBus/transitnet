@@ -22,7 +22,7 @@ public class HytraSerivce {
 
     @Bean
     // 进行 LsmTreeTest 测试时注释掉下面这句
-    @ConditionalOnProperty(value = "${transitnet.index.enable}", havingValue = "true")
+//    @ConditionalOnProperty(value = "${transitnet.index.enable}", havingValue = "true")
     public SocketStorageManager storageManager() {
         try {
             Socket socket = new Socket(host, port);
