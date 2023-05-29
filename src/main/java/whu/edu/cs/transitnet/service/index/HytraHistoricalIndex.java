@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @Service
 @EnableScheduling
@@ -62,7 +63,7 @@ public class HytraHistoricalIndex {
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
 
         long tBeforeIndexGenerate = System.currentTimeMillis();
-        HashMap<String, Integer> indexMap = Generator.generateKV();
+        HashMap<String, HashSet<Integer>> indexMap = Generator.generateKV();
         long tAfterIndexGenerate = System.currentTimeMillis();
         log.info("[cron]Generate Index for {}s", String.format("%.2f", (tAfterIndexGenerate - tBeforeIndexGenerate) / 1000.0));
 
@@ -89,10 +90,12 @@ public class HytraHistoricalIndex {
 
         // 5. 写入数据
         indexMap.forEach((key, value) -> {
-            try {
-                storageManager.put(key, String.valueOf(value));
-            } catch (Exception e) {
-                log.error(String.format("[cron]Error while write index for [%s, %d]", key, value), e);
+            for(int i : value) {
+                try{
+                    storageManager.put(key, String.valueOf(i));
+                } catch (Exception e) {
+                    log.error(String.format("[cron]Error while write index for [%s, %d]", key, i), e);
+                }
             }
         });
         long tAfterIndexWrite = System.currentTimeMillis();

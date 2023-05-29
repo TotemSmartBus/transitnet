@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @Component
 public class HistoricalIndexBuildConfig {
@@ -58,20 +59,23 @@ public class HistoricalIndexBuildConfig {
         long tAfterConfigGenerate = System.currentTimeMillis();
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
 
+
+//        long tBeforeConfigWrite = System.currentTimeMillis();
+//        try {
+//            // 传配置文件
+//            socketStorageManager.config(date, configPath);
+//        } catch (Exception e) {
+//            log.error("[cron]Error while read config from file:" + configPath, e);
+//        }
+//        long tAfterConfigWrite = System.currentTimeMillis();
+//        log.info("[cron]Write config for {}s", String.format("%.2f", (tAfterConfigWrite - tBeforeConfigWrite) / 1000.0));
+
+        // 3. 生成要插入的 KV
         long tBeforeIndexGenerate = System.currentTimeMillis();
-        HashMap<String, Integer> indexMap = Generator.generateKV();
+        // 更改了 indexMap 的定义
+        HashMap<String, HashSet<Integer>> indexMap = Generator.generateKV();
         long tAfterIndexGenerate = System.currentTimeMillis();
         log.info("[cron]Generate Index for {}s", String.format("%.2f", (tAfterIndexGenerate - tBeforeIndexGenerate) / 1000.0));
-
-        long tBeforeConfigWrite = System.currentTimeMillis();
-        try {
-            // 传配置文件
-            socketStorageManager.config(date, configPath);
-        } catch (Exception e) {
-            log.error("[cron]Error while read config from file:" + configPath, e);
-        }
-        long tAfterConfigWrite = System.currentTimeMillis();
-        log.info("[cron]Write config for {}s", String.format("%.2f", (tAfterConfigWrite - tBeforeConfigWrite) / 1000.0));
 
         long tBeforeIndexWrite = System.currentTimeMillis();
         log.info(String.format("[cron]Writing %d indexes", indexMap.size()));
@@ -86,16 +90,18 @@ public class HistoricalIndexBuildConfig {
 
         // 5. 写入数据
         indexMap.forEach((key, value) -> {
-            try {
-                socketStorageManager.put(key, String.valueOf(value));
-            } catch (Exception e) {
-                log.error(String.format("[cron]Error while write index for [%s, %d]", key, value), e);
-            }
+                for(int i : value) {
+                    try{
+                        socketStorageManager.put(key, String.valueOf(i));
+                    } catch (Exception e) {
+                        log.error(String.format("[cron]Error while write index for [%s, %d]", key, i), e);
+                    }
+                }
         });
         long tAfterIndexWrite = System.currentTimeMillis();
 
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
-        log.info("[cron]Total time is {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
-        System.out.printf("[cron]Total time is %.2fs", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
+//        log.info("[cron]Total time is {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
+//        System.out.printf("[cron]Total time is %.2fs", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
     }
 }
