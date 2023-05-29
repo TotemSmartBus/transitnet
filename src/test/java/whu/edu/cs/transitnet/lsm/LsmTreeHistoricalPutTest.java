@@ -19,6 +19,6 @@ public class LsmTreeHistoricalPutTest {
 
     @Test
     public void historicalCTListPutTest() {
-
+        System.out.println("3");
     }
 }
