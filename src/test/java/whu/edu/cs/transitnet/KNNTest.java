@@ -6,12 +6,8 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import whu.edu.cs.transitnet.realtime.RealtimeService;
-import whu.edu.cs.transitnet.realtime.Vehicle;
-import whu.edu.cs.transitnet.service.UserKNNService;
+import whu.edu.cs.transitnet.service.RealtimeKNNService;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
-
-import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -19,7 +15,7 @@ import java.util.List;
 public class KNNTest {
 
     @Autowired
-    UserKNNService userKNNService;
+    RealtimeKNNService realtimeKNNService;
 
     @Autowired
     ShapeIndex shapeIndex;
@@ -27,7 +23,7 @@ public class KNNTest {
     @Test
     public void kNNTest() throws InterruptedException {
         int k = 30;
-        userKNNService.getTopKTrips(k);
+        realtimeKNNService.getTopKTrips(k);
     }
 
 }

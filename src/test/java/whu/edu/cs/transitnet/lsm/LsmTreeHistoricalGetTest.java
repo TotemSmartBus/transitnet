@@ -30,11 +30,17 @@ public class LsmTreeHistoricalGetTest {
         HashMap<CubeId, ArrayList<TripId>> CTList = historicalTripIndex.getCubeTripList();
 
         CubeId[] keys = CTList.keySet().toArray(new CubeId[0]); //将map里的key值取出，并放进数组里
+
         int random = (int) (Math.random()*(keys.length)); //生成随机数
 
-        CubeId randomKey = new CubeId("93119");
+        CubeId randomKey = new CubeId("76672");
 //        CubeId randomKey = keys[random]; //随机取key值
-        String key = "2023-05-20@93119@0";
+        String key = "2023-05-20@76672@0";
+
+
+//        manager.put(key, "111");
+//        manager.put(key, "222");
+//        manager.put(key, "333");
 
         String result2 = manager.get(key);
         String[] results = result2.split(",");

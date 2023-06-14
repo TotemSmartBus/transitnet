@@ -6,15 +6,10 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import whu.edu.cs.transitnet.realtime.RealtimeService;
-import whu.edu.cs.transitnet.realtime.Vehicle;
-import whu.edu.cs.transitnet.service.UserKNNExpService;
-import whu.edu.cs.transitnet.service.UserKNNService;
+import whu.edu.cs.transitnet.service.RealtimeKNNExpService;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -22,7 +17,7 @@ import java.util.List;
 public class KNNExpTest {
 
     @Autowired
-    UserKNNExpService userKNNExpService;
+    RealtimeKNNExpService realtimeKNNExpService;
 
     @Autowired
     ShapeIndex shapeIndex;
@@ -30,7 +25,7 @@ public class KNNExpTest {
     @Test
     public void kNNExpTest() throws InterruptedException, IOException {
         int k = 20;
-        userKNNExpService.getTopKTrips(k);
+        realtimeKNNExpService.getTopKTrips(k);
     }
 
 }

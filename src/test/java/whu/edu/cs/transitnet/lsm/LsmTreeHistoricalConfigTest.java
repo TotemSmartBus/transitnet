@@ -16,7 +16,7 @@ public class LsmTreeHistoricalConfigTest {
     HistoricalIndexBuildConfig historicalIndexBuildConfig;
 
     @Test
-    public void configTest() {
+    public void configTest() throws Exception {
         historicalIndexBuildConfig.buildHistoricalIndexConfig();
     }
 }

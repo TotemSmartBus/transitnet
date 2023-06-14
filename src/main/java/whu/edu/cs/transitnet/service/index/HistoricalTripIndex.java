@@ -43,7 +43,7 @@ public class HistoricalTripIndex {
 
     @PostConstruct
     public void init() throws ParseException {
-
+//
 //        if(!indexEnable) {
 //            System.out.println("[HISTORICALTRIPINDEX] Index is not enabled, skipped.");
 //            return;
@@ -53,9 +53,9 @@ public class HistoricalTripIndex {
         String endTime = "2023-05-20 23:59:59";
         String date = getDateFromTime(startTime);
 
-        tripCubeListSerialization(startTime, endTime);
-        cubeTripListSerialization(date);
-        hashcodeTripListSerialization(date);
+        tripCubeListSerializationAndDeserilization(startTime, endTime);
+        cubeTripListSerializationAndDeserilization(date);
+        hashcodeTripListSerializationAndDeserilization(date);
     }
 
     public void getTripsByDate(String startTime, String endTime) throws ParseException {
@@ -93,7 +93,7 @@ public class HistoricalTripIndex {
     }
 
 
-    public void tripCubeListSerialization(String startTime, String endTime) throws ParseException {
+    public void tripCubeListSerializationAndDeserilization(String startTime, String endTime) throws ParseException {
 
         String date = getDateFromTime(startTime);
 
@@ -185,7 +185,7 @@ public class HistoricalTripIndex {
 
     }
 
-    public void cubeTripListSerialization(String date) throws ParseException {
+    public void cubeTripListSerializationAndDeserilization(String date) throws ParseException {
 
 
         File dateCubeTripFile = new File("./src/main/" + date + " CTList.txt");
@@ -312,7 +312,7 @@ public class HistoricalTripIndex {
         System.out.println("total number: " + n + "; ratio: " + n/n);
     }
 
-    public void hashcodeTripListSerialization(String date) throws ParseException {
+    public void hashcodeTripListSerializationAndDeserilization(String date) throws ParseException {
 
         File hashcodeTripFile = new File("./src/main/" + date + " hashcodeTripList.txt");
 

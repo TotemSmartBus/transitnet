@@ -1,11 +1,7 @@
 package whu.edu.cs.transitnet.service;
 
-import com.graphhopper.Trip;
-import edu.whu.hyk.model.Point;
-import org.locationtech.jts.triangulate.tri.Tri;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import whu.edu.cs.transitnet.TransitnetApplication;
 import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
@@ -19,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
-public class UserKNNService {
+public class RealtimeKNNService {
 
     @Autowired
     RealtimeService realtimeService;

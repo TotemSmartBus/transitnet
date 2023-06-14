@@ -4,15 +4,23 @@ import org.junit.Test;
 
 public class offsetTest {
 
-    Integer resolution = 6;
+    Integer resolution = 2;
 
     @Test
     public void offsetFuncTest() {
-        int a = getOffset(18, 4);
-        System.out.println(a);
+        int size = (int) (Math.pow(8, resolution + 1) - 1) / 7;
+        int a = getOffset(8, 0);
+        System.out.println("size: " + size);
+        System.out.println("offset: " + a);
         int[] b = offsetToZandL(a);
-        System.out.println(b[0]);
-        System.out.println(b[1]);
+        System.out.println("zorder: " + b[0]);
+        System.out.println("level: " + b[1]);
+
+
+        System.out.println("--------parentOffset--------");
+        for (int parentOffset : getAncestorOffsets(a)) {
+            System.out.println(parentOffset);
+        }
     }
 
     public int getOffset(int zorder, int level) {
@@ -37,5 +45,16 @@ public class offsetTest {
 
         int z = (int)Math.pow(8.0, (double)(resolution - level)) - (reverse + 1);
         return new int[]{z, level};
+    }
+
+    public int[] getAncestorOffsets(int offset) {
+        int[] offsets = new int[resolution];
+        for (int i = 1; i <= resolution; i++) {
+            // i = 1; i - 1 = 0; offset / 8
+            // i = 2; i - 1 = 1; offset / 64
+            // offsets: 0, 1, ..., resolution - 1 =>
+            offsets[i - 1] = getOffset(offset / (int) Math.pow(8, i), i);
+        }
+        return offsets;
     }
 }
