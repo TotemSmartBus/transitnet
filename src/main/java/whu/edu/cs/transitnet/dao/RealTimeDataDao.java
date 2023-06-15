@@ -3,7 +3,7 @@ package whu.edu.cs.transitnet.dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
-import whu.edu.cs.transitnet.vo.RealTimePointEntity;
+import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 
 import java.util.List;
 
@@ -19,12 +19,12 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "WHERE recorded_time = ?1", nativeQuery = true)
     List<String> findAllVehicleIdByRecordedTime(String recordedTime);
 
-    @Query(value = "SELECT new whu.edu.cs.transitnet.vo.RealTimePointEntity(rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
+    @Query(value = "SELECT new whu.edu.cs.transitnet.pojo.RealTimePointEntity(rte.tripId, rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
             "FROM RealTimeDataEntity rte " +
             "WHERE rte.vehicleId = ?1 AND rte.recordedTime >= ?2 AND rte.recordedTime < ?3 ORDER BY rte.recordedTime")
     List<RealTimePointEntity> findAllPointsByVehicleIdByTimeSpan(String vehicleId, String startTime, String endTime);
 
-    @Query(value = "SELECT new whu.edu.cs.transitnet.vo.RealTimePointEntity(rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
+    @Query(value = "SELECT new whu.edu.cs.transitnet.pojo.RealTimePointEntity(rte.tripId, rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
             "FROM RealTimeDataEntity  rte " +
             "WHERE rte.recordedTime >= ?1 AND rte.recordedTime < ?2 ORDER BY rte.recordedTime")
     List<RealTimePointEntity> findAllVehiclePointsByTimeSpan(String startTime, String endTime);
@@ -50,6 +50,11 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "FROM real_time_data_temp " +
             "WHERE trip_id = ?1 AND recorded_time >= ?2 AND recorded_time < ?3 ORDER BY recorded_time", nativeQuery = true)
     List<RealTimeDataEntity> findAllPointsByTripIdByTimeSpan(String tripId, String startTime, String endTime);
+
+    @Query(value = "SELECT new whu.edu.cs.transitnet.pojo.RealTimePointEntity(rte.tripId, rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
+            "FROM RealTimeDataEntity rte " +
+            "WHERE rte.tripId = ?1 AND rte.recordedTime >= ?2 AND rte.recordedTime < ?3 ORDER BY rte.recordedTime")
+    List<RealTimePointEntity> findAllSimplePointsByTripIdByTimeSpan(String tripId, String startTime, String endTime);
 
     <S extends RealTimeDataEntity> List<S> saveAll(Iterable<S> list);
 }

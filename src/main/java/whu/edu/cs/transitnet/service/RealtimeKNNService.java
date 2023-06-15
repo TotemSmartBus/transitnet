@@ -81,21 +81,6 @@ public class RealtimeKNNService {
     // 模拟用户轨迹
 
     public void getUserTra() throws InterruptedException {
-//        Thread.sleep(900000); // 50 * 30 * 1000 ms
-//        vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
-
-//        List<TripId> top10Keys = vehiclesByTripId.keySet().stream().limit(10).collect(Collectors.toList());
-//        for (TripId tripId : top10Keys) {
-//            if (vehiclesByTripId.get(tripId).size() >= 30) {
-//                userTripId = tripId;
-//                break;
-//            }
-//        }
-//        Random random = new Random();
-//        int randomIndex = random.nextInt(top10Keys.size());
-//        TripId randomKey = top10Keys.get(randomIndex);
-
-
 
         TripId[] keys = vehiclesByTripId.keySet().toArray(new TripId[0]); //将map里的key值取出，并放进数组里
         int random = (int) (Math.random() * (keys.length)); //生成随机数
@@ -105,80 +90,13 @@ public class RealtimeKNNService {
         System.out.println("[USERKNNSERVICE] randomKey: " + randomKey);   //输出随机的key值
 //
         userTripId = randomKey;
-//        userTripId = new TripId("35672205-BPPB3-BP_B3-Weekday-02-SDon");
-
 
         userVehicleList = vehiclesByTripId.get(userTripId);
-//        ArrayList<Vehicle> vehicles = vehiclesByTripId.get(userTripId);
-
-//        System.out.println(Arrays.asList(keys).contains("[USERKNNSERVICE] if vehicle set contains usertripid: " + new TripId("QV_B3-Sunday-044200_Q46_601")));
-//        ArrayList<Vehicle> vehicles = vehiclesByTripId.get(new TripId("QV_B3-Sunday-044200_Q46_601"));
-
-
-//        ArrayList<String> times = new ArrayList<>();
-//        ArrayList<GridId> grids = new ArrayList<>();
-//        ArrayList<CubeId> cubes = new ArrayList<>();
-//
-//        Date d = new Date();
-//        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-//        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-//
-//
-//        for (Vehicle vehicle : userVehicleList) {
-//            GridId gridId = encodeService.getGridID(vehicle.getLat(), vehicle.getLon());
-//            grids.add(gridId);
-//            if(userGridList.isEmpty() || userGridList.lastIndexOf(gridId) != (userGridList.size() - 1)) {
-//                userGridList.add(gridId);
-//            }
-//            CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime());
-//            cubes.add(cubeId);
-//            if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
-//                userCubeList.add(cubeId);
-//            }
-//
-//            d.setTime(vehicle.getRecordedTime() * 1000);
-//            String date_hour_min_sec  = sdf.format(d);
-//
-//            times.add(date_hour_min_sec);
-////            String[] hour_min_sec = date_hour_min_sec.split(":");   // 取的是时分秒
-////            double t = (double)(Integer.parseInt(hour_min_sec[0]) * 3600 + Integer.parseInt(hour_min_sec[1]) * 60 + Integer.parseInt(hour_min_sec[2])); // 转化成秒
-////            times.add(t);
-//        }
-//
-//        userStartTime = Time.valueOf(times.get(0));
-////        userEndTime = Time.valueOf(times.get(times.size() - 1));
-//        userEndTimes.add(Time.valueOf(times.get(9)));
-//        userEndTimes.add(Time.valueOf(times.get(19)));
-//        userEndTimes.add(Time.valueOf(times.get(29)));
-//        userEndTimes.add(Time.valueOf(times.get(39)));
-//        userEndTimes.add(Time.valueOf(times.get(times.size() - 1)));
 
 
         System.out.println("[USERKNNSERVICE] userId(TripId): " + userTripId);
         System.out.println("[USERKNNSERVICE] length of user vehicle list: " + userVehicleList.size());
-//        System.out.println("[USERKNNSERVICE] times: " + times);
-//        System.out.println("[USERKNNSERVICE] grids: " + grids);
-//        System.out.println("[USERKNNSERVICE] userGridList: " + userGridList);
-//        System.out.println("[USERKNNSERVICE] cubes: " + cubes);
-//        System.out.println("[USERKNNSERVICE] userCubeList: " + userCubeList);
     }
-
-    // 先获取Top-k的shape
-//    ArrayList<ShapeIndex.ShapeId> topkShapeList = shapeIndex.getTopKShapes(userGridList, k);
-    // 再获取下面的所有trip
-//    ArrayList<TripId> tripIdList = new ArrayList<>();
-
-    // 获取所有trip
-//    public void getTripList() {
-//        ArrayList<ShapeId> topkShapeList = shapeIndex.getTopKShapes(userGridList, k);
-//
-//        for (ShapeId shapeId : topkShapeList) {
-//            ArrayList<TripId> tripIds = shapeTripList.get(shapeId);
-//            for (TripId tripId : tripIds) {
-//                tripIdList.add(tripId);
-//            }
-//        }
-//    }
 
     // 再根据schedule找到和用户轨迹时间有重叠的trip
 
@@ -259,12 +177,6 @@ public class RealtimeKNNService {
                 // 只取前 length 个值
                 ArrayList<Vehicle> vehicles = new ArrayList<>();
                 vehicles = vehiclesByTripId.get(tripId);
-//                if (vehiclesByTripId.get(tripId).size() >= length) {
-//                    vehicles.addAll(vehiclesByTripId.get(tripId).subList(0, length));
-//                } else {
-//                    vehicles.addAll(vehiclesByTripId.get(tripId));
-//                }
-
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
@@ -272,7 +184,6 @@ public class RealtimeKNNService {
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
-//                    cubeIds.add(cubeId);
                 }
                 tripCubeList.put(tripId, cubeIds);
             }
@@ -282,8 +193,6 @@ public class RealtimeKNNService {
     }
 
     // tripCubeList 和 userCubeList 做相似度查询
-
-//    int theta = 5;
 
     // trip_id - similarity
     HashMap<TripId, Double> tripSimListLOCS = new HashMap<>();
@@ -338,9 +247,6 @@ public class RealtimeKNNService {
             String date_hour_min_sec  = sdf.format(d);
 
             times.add(date_hour_min_sec);
-//            String[] hour_min_sec = date_hour_min_sec.split(":");   // 取的是时分秒
-//            double t = (double)(Integer.parseInt(hour_min_sec[0]) * 3600 + Integer.parseInt(hour_min_sec[1]) * 60 + Integer.parseInt(hour_min_sec[2])); // 转化成秒
-//            times.add(t);
         }
 
         Time userStart = Time.valueOf(times.get(0));
@@ -351,23 +257,11 @@ public class RealtimeKNNService {
         System.out.println("[USERKNNSERVICE] userPartialGridList: " + userPartialGridList);
         System.out.println("[USERKNNSERVICE] cubes: " + cubes);
         System.out.println("[USERKNNSERVICE] userPartialCubeList: " + userPartialCubeList);
-
-
-
-//            ArrayList<GridId> userPartialGridList = new ArrayList<>();
-//            userPartialGridList.addAll(userGridList.subList(0, length));
-//            ArrayList<CubeId> userPartialCubeList = new ArrayList<>();
-//            userPartialCubeList.addAll(userCubeList.subList(0, length));
-//            Time userStart = userStartTime;
-//            Time userEnd = userEndTimes.get((length / 10) - 1);
-//            System.out.println("[USERKNNSERVICE] " + "userPartialGridList: " + userPartialGridList);
-//            System.out.println("[USERKNNSERVICE] " + "userPartialCubeList: " + userPartialCubeList);
         System.out.println("[USERKNNSERVICE] " + "userStartTime: " + userStart);
         System.out.println("[USERKNNSERVICE] " + "userEnd: " + userEnd);
 
 
         Long startTime = System.currentTimeMillis();
-//    public void getTopKTrips(ArrayList<CubeId> userCubeList, HashMap<TripId, ArrayList<CubeId>> tripCubeList, int k) throws InterruptedException {
         getTripIdCubeList(userPartialGridList, userStart, userEnd, length);
 
         Set<TripId> keySet = tripCubeList.keySet();
@@ -391,11 +285,6 @@ public class RealtimeKNNService {
 
 
         }
-
-        // 给 filteredTripList 排序就是最后结果
-//        List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
-//        List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
-//        List<TripId> topTripsERP = tripSimListERP.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
 
         // topk LOCS
         List<TripId> topTripsLOCS = tripSimListLOCS.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
@@ -483,9 +372,6 @@ public class RealtimeKNNService {
             topkTripsERP = topTripsERP;
         }
 
-
-
-
         Long endTime = System.currentTimeMillis();
         System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
 
@@ -513,252 +399,7 @@ public class RealtimeKNNService {
         for (TripId tripId : topkTripsERP) {
             System.out.println("ERP " + tripId + ": " + tripSimListERP.get(tripId) + " " +tripCubeList.get(tripId));
         }
-
-
-//        // 这个for循环导致运行时间非常短，因此还是选择一次运行一个length
-//        // 调整轨迹长度
-//        for(int length = 10; length <= 30; length += 10) {
-//            System.out.println("============================================");
-//            System.out.println("[USERKNNSERVICE] " + "trajectory length: " + length);
-////            ArrayList<Vehicle> userPartialVehicleList = new ArrayList<>();
-//            userPartialVehicleList = new ArrayList<>();
-//            userPartialVehicleList.addAll(userVehicleList.subList(0, length));
-//
-////            ArrayList<GridId> userPartialGridList = new ArrayList<>();
-////            ArrayList<CubeId> userPartialCubeList = new ArrayList<>();
-//            userPartialGridList = new ArrayList<>();
-//            userPartialCubeList = new ArrayList<>();
-//
-////            ArrayList<String> times = new ArrayList<>();
-////            ArrayList<GridId> grids = new ArrayList<>();
-////            ArrayList<CubeId> cubes = new ArrayList<>();
-//            times = new ArrayList<>();
-//            grids = new ArrayList<>();
-//            cubes = new ArrayList<>();
-//
-////            Date d = new Date();
-////            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-//            d = new Date();
-//            sdf = new SimpleDateFormat("HH:mm:ss");
-//            sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-//
-//            for (Vehicle vehicle : userPartialVehicleList) {
-//                GridId gridId = encodeService.getGridID(vehicle.getLat(), vehicle.getLon());
-//                grids.add(gridId);
-//                if(userPartialGridList.isEmpty() || userPartialGridList.lastIndexOf(gridId) != (userPartialGridList.size() - 1)) {
-//                    userPartialGridList.add(gridId);
-//                }
-//                CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime());
-//                cubes.add(cubeId);
-//                if(userPartialCubeList.isEmpty() || userPartialCubeList.lastIndexOf(cubeId) != (userPartialCubeList.size() - 1)) {
-//                    userPartialCubeList.add(cubeId);
-//                }
-//
-//                d.setTime(vehicle.getRecordedTime() * 1000);
-//                String date_hour_min_sec  = sdf.format(d);
-//
-//                times.add(date_hour_min_sec);
-////            String[] hour_min_sec = date_hour_min_sec.split(":");   // 取的是时分秒
-////            double t = (double)(Integer.parseInt(hour_min_sec[0]) * 3600 + Integer.parseInt(hour_min_sec[1]) * 60 + Integer.parseInt(hour_min_sec[2])); // 转化成秒
-////            times.add(t);
-//            }
-//
-////            Time userStart = Time.valueOf(times.get(0));
-////            Time userEnd = Time.valueOf(times.get(times.size() - 1));
-//            userStart = Time.valueOf(times.get(0));
-//            userEnd = Time.valueOf(times.get(times.size() - 1));
-//
-//            System.out.println("[USERKNNSERVICE] times: " + times);
-//            System.out.println("[USERKNNSERVICE] grids: " + grids);
-//            System.out.println("[USERKNNSERVICE] userPartialGridList: " + userPartialGridList);
-//            System.out.println("[USERKNNSERVICE] cubes: " + cubes);
-//            System.out.println("[USERKNNSERVICE] userPartialCubeList: " + userPartialCubeList);
-//
-//
-//
-////            ArrayList<GridId> userPartialGridList = new ArrayList<>();
-////            userPartialGridList.addAll(userGridList.subList(0, length));
-////            ArrayList<CubeId> userPartialCubeList = new ArrayList<>();
-////            userPartialCubeList.addAll(userCubeList.subList(0, length));
-////            Time userStart = userStartTime;
-////            Time userEnd = userEndTimes.get((length / 10) - 1);
-////            System.out.println("[USERKNNSERVICE] " + "userPartialGridList: " + userPartialGridList);
-////            System.out.println("[USERKNNSERVICE] " + "userPartialCubeList: " + userPartialCubeList);
-//            System.out.println("[USERKNNSERVICE] " + "userStartTime: " + userStart);
-//            System.out.println("[USERKNNSERVICE] " + "userEnd: " + userEnd);
-//
-//
-////            Long startTime = System.currentTimeMillis();
-//            startTime = System.currentTimeMillis();
-////    public void getTopKTrips(ArrayList<CubeId> userCubeList, HashMap<TripId, ArrayList<CubeId>> tripCubeList, int k) throws InterruptedException {
-//            getTripIdCubeList(userPartialGridList, userStart, userEnd, length);
-//
-////            Set<TripId> keySet = tripCubeList.keySet();
-//            keySet = tripCubeList.keySet();
-//            for (TripId tripId : keySet) {
-//                double sim = LongestOverlappedCubeSeries(userPartialCubeList, tripCubeList.get(tripId), Integer.MAX_VALUE);
-//                tripSimListLOCS.put(tripId, sim);
-//
-//                List<CubeId> intersection0 = new ArrayList<>(userPartialCubeList);
-//                intersection0.retainAll(tripCubeList.get(tripId));
-//                List<CubeId> intersection1 = intersection0.stream().distinct().collect(Collectors.toList());
-//                tripSimListLOC.put(tripId, intersection1.size());
-//
-//                double sim1 = DynamicTimeWarping(userPartialCubeList, tripCubeList.get(tripId));
-//                tripSimListDTW.put(tripId, sim1);
-//
-//                double sim2 = EditDistanceonRealSequence(userPartialCubeList, tripCubeList.get(tripId));
-//                tripSimListEDR.put(tripId, sim2);
-//
-//                double sim3 = EditDistanceWithRealPenalty(userPartialCubeList, tripCubeList.get(tripId), new CubeId("0"));
-//                tripSimListERP.put(tripId, sim3);
-//
-//
-//            }
-//
-//            // 给 filteredTripList 排序就是最后结果
-////        List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
-////        List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
-////        List<TripId> topTripsERP = tripSimListERP.entrySet().stream().sorted((a, b) -> a.getValue() <= b.getValue() ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
-//
-//            // topk LOCS
-////            List<TripId> topTripsLOCS = tripSimListLOCS.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            topTripsLOCS = tripSimListLOCS.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            Collections.sort(topTripsLOCS, new Comparator<TripId>() {
-//                @Override
-//                public int compare(TripId a, TripId b) { // 从大到小
-//                    Double t = tripSimListLOCS.get(a) - tripSimListLOCS.get(b);
-//                    int flag = -1;
-//                    if (t < 0) flag = 1;
-//                    if (t == 0) flag = 0;
-//                    return flag;
-//                }
-//            });
-////            List<TripId> topkTripsLOCS = new ArrayList<>();
-//            topkTripsLOCS = new ArrayList<>();
-//            if(topTripsLOCS.size() >= k) {
-//                topkTripsLOCS = topTripsLOCS.subList(0, k);
-//            } else {
-//                topkTripsLOCS = topTripsLOCS;
-//            }
-//
-//            // topk LOC
-////            List<TripId> topTripsLOC = tripSimListLOC.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).map(Map.Entry::getKey).collect(Collectors.toList());
-////            List<TripId> topkTripsLOC = new ArrayList<>();
-//            topTripsLOC = tripSimListLOC.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).map(Map.Entry::getKey).collect(Collectors.toList());
-//            topkTripsLOC = new ArrayList<>();
-//            if(topTripsLOC.size() >= k) {
-//                topkTripsLOC = topTripsLOC.subList(0, k);
-//            } else {
-//                topkTripsLOC = topTripsLOC;
-//            }
-//
-//            // topk DTW
-////            List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            topTripsDTW = tripSimListDTW.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            Collections.sort(topTripsDTW, new Comparator<TripId>() {
-//                @Override
-//                public int compare(TripId a, TripId b) { // 从小到大
-//                    Double t = tripSimListDTW.get(a) - tripSimListDTW.get(b);
-//                    int flag = 1;
-//                    if (t < 0) flag = -1;
-//                    if (t == 0) flag = 0;
-//                    return flag;
-//                }
-//            });
-////            List<TripId> topkTripsDTW = new ArrayList<>();
-//            topkTripsDTW = new ArrayList<>();
-//            if(topTripsDTW.size() >= k) {
-//                topkTripsDTW = topTripsDTW.subList(0, k);
-//            } else {
-//                topkTripsDTW = topTripsDTW;
-//            }
-//
-//            // topk EDR
-////            List<TripId> topTripsEDR = tripSimListEDR.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            topTripsEDR = tripSimListEDR.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            Collections.sort(topTripsEDR, new Comparator<TripId>() {
-//                @Override
-//                public int compare(TripId a, TripId b) { // 从小到大
-//                    Double t = tripSimListEDR.get(a) - tripSimListEDR.get(b);
-//                    int flag = 1;
-//                    if (t < 0) flag = -1;
-//                    if (t == 0) flag = 0;
-//                    return flag;
-//                }
-//            });
-////            List<TripId> topkTripsEDR = new ArrayList<>();
-//            topkTripsEDR = new ArrayList<>();
-//            if(topTripsEDR.size() >= k) {
-//                topkTripsEDR = topTripsEDR.subList(0, k);
-//            } else {
-//                topkTripsEDR = topTripsEDR;
-//            }
-//
-//
-//            // topk ERP
-////            List<TripId> topTripsERP = tripSimListERP.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            topTripsERP = tripSimListERP.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-//            Collections.sort(topTripsERP, new Comparator<TripId>() {
-//                @Override
-//                public int compare(TripId a, TripId b) { // 从小到大
-//                    Double t = tripSimListERP.get(a) - tripSimListERP.get(b);
-//                    int flag = 1;
-//                    if (t < 0) flag = -1;
-//                    if (t == 0) flag = 0;
-//                    return flag;
-//                }
-//            });
-////            List<TripId> topkTripsERP = new ArrayList<>();
-//            topkTripsERP = new ArrayList<>();
-//            if(topTripsERP.size() >= k) {
-//                topkTripsERP = topTripsERP.subList(0, k);
-//            } else {
-//                topkTripsERP = topTripsERP;
-//            }
-//
-//
-//
-//
-////            Long endTime = System.currentTimeMillis();
-//            endTime = System.currentTimeMillis();
-//            System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
-//
-//            System.out.println("================================");
-//            for (TripId tripId : topkTripsLOCS) {
-//                System.out.println("LOCS " + tripId + ": " + tripSimListLOCS.get(tripId) + " " +tripCubeList.get(tripId));
-//            }
-//
-//            System.out.println("================================");
-//            for (TripId tripId : topkTripsLOC) {
-//                System.out.println("LOC " + tripId + ": " + tripSimListLOC.get(tripId) + " " +tripCubeList.get(tripId));
-//            }
-//
-//            System.out.println("================================");
-//            for (TripId tripId : topkTripsDTW) {
-//                System.out.println("DTW " + tripId + ": " + tripSimListDTW.get(tripId) + " " +tripCubeList.get(tripId));
-//            }
-//
-//            System.out.println("================================");
-//            for (TripId tripId : topkTripsEDR) {
-//                System.out.println("EDR " + tripId + ": " + tripSimListEDR.get(tripId) + " " +tripCubeList.get(tripId));
-//            }
-//
-//            System.out.println("================================");
-//            for (TripId tripId : topkTripsERP) {
-//                System.out.println("ERP " + tripId + ": " + tripSimListERP.get(tripId) + " " +tripCubeList.get(tripId));
-//            }
-//
-//        }
-
-
     }
-
-
-//    // cube 做相似度计算
-//    public double getCubeSimilarity(ArrayList<ShapeIndex.CubeId> cubes1, ArrayList<ShapeIndex.CubeId> cubes2, int theta) {
-//
-//    }
 
 
     // LOCS

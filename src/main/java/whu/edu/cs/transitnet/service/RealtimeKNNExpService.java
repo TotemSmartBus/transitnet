@@ -35,14 +35,8 @@ public class RealtimeKNNExpService {
 
     @Autowired
     ScheduleIndex scheduleIndex;
-    // 给定用户轨迹 <lat, lon, timestamp>
-    // ArrayList<Point> user_tra;
     int kShape = 15; // 这个k指的是取前k个shape
 
-
-//    TripId userTripId;
-    // vehicle list
-//    ArrayList<Vehicle> userVehicleList = new ArrayList<>();
 
     // trip_id - [start_time, end_time] 写个类
     private HashMap<TripId, ArrayList<Time>> tripStartEndList = new HashMap<>();
@@ -157,7 +151,7 @@ public class RealtimeKNNExpService {
     // 使用 shape - trip - schedule 两层索引
     // 取得所有轨迹
     public void getTripIdCubeList(TripId userTripId, ArrayList<GridId> userGridList, Time userStart, Time userEnd) throws InterruptedException {
-//        getUserTra(); // 先构建用户轨迹的索引表；获取用户轨迹起始时间和结束时间
+
         tripCubeList = new HashMap<>();
 
         ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList, userStart, userEnd); // 获取所有要判断的tripid
@@ -167,18 +161,13 @@ public class RealtimeKNNExpService {
         }
 
                 System.out.println("[USERKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
-//        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
+
         System.out.println("[USERKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.containsKey(tripId) && vehiclesByTripId.get(tripId) != null) {
                 // 只取前 length 个值
                 ArrayList<Vehicle> vehicles = new ArrayList<>();
                 vehicles = vehiclesByTripId.get(tripId);
-//                if (vehiclesByTripId.get(tripId).size() >= length) {
-//                    vehicles.addAll(vehiclesByTripId.get(tripId).subList(0, length));
-//                } else {
-//                    vehicles.addAll(vehiclesByTripId.get(tripId));
-//                }
 
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
@@ -187,7 +176,6 @@ public class RealtimeKNNExpService {
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
-//                    cubeIds.add(cubeId);
                 }
                 tripCubeList.put(tripId, cubeIds);
             }

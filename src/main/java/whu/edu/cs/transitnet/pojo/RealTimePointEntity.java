@@ -1,12 +1,17 @@
-package whu.edu.cs.transitnet.vo;
+package whu.edu.cs.transitnet.pojo;
 
-public class RealTimePointEntity {
+import java.io.Serializable;
+
+public class RealTimePointEntity implements Serializable {
+
+    private String tripId;
     private String vehicleId;
     private Double lat;
     private Double lon;
     private String recordedTime;
 
-    public RealTimePointEntity(String vehicleId, Double lat, Double lon, String recordedTime) {
+    public RealTimePointEntity(String tripId, String vehicleId, Double lat, Double lon, String recordedTime) {
+        this.tripId = tripId;
         this.vehicleId = vehicleId;
         this.lat = lat;
         this.lon = lon;
@@ -14,12 +19,21 @@ public class RealTimePointEntity {
     }
 
     public RealTimePointEntity() {
+        this.tripId = null;
         this.vehicleId = null;
         this.lat = null;
         this.lon = null;
         this.recordedTime = null;
     }
 
+
+    public String getTripId() {
+        return tripId;
+    }
+
+    public void setTripId(String tripId) {
+        this.tripId = tripId;
+    }
 
     public String getVehicleId() {
         return vehicleId;

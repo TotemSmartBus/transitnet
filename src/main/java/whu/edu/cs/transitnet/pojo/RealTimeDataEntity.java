@@ -1,7 +1,5 @@
 package whu.edu.cs.transitnet.pojo;
 
-import whu.edu.cs.transitnet.vo.RealTimePointEntity;
-
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -25,8 +23,8 @@ public class RealTimeDataEntity extends RealTimePointEntity {
     private String nextStop;
     private String recordedTime;
 
-    public RealTimeDataEntity(String vehicleId, Double lat, Double lon, String recordedTime) {
-        super(vehicleId, lat, lon, recordedTime);
+    public RealTimeDataEntity(String tripId, String vehicleId, Double lat, Double lon, String recordedTime) {
+        super(tripId, vehicleId, lat, lon, recordedTime);
     }
 
     public RealTimeDataEntity() {

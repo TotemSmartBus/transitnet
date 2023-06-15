@@ -14,7 +14,7 @@ import java.util.HashSet;
 
 @Component
 public class HistoricalIndexBuildConfig {
-    @Autowired
+//    @Autowired
     private SocketStorageManager socketStorageManager;
 
     @Autowired

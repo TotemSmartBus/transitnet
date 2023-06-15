@@ -7,7 +7,7 @@ import whu.edu.cs.transitnet.pojo.IndexEntity;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
 import whu.edu.cs.transitnet.utils.TimeUtil;
 import whu.edu.cs.transitnet.vo.RealTimeDataVo;
-import whu.edu.cs.transitnet.vo.RealTimePointEntity;
+import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 import whu.edu.cs.transitnet.vo.SpeedDateVo;
 import whu.edu.cs.transitnet.vo.StringPair;
 

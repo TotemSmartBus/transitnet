@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.RealTimeDataDao;
-import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
+import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 import whu.edu.cs.transitnet.service.EncodeService;
 
 import javax.annotation.PostConstruct;
@@ -37,9 +37,15 @@ public class HistoricalTripIndex {
         return hashcodeTripList;
     }
 
+    public HashMap<TripId, ArrayList<RealTimePointEntity>> getTripPointList() {
+        return tripPointList;
+    }
+
     HashMap<TripId, ArrayList<CubeId>> tripCubeList = new HashMap<>();
     HashMap<CubeId, ArrayList<TripId>> cubeTripList = new HashMap<>();
     HashMap<Integer, TripId> hashcodeTripList = new HashMap<>();
+    // 新增 TPList 用于实验
+    HashMap<TripId, ArrayList<RealTimePointEntity>> tripPointList = new HashMap<>();
 
     @PostConstruct
     public void init() throws ParseException {
@@ -56,6 +62,8 @@ public class HistoricalTripIndex {
         tripCubeListSerializationAndDeserilization(startTime, endTime);
         cubeTripListSerializationAndDeserilization(date);
         hashcodeTripListSerializationAndDeserilization(date);
+
+        tripPointListSerializationAndDeserialization(startTime, endTime);
     }
 
     public void getTripsByDate(String startTime, String endTime) throws ParseException {
@@ -71,16 +79,21 @@ public class HistoricalTripIndex {
             String tripId = tripIdsByDate.get(i);
             ArrayList<CubeId> cubeIds = new ArrayList<>();
 
-            List<RealTimeDataEntity> realTimeDataEntityList = realTimeDataDao.findAllPointsByTripIdByTimeSpan(tripId, startTime, endTime);
+//            List<RealTimeDataEntity> realTimeDataEntityList = realTimeDataDao.findAllPointsByTripIdByTimeSpan(tripId, startTime, endTime);
+            List<RealTimePointEntity> realTimePointEntityList = realTimeDataDao.findAllSimplePointsByTripIdByTimeSpan(tripId, startTime, endTime);
 
-            System.out.println("[HISTORICALTRIPINDEX] number of points: " + realTimeDataEntityList.size());
-            for (int j = 0; j < realTimeDataEntityList.size(); j++) {
+            // List 转 ArrayList，构造 tripPointList
+            ArrayList<RealTimePointEntity> realTimePointEntityArrayList = new ArrayList<>(realTimePointEntityList);
+            tripPointList.put(new TripId(tripId), realTimePointEntityArrayList);
+            System.out.println("[HISTORICALTRIPINDEX] number of points: " + realTimePointEntityList.size());
+
+            for (int j = 0; j < realTimePointEntityList.size(); j++) {
 //                System.out.println("[HISTORICALTRIPINDEX] number of scanned points: " + (j + 1));
 
-                double lat = realTimeDataEntityList.get(j).getLat();
-                double lon = realTimeDataEntityList.get(j).getLon();
+                double lat = realTimePointEntityList.get(j).getLat();
+                double lon = realTimePointEntityList.get(j).getLon();
 
-                String recordedTime = realTimeDataEntityList.get(j).getRecordedTime();
+                String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
                 Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
                 Long time = parse.getTime();
 
@@ -88,10 +101,102 @@ public class HistoricalTripIndex {
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) cubeIds.add(cubeId);
             }
 
+            // 构造 tripCubeList
             tripCubeList.put(new TripId(tripId), cubeIds);
         }
     }
 
+    // 新增 TPList 的序列化和反序列化
+    public void tripPointListSerializationAndDeserialization(String startTime, String endTime) throws ParseException {
+        String date = getDateFromTime(startTime);
+
+        File dateTripPointFile = new File("./src/main/" + date + " TPList.txt");
+
+        if(!dateTripPointFile.exists()) {
+            System.out.println("=============================");
+            System.out.println("[HISTORICALTRIPINDEX] dateTripPointFile Not Exists... Start serializing TCList...");
+
+            Long startTime1 = System.currentTimeMillis();
+            // 构建 TPList
+            getTripsByDate(startTime, endTime);
+            Long endTime1 = System.currentTimeMillis();
+            System.out.println("[HISTORICALTRIPINDEX] index construction time: " + (endTime1 - startTime1) / 1000 + "s");
+
+
+            Long startTime2 = System.currentTimeMillis();
+            // try catch block
+            try {
+                FileOutputStream myFileOutStream
+                        = new FileOutputStream(dateTripPointFile);
+
+                ObjectOutputStream myObjectOutStream
+                        = new ObjectOutputStream(myFileOutStream);
+
+                myObjectOutStream.writeObject(tripPointList);
+
+                // closing FileOutputStream and
+                // ObjectOutputStream
+                myObjectOutStream.close();
+                myFileOutStream.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            Long endTime2 = System.currentTimeMillis();
+            System.out.println("[HISTORICALTRIPINDEX] serialization time: " + (endTime2 - startTime2) / 1000 + "s");
+
+        }
+
+        // 如果文件存在
+        // 读取文件
+        System.out.println("======================");
+        System.out.println("[HISTORICALTRIPINDEX] FILE EXISTS...");
+        System.out.println("[HISTORICALTRIPINDEX] Start Deserializing HashMap..");
+
+        Long starttime = System.currentTimeMillis();
+        try {
+            FileInputStream fileInput = new FileInputStream(
+                    dateTripPointFile);
+
+
+            ObjectInputStream objectInput
+                    = new ObjectInputStream(fileInput);
+
+            tripPointList = (HashMap)objectInput.readObject();
+
+            objectInput.close();
+            fileInput.close();
+        }
+        catch (IOException obj1) {
+            obj1.printStackTrace();
+            return;
+        }
+        catch (ClassNotFoundException obj2) {
+            System.out.println("[HISTORICALTRIPINDEX] Class not found");
+            obj2.printStackTrace();
+            return;
+        }
+
+        Long endtime = System.currentTimeMillis();
+
+        System.out.println("======================");
+        System.out.println("[HISTORICALTRIPINDEX] Deserializing HashMap DONE!");
+        System.out.println("[HISTORICALTRIPINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
+
+        Set set = tripPointList.entrySet();
+        Iterator iterator = set.iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry)iterator.next();
+
+            System.out.print("key : " + entry.getKey()
+                    + " & Value : ");
+            System.out.println(entry.getValue());
+        }
+
+
+    }
 
     public void tripCubeListSerializationAndDeserilization(String startTime, String endTime) throws ParseException {
 
@@ -185,6 +290,7 @@ public class HistoricalTripIndex {
 
     }
 
+    // 将 TCList 转为 CTList，因此传参只需要 date，不需要 startTime 和 endTime
     public void cubeTripListSerializationAndDeserilization(String date) throws ParseException {
 
 
