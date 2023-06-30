@@ -42,10 +42,10 @@ public class HytraHistoricalIndex {
         // 1. 获取日期 key
         Date date = getDate();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        // 2. 用 generator 从内存索引中构建 LSM 索引和配置
         String dateKey = dateFormat.format(date);
         String datetimeKey = formatter.format(date);
-        String configPath = "/tmp";
+        // 生成配置文件并保存到指定位置
+        String configPath = "/tmp/log/transitnet";
         long tBeforeConfigGenerate = System.currentTimeMillis();
         try {
             String path = System.getProperty("user.dir");
@@ -55,11 +55,12 @@ public class HytraHistoricalIndex {
         }
         long tAfterConfigGenerate = System.currentTimeMillis();
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
+        // 生成索引
         long tBeforeIndexGenerate = System.currentTimeMillis();
         HashMap<String, Integer> indexMap = Generator.generateKV();
         long tAfterIndexGenerate = System.currentTimeMillis();
         log.info("[cron]Generate Index for {}s", String.format("%.2f", (tAfterIndexGenerate - tBeforeIndexGenerate) / 1000.0));
-        // 3. 写入索引
+        // 向 LSM-Tree 写入配置
         long tBeforeConfigWrite = System.currentTimeMillis();
         try {
             storageManager.config(dateKey, configPath);
@@ -68,17 +69,9 @@ public class HytraHistoricalIndex {
         }
         long tAfterConfigWrite = System.currentTimeMillis();
         log.info("[cron]Write config for {}s", String.format("%.2f", (tAfterConfigWrite - tBeforeConfigWrite) / 1000.0));
-        // 4. 写入数据
         long tBeforeIndexWrite = System.currentTimeMillis();
         log.info(String.format("[cron]Writing %d indexes", indexMap.size()));
-        // matrix
-        // 5. 查询 LSM 状态
-        try {
-            String status = storageManager.status();
-            log.info("[cron]LSM-Status is " + status);
-        } catch (Exception e) {
-            log.error("[cron]Error while get status of LSM-Tree", e);
-        }
+        // 向 LSM-Tree 写入数据
         indexMap.forEach((key, value) -> {
             try {
                 storageManager.put(key, String.valueOf(value));
@@ -88,17 +81,21 @@ public class HytraHistoricalIndex {
         });
         long tAfterIndexWrite = System.currentTimeMillis();
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
+        // 查询 LSM 状态
+        try {
+            String status = storageManager.status();
+            log.info("[cron]LSM-Status is " + status);
+        } catch (Exception e) {
+            log.error("[cron]Error while get status of LSM-Tree", e);
+        }
         log.info("[cron]Total time is {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0));
-        System.out.printf("[cron]Total time is %.2fs", (tAfterIndexWrite - tBeforeConfigGenerate) / 1000.0);
     }
 
     private Date getDate() {
         // 找到最新的 datetime - 60s,获取前一天的日期
         Date date = new Date(System.currentTimeMillis() - 60 * 1000);
-
-        String datetime = formatter.format(date);
         if (Engine.trajDataBase.size() > 0) {
-            datetime = Engine.trajDataBase.entrySet().stream().findFirst().get().getValue().get(0).getDatetime();
+            String datetime = Engine.trajDataBase.entrySet().stream().findFirst().get().getValue().get(0).getDatetime();
             try {
                 date = formatter.parse(datetime);
             } catch (ParseException e) {
