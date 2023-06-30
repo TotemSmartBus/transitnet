@@ -35,7 +35,7 @@ public class HytraHistoricalIndex {
     @Scheduled(cron = "${scheduled.historicalIndex}")
     public void buildHistoricalIndex() {
         log.info("[cron]Running cron");
-        if(!indexEnable) {
+        if (!indexEnable) {
             log.info("[cron]Index is not enabled, skipped.");
             return;
         }
@@ -81,6 +81,8 @@ public class HytraHistoricalIndex {
         });
         long tAfterIndexWrite = System.currentTimeMillis();
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
+        // 清理 trajDatabase
+        Engine.trajDataBase.clear();
         // 查询 LSM 状态
         try {
             String status = storageManager.status();
