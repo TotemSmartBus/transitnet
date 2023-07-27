@@ -25,6 +25,9 @@ public class HistoricalTripIndex {
     @Autowired
     EncodeService encodeService;
 
+    @Autowired
+    HytraEngineManager hytraEngineManager;
+
     public HashMap<TripId, ArrayList<CubeId>> getTripCubeList() {
         return tripCubeList;
     }
@@ -49,13 +52,13 @@ public class HistoricalTripIndex {
 
     @PostConstruct
     public void init() throws ParseException {
-//
+
 //        if(!indexEnable) {
 //            System.out.println("[HISTORICALTRIPINDEX] Index is not enabled, skipped.");
 //            return;
 //        }
 
-        String startTime = "2023-05-20 10:00:00";
+        String startTime = "2023-05-20 00:00:00";
         String endTime = "2023-05-20 23:59:59";
         String date = getDateFromTime(startTime);
 
@@ -70,10 +73,13 @@ public class HistoricalTripIndex {
         // 1. 先根据 dateTime 筛选出所有 tripId
         List<String> tripIdsByDate = realTimeDataDao.findAllTripsOnlyByDate(startTime, endTime);
 
+
         // 2. 再根据 dateTime 和 tripId 筛选出每个 tripId 在 dateTime 当天的所有轨迹点 【按时间升序】
         System.out.println("=============================");
         System.out.println("[HISTORICALTRIPINDEX] number of tripIds: " + tripIdsByDate.size());
-        for (int i = 0; i < tripIdsByDate.size(); i++) {
+//        int num = tripIdsByDate.size();
+        int num = 11;
+        for (int i = 0; i < num; i++) {
             System.out.println("[HISTORICALTRIPINDEX] number of scanned tripIds: " + (i + 1));
 
             String tripId = tripIdsByDate.get(i);
@@ -93,10 +99,12 @@ public class HistoricalTripIndex {
                 double lat = realTimePointEntityList.get(j).getLat();
                 double lon = realTimePointEntityList.get(j).getLon();
 
+                // TODO:
                 String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
                 Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
                 Long time = parse.getTime();
 
+                // 注意 encodecube 里面传的是年月日时分秒
                 CubeId cubeId = encodeService.encodeCube(lat, lon, time);
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) cubeIds.add(cubeId);
             }
@@ -151,7 +159,7 @@ public class HistoricalTripIndex {
         // 如果文件存在
         // 读取文件
         System.out.println("======================");
-        System.out.println("[HISTORICALTRIPINDEX] FILE EXISTS...");
+        System.out.println("[HISTORICALTRIPINDEX] dateTripPointFile EXISTS...");
         System.out.println("[HISTORICALTRIPINDEX] Start Deserializing HashMap..");
 
         Long starttime = System.currentTimeMillis();
@@ -184,16 +192,16 @@ public class HistoricalTripIndex {
         System.out.println("[HISTORICALTRIPINDEX] Deserializing HashMap DONE!");
         System.out.println("[HISTORICALTRIPINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
 
-        Set set = tripPointList.entrySet();
-        Iterator iterator = set.iterator();
-
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry)iterator.next();
-
-            System.out.print("key : " + entry.getKey()
-                    + " & Value : ");
-            System.out.println(entry.getValue());
-        }
+//        Set set = tripPointList.entrySet();
+//        Iterator iterator = set.iterator();
+//
+//        while (iterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry)iterator.next();
+//
+//            System.out.print("key : " + entry.getKey()
+//                    + " & Value : ");
+//            System.out.println(entry.getValue());
+//        }
 
 
     }
@@ -202,11 +210,12 @@ public class HistoricalTripIndex {
 
         String date = getDateFromTime(startTime);
 
-        File dateTripCubeFile = new File("./src/main/" + date + " TCList.txt");
+        int resolution = hytraEngineManager.getParams().getResolution();
+        File dateTripCubeFile = new File("./src/main/" + date + " TCList_" + resolution + ".txt");
 
         if(!dateTripCubeFile.exists()) {
             System.out.println("=============================");
-            System.out.println("[HISTORICALTRIPINDEX] File Not Exists... Start serializing TCList...");
+            System.out.println("[HISTORICALTRIPINDEX] dateTripCubeFile Not Exists... Start serializing TCList...");
 
             Long startTime1 = System.currentTimeMillis();
             // 构建 CTList
@@ -243,7 +252,7 @@ public class HistoricalTripIndex {
         // 如果文件存在
         // 读取文件
         System.out.println("======================");
-        System.out.println("[HISTORICALTRIPINDEX] FILE EXISTS...");
+        System.out.println("[HISTORICALTRIPINDEX] dateTripCubeFile EXISTS...");
         System.out.println("[HISTORICALTRIPINDEX] Start Deserializing HashMap..");
 
         Long starttime = System.currentTimeMillis();
@@ -276,8 +285,9 @@ public class HistoricalTripIndex {
         System.out.println("[HISTORICALTRIPINDEX] Deserializing HashMap DONE!");
         System.out.println("[HISTORICALTRIPINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
 
-        //        Set set = tripCubeList.entrySet();
+//        Set set = tripCubeList.entrySet();
 //        Iterator iterator = set.iterator();
+//
 //
 //        while (iterator.hasNext()) {
 //            Map.Entry entry = (Map.Entry)iterator.next();
@@ -285,7 +295,7 @@ public class HistoricalTripIndex {
 //            System.out.print("key : " + entry.getKey()
 //                    + " & Value : ");
 //            System.out.println(entry.getValue());
-        //        }
+//                }
 
 
     }
@@ -294,13 +304,14 @@ public class HistoricalTripIndex {
     public void cubeTripListSerializationAndDeserilization(String date) throws ParseException {
 
 
-        File dateCubeTripFile = new File("./src/main/" + date + " CTList.txt");
+        int resolution = hytraEngineManager.getParams().getResolution();
+        File dateCubeTripFile = new File("./src/main/" + date + " CTList_" + resolution + ".txt");
 
 
 
         if(!dateCubeTripFile.exists()) {
             System.out.println("=============================");
-            System.out.println("[HISTORICALTRIPINDEX] File Not Exists... Start serializing CTList...");
+            System.out.println("[HISTORICALTRIPINDEX] dateCubeTripFile Not Exists... Start serializing CTList...");
 
             // 将 TCList 转为 CTList
             for (TripId tripId : tripCubeList.keySet()) {
@@ -350,7 +361,7 @@ public class HistoricalTripIndex {
         // 如果文件存在
         // 读取文件
         System.out.println("======================");
-        System.out.println("[HISTORICALTRIPINDEX] FILE EXISTS...");
+        System.out.println("[HISTORICALTRIPINDEX] dateCubeTripFile EXISTS...");
         System.out.println("[HISTORICALTRIPINDEX] Start Deserializing HashMap..");
 
         Long starttime = System.currentTimeMillis();
@@ -385,6 +396,16 @@ public class HistoricalTripIndex {
 
         Set set = cubeTripList.entrySet();
         Iterator iterator = set.iterator();
+
+
+
+//        while (iterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry)iterator.next();
+//
+//            System.out.print("key : " + entry.getKey()
+//                    + " & Value : ");
+//            System.out.println(entry.getValue());
+//        }
 
         int n5 = 0, n10 = 0, n20 = 0, n30 = 0, n40 = 0, n = 0;
         while (iterator.hasNext()) {

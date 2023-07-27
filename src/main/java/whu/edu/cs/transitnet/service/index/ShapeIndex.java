@@ -58,10 +58,10 @@ public class ShapeIndex {
     @PostConstruct
     public void init() {
 
-        if(!indexEnable) {
-            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
-            return;
-        }
+//        if(!indexEnable) {
+//            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
+//            return;
+//        }
 
         int resolution = hytraEngineManager.getParams().getResolution();
         File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + ".txt");

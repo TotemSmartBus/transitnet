@@ -87,15 +87,15 @@ public class RealtimeKNNService {
         TripId randomKey = keys[random]; //随机取key值
 
         System.out.println("============================================");
-        System.out.println("[USERKNNSERVICE] randomKey: " + randomKey);   //输出随机的key值
+        System.out.println("[REALTIMEKNNSERVICE] randomKey: " + randomKey);   //输出随机的key值
 //
         userTripId = randomKey;
 
         userVehicleList = vehiclesByTripId.get(userTripId);
 
 
-        System.out.println("[USERKNNSERVICE] userId(TripId): " + userTripId);
-        System.out.println("[USERKNNSERVICE] length of user vehicle list: " + userVehicleList.size());
+        System.out.println("[REALTIMEKNNSERVICE] userId(TripId): " + userTripId);
+        System.out.println("[REALTIMEKNNSERVICE] length of user vehicle list: " + userVehicleList.size());
     }
 
     // 再根据schedule找到和用户轨迹时间有重叠的trip
@@ -125,12 +125,12 @@ public class RealtimeKNNService {
 
 
         tripStartEndList = scheduleIndex.getTripStartEndList();
-        System.out.println("[USERKNNSERVICE] userStartTime: " + userStart);
-        System.out.println("[USERKNNSERVICE] userEndTime: " + userEnd);
-        System.out.println("[USERKNNSERVICE] userTripId start and end time: " + tripStartEndList.get(userTripId));
+        System.out.println("[REALTIMEKNNSERVICE] userStartTime: " + userStart);
+        System.out.println("[REALTIMEKNNSERVICE] userEndTime: " + userEnd);
+        System.out.println("[REALTIMEKNNSERVICE] userTripId start and end time: " + tripStartEndList.get(userTripId));
 
-        System.out.println("[USERKNNSERVICE] size of trips of top-k shapes: " + tripIds.size());
-        System.out.println("[USERKNNSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
+        System.out.println("[REALTIMEKNNSERVICE] size of trips of top-k shapes: " + tripIds.size());
+        System.out.println("[REALTIMEKNNSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
 
         for (TripId tripId : tripIds) {
             ArrayList<Time> times = tripStartEndList.get(tripId);
@@ -169,9 +169,9 @@ public class RealtimeKNNService {
         tripCubeList = new HashMap<>();
 
         ArrayList<TripId> filteredTripList = filterTripList(userPartialGridList, userStart, userEnd); // 获取所有要判断的tripid
-        System.out.println("[USERKNNSERVICE] " + "size of filtered trips: " + filteredTripList.size());
+        System.out.println("[REALTIMEKNNSERVICE] " + "size of filtered trips: " + filteredTripList.size());
 //        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
-        System.out.println("[USERKNNSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
+        System.out.println("[REALTIMEKNNSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.get(tripId) != null && !vehiclesByTripId.get(tripId).isEmpty()) {
                 // 只取前 length 个值
@@ -180,7 +180,7 @@ public class RealtimeKNNService {
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime());
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -211,11 +211,11 @@ public class RealtimeKNNService {
         Thread.sleep(sleepTime); // 50 * 30 * 1000 ms
         vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
         System.out.println("============================================");
-        System.out.println("[USERKNNSERVICE] " + "number of realtime vehicles: " + vehiclesByTripId.size());
+        System.out.println("[REALTIMEKNNSERVICE] " + "number of realtime vehicles: " + vehiclesByTripId.size());
         getUserTra(); // 先构建用户轨迹的索引表；获取用户轨迹起始时间和结束时间
 
         System.out.println("============================================");
-        System.out.println("[USERKNNSERVICE] " + "trajectory length: " + length);
+        System.out.println("[REALTIMEKNNSERVICE] " + "trajectory length: " + length);
         ArrayList<Vehicle> userPartialVehicleList = new ArrayList<>();
 //        userPartialVehicleList.addAll(userVehicleList.subList(0, 30));
         userPartialVehicleList.addAll(userVehicleList);
@@ -237,7 +237,7 @@ public class RealtimeKNNService {
             if(userPartialGridList.isEmpty() || userPartialGridList.lastIndexOf(gridId) != (userPartialGridList.size() - 1)) {
                 userPartialGridList.add(gridId);
             }
-            CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime());
+            CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime()*1000);
             cubes.add(cubeId);
             if(userPartialCubeList.isEmpty() || userPartialCubeList.lastIndexOf(cubeId) != (userPartialCubeList.size() - 1)) {
                 userPartialCubeList.add(cubeId);
@@ -252,13 +252,13 @@ public class RealtimeKNNService {
         Time userStart = Time.valueOf(times.get(0));
         Time userEnd = Time.valueOf(times.get(times.size() - 1));
 
-        System.out.println("[USERKNNSERVICE] times: " + times);
-        System.out.println("[USERKNNSERVICE] grids: " + grids);
-        System.out.println("[USERKNNSERVICE] userPartialGridList: " + userPartialGridList);
-        System.out.println("[USERKNNSERVICE] cubes: " + cubes);
-        System.out.println("[USERKNNSERVICE] userPartialCubeList: " + userPartialCubeList);
-        System.out.println("[USERKNNSERVICE] " + "userStartTime: " + userStart);
-        System.out.println("[USERKNNSERVICE] " + "userEnd: " + userEnd);
+        System.out.println("[REALTIMEKNNSERVICE] times: " + times);
+        System.out.println("[REALTIMEKNNSERVICE] grids: " + grids);
+        System.out.println("[REALTIMEKNNSERVICE] userPartialGridList: " + userPartialGridList);
+        System.out.println("[REALTIMEKNNSERVICE] cubes: " + cubes);
+        System.out.println("[REALTIMEKNNSERVICE] userPartialCubeList: " + userPartialCubeList);
+        System.out.println("[REALTIMEKNNSERVICE] " + "userStartTime: " + userStart);
+        System.out.println("[REALTIMEKNNSERVICE] " + "userEnd: " + userEnd);
 
 
         Long startTime = System.currentTimeMillis();
@@ -373,7 +373,7 @@ public class RealtimeKNNService {
         }
 
         Long endTime = System.currentTimeMillis();
-        System.out.println("[USERKNNSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
+        System.out.println("[REALTIMEKNNSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
 
         System.out.println("================================");
         for (TripId tripId : topkTripsLOCS) {

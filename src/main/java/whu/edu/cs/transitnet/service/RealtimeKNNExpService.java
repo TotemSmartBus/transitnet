@@ -79,10 +79,10 @@ public class RealtimeKNNExpService {
 
         tripStartEndList = scheduleIndex.getTripStartEndList();
 
-        System.out.println("[USERKNNEXPSERVICE] userTripId scheduled start and end time: " + tripStartEndList.get(userTripId));
+        System.out.println("[REALTIMEKNNEXPSERVICE] userTripId scheduled start and end time: " + tripStartEndList.get(userTripId));
 
-        System.out.println("[USERKNNEXPSERVICE] size of trips of top-k shapes: " + tripIds.size());
-        System.out.println("[USERKNNEXPSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
+        System.out.println("[REALTIMEKNNEXPSERVICE] size of trips of top-k shapes: " + tripIds.size());
+        System.out.println("[REALTIMEKNNEXPSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
 
         for (TripId tripId : tripIds) {
             ArrayList<Time> times = tripStartEndList.get(tripId);
@@ -142,8 +142,8 @@ public class RealtimeKNNExpService {
             }
         }
 
-        System.out.println("[USERKNNEXPSERVICE] size of trips of top-k shapes: " + tripIds.size());
-        System.out.println("[USERKNNEXPSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
+        System.out.println("[REALTIMEKNNEXPSERVICE] size of trips of top-k shapes: " + tripIds.size());
+        System.out.println("[REALTIMEKNNEXPSERVICE] if the trips of top-k shapes contain usertripid: " + tripIds.contains(userTripId));
 
         return tripIds;
     }
@@ -160,9 +160,9 @@ public class RealtimeKNNExpService {
             return;
         }
 
-                System.out.println("[USERKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
+                System.out.println("[REALTIMEKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
 
-        System.out.println("[USERKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
+        System.out.println("[REALTIMEKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.containsKey(tripId) && vehiclesByTripId.get(tripId) != null) {
                 // 只取前 length 个值
@@ -172,7 +172,8 @@ public class RealtimeKNNExpService {
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime());
+                    // TODO: 是否要乘以1000；recordedTime 是不是秒？
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -193,9 +194,9 @@ public class RealtimeKNNExpService {
             return;
         }
 
-        System.out.println("[USERKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
+        System.out.println("[REALTIMEKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
 //        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
-        System.out.println("[USERKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
+        System.out.println("[REALTIMEKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.containsKey(tripId) && vehiclesByTripId.get(tripId) != null) {
                 // 只取前 length 个值
@@ -205,7 +206,7 @@ public class RealtimeKNNExpService {
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (int i = 0; i < vehicles.size(); i++) {
                     Vehicle v= vehicles.get(i);
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime());
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -235,7 +236,7 @@ public class RealtimeKNNExpService {
             // arraylist 总是报错
             for (int i = 0; i < vehicles.size(); i++) {
                 Vehicle v= vehicles.get(i);
-                CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime());
+                CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                     cubeIds.add(cubeId);
                 }
@@ -266,7 +267,7 @@ public class RealtimeKNNExpService {
         // 实时的所有 tripId - vehicles 的 Hashmap
         vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
         System.out.println("============================================");
-        System.out.println("[USERKNNEXPSERVICE] " + "number of realtime vehicles: " + vehiclesByTripId.size());
+        System.out.println("[REALTIMEKNNEXPSERVICE] " + "number of realtime vehicles: " + vehiclesByTripId.size());
 
 //        FileWriter fw = new FileWriter("./src/main/knnTime.txt");
 
@@ -304,7 +305,7 @@ public class RealtimeKNNExpService {
                 if(userGridList.isEmpty() || userGridList.lastIndexOf(gridId) != (userGridList.size() - 1)) {
                     userGridList.add(gridId);
                 }
-                CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime());
+                CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime()*1000);
                 cubes.add(cubeId);
                 if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
                     userCubeList.add(cubeId);
@@ -322,12 +323,12 @@ public class RealtimeKNNExpService {
             // 以上不会出现任何问题
 
             System.out.println("============================================");
-            System.out.println("[USERKNNEXPSERVICE] user raw grids: " + grids);
-            System.out.println("[USERKNNEXPSERVICE] userGridList: " + userGridList);
-            System.out.println("[USERKNNEXPSERVICE] user raw cubes: " + cubes);
-            System.out.println("[USERKNNEXPSERVICE] userCubeList: " + userCubeList);
-            System.out.println("[USERKNNEXPSERVICE] userStartTime: " + userStart);
-            System.out.println("[USERKNNEXPSERVICE] userEndTime: " + userEnd);
+            System.out.println("[REALTIMEKNNEXPSERVICE] user raw grids: " + grids);
+            System.out.println("[REALTIMEKNNEXPSERVICE] userGridList: " + userGridList);
+            System.out.println("[REALTIMEKNNEXPSERVICE] user raw cubes: " + cubes);
+            System.out.println("[REALTIMEKNNEXPSERVICE] userCubeList: " + userCubeList);
+            System.out.println("[REALTIMEKNNEXPSERVICE] userStartTime: " + userStart);
+            System.out.println("[REALTIMEKNNEXPSERVICE] userEndTime: " + userEnd);
 
             Long startTime = System.currentTimeMillis();
 
@@ -352,11 +353,11 @@ public class RealtimeKNNExpService {
             }
 
 
-            System.out.println("[USERKNNEXPSERVICE] size of tripCubeList: " + tripCubeList.size());
+            System.out.println("[REALTIMEKNNEXPSERVICE] size of tripCubeList: " + tripCubeList.size());
 
             // tripCubeList 为空则 continue
             if (tripCubeList.isEmpty()) {
-                System.out.println("[USERKNNEXPSERVICE] tripCubeList is empty! Early termination of the procedure!");
+                System.out.println("[REALTIMEKNNEXPSERVICE] tripCubeList is empty! Early termination of the procedure!");
                 continue;
             }
 
@@ -469,7 +470,7 @@ public class RealtimeKNNExpService {
 
             Long endTime = System.currentTimeMillis();
             Long running = endTime - startTime;
-            System.out.println("[USERKNNEXPSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
+            System.out.println("[REALTIMEKNNEXPSERVICE] Top-k time: " + (endTime - startTime)+ "ms");
 
             if (running >= 10 && running < 100) {
 
@@ -478,7 +479,7 @@ public class RealtimeKNNExpService {
             }
             totalTime += running;
             totalNum++;
-            System.out.println("[USERKNNEXPSERVICE] the number of scanned trips: " + totalNum);
+            System.out.println("[REALTIMEKNNEXPSERVICE] the number of scanned trips: " + totalNum);
 //            if (totalNum >= 1000) {
 //                break;
 //            }
@@ -492,9 +493,9 @@ public class RealtimeKNNExpService {
         }
 //        fw.close();
 
-        System.out.println("[USERKNNEXPSERVICE] totalTime | totalNum: " + totalTime / totalNum);
-        System.out.println("[USERKNNEXPSERVICE] partialTime | totalNum: " + partialTime / totalNum);
-        System.out.println("[USERKNNEXPSERVICE] partialTime | partialNum: " + partialTime / partialNum);
+        System.out.println("[REALTIMEKNNEXPSERVICE] totalTime | totalNum: " + totalTime / totalNum);
+        System.out.println("[REALTIMEKNNEXPSERVICE] partialTime | totalNum: " + partialTime / totalNum);
+        System.out.println("[REALTIMEKNNEXPSERVICE] partialTime | partialNum: " + partialTime / partialNum);
     }
 
 

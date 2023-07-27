@@ -42,10 +42,10 @@ public class ScheduleIndex {
     @PostConstruct
     public void init() {
 
-        if(!indexEnable) {
-            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
-            return;
-        }
+//        if(!indexEnable) {
+//            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
+//            return;
+//        }
 
         File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");
 

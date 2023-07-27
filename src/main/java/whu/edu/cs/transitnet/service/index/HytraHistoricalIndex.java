@@ -98,6 +98,8 @@ public class HytraHistoricalIndex {
                 }
             }
         });
+
+
         long tAfterIndexWrite = System.currentTimeMillis();
 
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
