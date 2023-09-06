@@ -10,6 +10,7 @@ import org.gavaghan.geodesy.GlobalCoordinates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import whu.edu.cs.transitnet.bean.RouteCache;
 import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -51,6 +53,8 @@ public class RealtimeService {
     // 获取所有轨迹信息；有序
     private final ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId = new ConcurrentHashMap<>();
 
+    private Map<String, Vehicle> onRouteVehiclesById;
+
     // 位置信息时间序列
     private final LinkedList<List<Vehicle>> timeSerial = new LinkedList<>();
 
@@ -74,9 +78,13 @@ public class RealtimeService {
     @Autowired
     GeodeticCalculator geodeticCalculator;
 
+    @Autowired
+    RouteCache routeCache;
+
     //  @PostConstruct
     public void start() {
         vehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
+        onRouteVehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc_filter"), new ConcurrentHashMap<>());
         executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(refreshTask, 0, TimeUnit.SECONDS);
         log.info("executor is running...");
@@ -84,6 +92,10 @@ public class RealtimeService {
 
     public List<Vehicle> getAllVehicles() {
         return new ArrayList<>(timeSerial.getLast());
+    }
+
+    public List<Vehicle> getValidVehicles() {
+        return timeSerial.getLast().stream().filter(vehicle -> routeCache.routes.contains(vehicle.getRouteID())).collect(Collectors.toList());
     }
 
     public long getCurrentTimestamp() {
@@ -195,7 +207,14 @@ public class RealtimeService {
         long t0 = System.currentTimeMillis();
         // update latest map
         vehiclesById.clear();
-        vehicles.stream().forEach(v -> vehiclesById.put(v.getId(), v));
+        onRouteVehiclesById.clear();
+        vehicles.stream().forEach(v -> {
+            vehiclesById.put(v.getId(), v);
+            if (routeCache.routes.contains(v.getRouteID())) {
+                onRouteVehiclesById.put(v.getId(), v);
+            }
+        });
+
         // update time serial
         updateTimeSerial(vehicles);
         // update indexes

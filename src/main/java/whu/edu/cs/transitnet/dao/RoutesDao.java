@@ -11,6 +11,9 @@ import java.util.List;
 public interface RoutesDao extends JpaRepository<RoutesEntity, String> {
     List<RoutesEntity> findAll();
 
+    @Query(value = "select distinct r.routeId from RoutesEntity as r")
+    List<String> findDistinctRouteID();
+
     @Query(value = "SELECT new whu.edu.cs.transitnet.vo.RoutesVo(re.routeId, re.agencyId, re.routeShortName, "
             + "re.routeLongName, re.routeDesc, re.routeType, re.routeColor, "
             + "re.routeTextColor)"
