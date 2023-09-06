@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -53,7 +52,7 @@ public class RealtimeServiceTest {
 //        Thread.sleep(200000);
         Thread.sleep(20000);
 
-        Map<TripId, ArrayList<Vehicle>> vehicles =  realtimeService.get_vehiclesByTripId();
+        Map<TripId, ArrayList<Vehicle>> vehicles =  realtimeService.getVehiclesByTripId();
 
         Date d = new Date();
 

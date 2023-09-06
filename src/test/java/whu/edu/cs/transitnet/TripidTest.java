@@ -26,7 +26,7 @@ public class TripidTest {
 
     @Test
     public void tripidTest() {
-        Map<TripId, ArrayList<Vehicle>> tripids =  realtimeService.get_vehiclesByTripId();
+        Map<TripId, ArrayList<Vehicle>> tripids =  realtimeService.getVehiclesByTripId();
         Set<TripId> tripIds = tripids.keySet();
 
         Set<TripId> tripIds1 = new HashSet<>();

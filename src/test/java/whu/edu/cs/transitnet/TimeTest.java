@@ -6,14 +6,10 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import whu.edu.cs.transitnet.dao.StopsDao;
-import whu.edu.cs.transitnet.pojo.StopsEntity;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
 import whu.edu.cs.transitnet.realtime.Vehicle;
-import whu.edu.cs.transitnet.service.StopsService;
 import whu.edu.cs.transitnet.service.index.ScheduleIndex;
 import whu.edu.cs.transitnet.service.index.TripId;
-import whu.edu.cs.transitnet.vo.StopsVo;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -33,12 +29,9 @@ public class TimeTest {
     // 测试看实时取到的tripid的时间范围和schedule的时间是不是一致的
     @Test
     public void timeTest() throws InterruptedException {
-        HashMap<TripId, ArrayList<Time>> tripStartEndList = new HashMap<>();
-        tripStartEndList = scheduleIndex.getTripStartEndList();
-
-        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new HashMap<>();
+        HashMap<TripId, ArrayList<Time>> tripStartEndList = scheduleIndex.getTripStartEndList();
         Thread.sleep(300000);
-        vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
+        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId = realtimeService.getVehiclesByTripId();
 
 
         Date d = new Date();
