@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Time;
+
 @Data
 public class QueryPathPoint {
 
@@ -18,4 +20,8 @@ public class QueryPathPoint {
     @SerializedName("lng")
     private double lon;
 
+    @Getter
+    @Setter
+    @SerializedName("time")
+    private Time time;
 }

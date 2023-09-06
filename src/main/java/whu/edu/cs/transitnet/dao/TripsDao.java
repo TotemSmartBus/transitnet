@@ -9,8 +9,17 @@ import java.sql.Date;
 import java.util.List;
 
 public interface TripsDao extends JpaRepository<TripsEntity, String> {
+    @Query(value = "SELECT * FROM trips", nativeQuery = true)
     List<TripsEntity> findAll();
+
+    @Query(value = "SELECT * FROM trips WHERE trip_id = ?1", nativeQuery = true)
+    List<TripsEntity> findAllByTripId(String tripId);
+
+    @Query(value = "SELECT * FROM trips WHERE route_id =?1", nativeQuery = true)
     List<TripsEntity> findAllByRouteId(String routeId);
+
+    @Query(value = "SELECT * FROM trips WHERE shape_id = ?1", nativeQuery = true)
+    List<TripsEntity> findAllByShapeId(String shapeId);
 
     @Query(value = "SELECT * FROM trips GROUP BY route_id", nativeQuery = true)
     List<TripsEntity> findOriginTrips();

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.bean.RouteCache;
 import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
+import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
 import javax.annotation.PostConstruct;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 public class RealtimeService {
 
     @Value("${transitnet.realtime.url}")
-    private URI _vehiclePositionsUri;
+    private URI vehiclePositionsUri;
 
     @Value("${transitnet.realtime.agency-name}")
     private String AgencyName = "Agency";
@@ -40,27 +41,34 @@ public class RealtimeService {
     private int timezone = 8;
     @Autowired
     private MeterRegistry meterRegistry;
-    private ScheduledExecutorService _executor;
+    private ScheduledExecutorService executor;
 
-    private final Map<String, String> _vehicleIdsByEntityIds = new HashMap<>();
+    private final Map<String, String> vehicleIdsByEntityIds = new HashMap<>();
 
-    private Map<String, Vehicle> _vehiclesById;
+    private Map<String, Vehicle> vehiclesById;
 
-    private Map<String, Vehicle> _onRouteVehiclesById;
+    public ConcurrentHashMap<TripId, ArrayList<Vehicle>> getVehiclesByTripId() {
+        return vehiclesByTripId;
+    }
+
+    // 获取所有轨迹信息；有序
+    private final ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId = new ConcurrentHashMap<>();
+
+    private Map<String, Vehicle> onRouteVehiclesById;
 
     // 位置信息时间序列
     private final LinkedList<List<Vehicle>> timeSerial = new LinkedList<>();
 
-    private final RefreshTask _refreshTask = new RefreshTask();
+    private final RefreshTask refreshTask = new RefreshTask();
 
     /**
      * GTFS 采样的时间间隔，由于原始数据使用了 30s 间隔，这里也用 30s
      **/
-    private final int _refreshInterval = 30;
+    private final int refreshInterval = 30;
 
-    private boolean _dynamicRefreshInterval = true;
+    private boolean dynamicRefreshInterval = true;
 
-    private long _mostRecentRefresh = -1;
+    private long mostRecentRefresh = -1;
 
     @Autowired
     RealtimeDataStore storeService;
@@ -76,10 +84,10 @@ public class RealtimeService {
 
     @PostConstruct
     public void start() {
-        _vehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
-        _onRouteVehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc_filter"), new ConcurrentHashMap<>());
-        _executor = Executors.newSingleThreadScheduledExecutor();
-        _executor.schedule(_refreshTask, 0, TimeUnit.SECONDS);
+        vehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc"), new ConcurrentHashMap<>());
+        onRouteVehiclesById = meterRegistry.gaugeMapSize("realtime_vehicle", Tags.of("region", "nyc_filter"), new ConcurrentHashMap<>());
+        executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(refreshTask, 0, TimeUnit.SECONDS);
         log.info("executor is running...");
     }
 
@@ -101,7 +109,7 @@ public class RealtimeService {
 
         log.info("refreshing vehicle positions");
 
-        URL url = _vehiclePositionsUri.toURL();
+        URL url = vehiclePositionsUri.toURL();
         boolean hadUpdate = false;
         try {
             FeedMessage feed = FeedMessage.parseFrom(url.openStream());
@@ -113,12 +121,12 @@ public class RealtimeService {
 
         }
         if (hadUpdate) {
-            if (_dynamicRefreshInterval) {
+            if (dynamicRefreshInterval) {
                 updateRefreshInterval();
             }
         }
 
-        _executor.schedule(_refreshTask, _refreshInterval, TimeUnit.SECONDS);
+        executor.schedule(refreshTask, refreshInterval, TimeUnit.SECONDS);
     }
 
     private boolean processDataset(FeedMessage feed) {
@@ -128,7 +136,7 @@ public class RealtimeService {
         log.info(String.format("get %d vehicles info", feed.getEntityList().size()));
         for (FeedEntity entity : feed.getEntityList()) {
             if (entity.hasIsDeleted() && entity.getIsDeleted()) {
-                String vehicleId = _vehicleIdsByEntityIds.get(entity.getId());
+                String vehicleId = vehicleIdsByEntityIds.get(entity.getId());
                 if (vehicleId == null) {
                     log.warn("unknown entity id in deletion request: " + entity.getId());
                     continue;
@@ -144,7 +152,7 @@ public class RealtimeService {
             if (vehicleId == null) {
                 continue;
             }
-            _vehicleIdsByEntityIds.put(entity.getId(), vehicleId);
+            vehicleIdsByEntityIds.put(entity.getId(), vehicleId);
             if (!vehicle.hasPosition()) {
                 continue;
             }
@@ -165,10 +173,20 @@ public class RealtimeService {
             v.setNextStop("");
             v.setAimedArrivalTime(0L);
             v.setRecordedTime(vehicle.getTimestamp());
+
+            ArrayList<Vehicle> vs = new ArrayList<>();
+            TripId tripId = new TripId(v.getTripID());
+            if (vehiclesByTripId.containsKey(tripId)) {
+                vs = vehiclesByTripId.get(tripId);
+            }
+            vs.add(v);
+            vehiclesByTripId.put(tripId, vs);
+
+
             // 计算速度
             if (position.getSpeed() == 0.0) {
-                if (_vehiclesById.containsKey(v.getId())) {
-                    Vehicle lastPoint = _vehiclesById.get(v.getId());
+                if (vehiclesById.containsKey(v.getId())) {
+                    Vehicle lastPoint = vehiclesById.get(v.getId());
                     GlobalCoordinates source = new GlobalCoordinates(lastPoint.getLat(), lastPoint.getLon());
                     GlobalCoordinates target = new GlobalCoordinates(v.getLat(), v.getLon());
                     // 默认应该都使用 WGS84 坐标系下计算距离
@@ -189,12 +207,12 @@ public class RealtimeService {
         log.info("vehicles updating: " + vehicles.size());
         long t0 = System.currentTimeMillis();
         // update latest map
-        _vehiclesById.clear();
-        _onRouteVehiclesById.clear();
+        vehiclesById.clear();
+        onRouteVehiclesById.clear();
         vehicles.stream().forEach(v -> {
-            _vehiclesById.put(v.getId(), v);
+            vehiclesById.put(v.getId(), v);
             if (routeCache.routes.contains(v.getRouteID())) {
-                _onRouteVehiclesById.put(v.getId(), v);
+                onRouteVehiclesById.put(v.getId(), v);
             }
         });
 
@@ -210,7 +228,7 @@ public class RealtimeService {
     }
 
     private void updateTimeSerial(List<Vehicle> vehicles) {
-        if (timeSerial.size() > 10) {
+        if (timeSerial.size() > 50) {
             timeSerial.poll();
         }
         timeSerial.offer(vehicles);
@@ -233,11 +251,11 @@ public class RealtimeService {
 
     private void updateRefreshInterval() {
         long t = System.currentTimeMillis();
-        if (_mostRecentRefresh != -1) {
-            int refreshInterval = (int) ((t - _mostRecentRefresh) / 1000);
-            log.info("refresh interval: " + _refreshInterval + "s");
+        if (mostRecentRefresh != -1) {
+            int refreshInterval = (int) ((t - mostRecentRefresh) / 1000);
+            log.info("refresh interval: " + refreshInterval + "s");
         }
-        _mostRecentRefresh = t;
+        mostRecentRefresh = t;
     }
 
     private class RefreshTask implements Runnable {

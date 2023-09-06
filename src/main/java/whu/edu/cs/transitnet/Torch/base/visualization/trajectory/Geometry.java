@@ -7,8 +7,9 @@ public class Geometry {
 
     String type = "LineString";
 
-    //lng, lat
-    //order is vital
+    /**
+     * lng, lat
+     */
     double[][] coordinates;
 
     public Geometry(List<ShapePointVo> path){

@@ -8,10 +8,7 @@ import whu.edu.cs.transitnet.dao.RealTimeDataDao;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +27,7 @@ public class RealtimeDataStore {
         t.start();
     }
 
-    private static final SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    private static final SimpleDateFormat FORMATER = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
     class RealtimeDataStoreRunner implements Runnable {
         private List<Vehicle> vehicleList;
@@ -58,13 +55,13 @@ public class RealtimeDataStore {
                 entity.setLon(v.getLon());
                 entity.setBearing((double) v.getBearing());
                 entity.setVehicleId(v.getId());
-                entity.setAimedArrivalTime(formater.format(v.getAimedArrivalTime() * 1000));
+                entity.setAimedArrivalTime(FORMATER.format(v.getAimedArrivalTime() * 1000));
                 entity.setDistanceFromOrigin((double) v.getDistanceFromOrigin());
                 entity.setPresentableDistance((double) v.getPresentableDistance());
                 entity.setDistanceFromNextStop(String.valueOf(v.getDistanceFromNextStop()));
                 entity.setNextStop(v.getNextStop());
                 entity.setDistanceFromOrigin((double) v.getDistanceFromOrigin());
-                entity.setRecordedTime(formater.format(v.getRecordedTime() * 1000));
+                entity.setRecordedTime(FORMATER.format(v.getRecordedTime() * 1000));
                 return entity;
             }).collect(Collectors.toList());
             List<RealTimeDataEntity> result = realTimeDataDao.saveAll(list);

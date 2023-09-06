@@ -12,8 +12,8 @@ import java.util.List;
 public class TrajNode extends Coordinate{
 
     public int id;
-    private long _time = -1;
-    List<String> _bundle = new ArrayList<>(3);
+    private long time = -1;
+    List<String> bundle = new ArrayList<>(3);
 
     public TrajNode(double lat, double lng) {
         super(lat,lng);
@@ -21,20 +21,22 @@ public class TrajNode extends Coordinate{
 
     public TrajNode(double lat, double lng, long time) {
         this(lat, lng);
-        _time = time;
+        time = time;
     }
 
     public void addExtraInfo(String extra){
-        _bundle.add(extra);
+        bundle.add(extra);
     }
 
     public void setTime(long time){
-        _time = time;
+        time = time;
     }
 
     public long getTime() {
-        if (_time == -1) throw new IllegalStateException("try to fetch time in node not containing time information");
-        return _time;
+        if (time == -1) {
+            throw new IllegalStateException("try to fetch time in node not containing time information");
+        }
+        return time;
     }
 
     @Override

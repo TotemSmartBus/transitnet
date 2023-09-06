@@ -31,8 +31,12 @@ public class StopTimesEntityPK implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         StopTimesEntityPK that = (StopTimesEntityPK) o;
         return Objects.equals(tripId, that.tripId) &&
                 Objects.equals(stopId, that.stopId);

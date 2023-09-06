@@ -97,8 +97,12 @@ public class RoutesEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         RoutesEntity that = (RoutesEntity) o;
         return Objects.equals(routeId, that.routeId) &&
                 Objects.equals(agencyId, that.agencyId) &&

@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @Service
 @EnableScheduling
@@ -32,7 +32,7 @@ public class HytraHistoricalIndex {
 
     private final Logger log = LoggerFactory.getLogger("Cron");
 
-    @Scheduled(cron = "${scheduled.historicalIndex}")
+    // @Scheduled(cron = "${scheduled.historicalIndex}")
     public void buildHistoricalIndex() {
         log.info("[cron]Running cron");
         if (!indexEnable) {
@@ -44,42 +44,58 @@ public class HytraHistoricalIndex {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String dateKey = dateFormat.format(date);
         String datetimeKey = formatter.format(date);
-        // 生成配置文件并保存到指定位置
-        String configPath = "/tmp/log/transitnet";
+        String configPath = "/tmp";
+
         long tBeforeConfigGenerate = System.currentTimeMillis();
         try {
             String path = System.getProperty("user.dir");
             configPath = Generator.generateConfig().saveTo(path, datetimeKey + ".index");
         } catch (IOException e) {
-            log.error("[cron]Error while write config to file:" + configPath, e);
+            log.error("[cron]Error while write config to file: " + configPath, e);
         }
         long tAfterConfigGenerate = System.currentTimeMillis();
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
-        // 生成索引
+
         long tBeforeIndexGenerate = System.currentTimeMillis();
-        HashMap<String, Integer> indexMap = Generator.generateKV();
+        HashMap<String, HashSet<Integer>> indexMap = Generator.generateKV();
         long tAfterIndexGenerate = System.currentTimeMillis();
         log.info("[cron]Generate Index for {}s", String.format("%.2f", (tAfterIndexGenerate - tBeforeIndexGenerate) / 1000.0));
-        // 向 LSM-Tree 写入配置
+
         long tBeforeConfigWrite = System.currentTimeMillis();
         try {
+            // 传配置文件
             storageManager.config(dateKey, configPath);
         } catch (Exception e) {
             log.error("[cron]Error while read config from file:" + configPath, e);
         }
         long tAfterConfigWrite = System.currentTimeMillis();
         log.info("[cron]Write config for {}s", String.format("%.2f", (tAfterConfigWrite - tBeforeConfigWrite) / 1000.0));
+
         long tBeforeIndexWrite = System.currentTimeMillis();
         log.info(String.format("[cron]Writing %d indexes", indexMap.size()));
-        // 向 LSM-Tree 写入数据
+
+        // 4. 查询 LSM 状态
+        try {
+            String status = storageManager.status();
+            log.info("[cron]LSM-Status is " + status);
+        } catch (Exception e) {
+            log.error("[cron]Error while get status of LSM-Tree", e);
+        }
+
+        // 5. 写入数据
         indexMap.forEach((key, value) -> {
-            try {
-                storageManager.put(key, String.valueOf(value));
-            } catch (Exception e) {
-                log.error(String.format("[cron]Error while write index for [%s, %d]", key, value), e);
+            for(int i : value) {
+                try{
+                    storageManager.put(key, String.valueOf(i));
+                } catch (Exception e) {
+                    log.error(String.format("[cron]Error while write index for [%s, %d]", key, i), e);
+                }
             }
         });
+
+
         long tAfterIndexWrite = System.currentTimeMillis();
+
         log.info("[cron]Write index for {}s", String.format("%.2f", (tAfterIndexWrite - tBeforeIndexWrite) / 1000.0));
         // 清理 trajDatabase
         Engine.trajDataBase.clear();

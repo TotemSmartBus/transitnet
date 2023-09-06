@@ -54,8 +54,12 @@ public class SplitShapeSpeedEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         SplitShapeSpeedEntity that = (SplitShapeSpeedEntity) o;
         return splitId == that.splitId &&
                 Double.compare(that.speed, speed) == 0 &&

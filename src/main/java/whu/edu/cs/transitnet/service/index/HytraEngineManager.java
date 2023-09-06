@@ -3,11 +3,12 @@ package whu.edu.cs.transitnet.service.index;
 import edu.whu.hytra.EngineFactory;
 import edu.whu.hytra.EngineParam;
 import edu.whu.hytra.entity.Vehicle;
-import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -57,6 +58,10 @@ public class HytraEngineManager {
 
     public void updateIndex(List<Vehicle> data) {
         engineFactory.updateIndex(data);
+    }
+
+    public void updateCTIndex(HashMap<String, ArrayList<String>> data) {
+        engineFactory.updateCTIndex(data);
     }
 
     public EngineParam getParams() {
