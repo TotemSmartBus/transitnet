@@ -88,8 +88,12 @@ public class StopTimesEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         StopTimesEntity that = (StopTimesEntity) o;
         return stopSequence == that.stopSequence &&
                 Objects.equals(tripId, that.tripId) &&

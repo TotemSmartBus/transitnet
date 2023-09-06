@@ -21,7 +21,9 @@ public class HytraSerivce {
     private int port;
 
     @Bean
-    // 进行 LsmTreeTest 测试时注释掉下面这句
+    /**
+     * 进行 LsmTreeTest 测试时注释掉下面这句
+     */
     @ConditionalOnProperty(value = "${transitnet.index.enable}", havingValue = "true")
     public SocketStorageManager storageManager() {
         try {

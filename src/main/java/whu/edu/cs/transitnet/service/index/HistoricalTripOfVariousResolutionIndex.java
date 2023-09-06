@@ -42,7 +42,9 @@ public class HistoricalTripOfVariousResolutionIndex {
 
 //    @PostConstruct
     public void init() throws ParseException {
-//
+
+        // 不要删除这段代码
+        // 是否注释掉等同于是否进行索引构建
 //        if(!indexEnable) {
 //            System.out.println("[HISTORICALTRIPOFVARIOUSRESOLUTIONINDEX] Index is not enabled, skipped.");
 //            return;
@@ -73,16 +75,14 @@ public class HistoricalTripOfVariousResolutionIndex {
             ArrayList<CubeId> cubeIds8 = new ArrayList<>();
             ArrayList<CubeId> cubeIds6 = new ArrayList<>();
 
-//            List<RealTimeDataEntity> realTimeDataEntityList = realTimeDataDao.findAllPointsByTripIdByTimeSpan(tripId, startTime, endTime);
+
             List<RealTimePointEntity> realTimePointEntityList = realTimeDataDao.findAllSimplePointsByTripIdByTimeSpan(tripId, startTime, endTime);
 
             for (int j = 0; j < realTimePointEntityList.size(); j++) {
-//                System.out.println("[HISTORICALTRIPOFVARIOUSRESOLUTIONINDEX] number of scanned points: " + (j + 1));
 
                 double lat = realTimePointEntityList.get(j).getLat();
                 double lon = realTimePointEntityList.get(j).getLon();
 
-                // TODO:
                 String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
                 Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
                 Long time = parse.getTime();
@@ -94,11 +94,21 @@ public class HistoricalTripOfVariousResolutionIndex {
                 CubeId cubeId8 = encodeService.encodeCube(lat, lon, time, 8);
                 CubeId cubeId6 = encodeService.encodeCube(lat, lon, time, 6);
 
-                if(cubeIds4.isEmpty() || cubeIds4.lastIndexOf(cubeId4) != (cubeIds4.size() - 1)) cubeIds4.add(cubeId4);
-                if(cubeIds5.isEmpty() || cubeIds5.lastIndexOf(cubeId5) != (cubeIds5.size() - 1)) cubeIds5.add(cubeId5);
-                if(cubeIds7.isEmpty() || cubeIds7.lastIndexOf(cubeId7) != (cubeIds7.size() - 1)) cubeIds7.add(cubeId7);
-                if(cubeIds8.isEmpty() || cubeIds8.lastIndexOf(cubeId8) != (cubeIds8.size() - 1)) cubeIds8.add(cubeId8);
-                if(cubeIds6.isEmpty() || cubeIds6.lastIndexOf(cubeId6) != (cubeIds6.size() - 1)) cubeIds6.add(cubeId6);
+                if(cubeIds4.isEmpty() || cubeIds4.lastIndexOf(cubeId4) != (cubeIds4.size() - 1)) {
+                    cubeIds4.add(cubeId4);
+                }
+                if(cubeIds5.isEmpty() || cubeIds5.lastIndexOf(cubeId5) != (cubeIds5.size() - 1)) {
+                    cubeIds5.add(cubeId5);
+                }
+                if(cubeIds7.isEmpty() || cubeIds7.lastIndexOf(cubeId7) != (cubeIds7.size() - 1)) {
+                    cubeIds7.add(cubeId7);
+                }
+                if(cubeIds8.isEmpty() || cubeIds8.lastIndexOf(cubeId8) != (cubeIds8.size() - 1)) {
+                    cubeIds8.add(cubeId8);
+                }
+                if(cubeIds6.isEmpty() || cubeIds6.lastIndexOf(cubeId6) != (cubeIds6.size() - 1)) {
+                    cubeIds6.add(cubeId6);
+                }
             }
 
             // 构造 tripCubeList

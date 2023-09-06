@@ -108,8 +108,12 @@ public class StopsEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         StopsEntity that = (StopsEntity) o;
         return Objects.equals(stopId, that.stopId) &&
                 Objects.equals(stopName, that.stopName) &&

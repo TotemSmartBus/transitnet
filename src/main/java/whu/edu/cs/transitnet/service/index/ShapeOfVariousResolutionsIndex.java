@@ -62,11 +62,13 @@ public class ShapeOfVariousResolutionsIndex {
         gridShapeList8 = new HashMap<>();
     }
 
-    // resolution = 4/5/7/8 时创建 txt 文件的操作
-//    @PostConstruct
-    public void init() {
 
-//        int resolution = hytraEngineManager.getParams().getResolution();
+    // @PostConstruct
+
+    /**
+     * resolution = 4/5/7/8 时创建 txt 文件的操作
+     */
+    public void init() {
         File shapeGridFile4 = new File("./src/main/" + "shape_grid_" + "4.txt");
         File gridShapeFile4 = new File("./src/main/" + "grid_shape_" + "4.txt");
         File shapeGridFile5 = new File("./src/main/" + "shape_grid_" + "5.txt");

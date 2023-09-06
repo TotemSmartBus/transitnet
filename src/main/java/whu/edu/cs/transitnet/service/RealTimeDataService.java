@@ -44,7 +44,9 @@ public class RealTimeDataService {
             String curVehicleId = re.getVehicleId();
             List<RealTimePointEntity> tempList = new ArrayList<>();
             for (RealTimePointEntity rtp : realTimePointEntities) {
-                if (rtp.getVehicleId().equals(curVehicleId)) tempList.add(rtp);
+                if (rtp.getVehicleId().equals(curVehicleId)) {
+                    tempList.add(rtp);
+                }
             }
             Double speed = calSpeed(tempList);
             realTimeDataVos.add(new RealTimeDataVo(re, speed));
@@ -120,10 +122,11 @@ public class RealTimeDataService {
             } else {
                 speedList.add(0.0);
             }
-            if (firstIndex.equals(tempIndex))
+            if (firstIndex.equals(tempIndex)) {
                 firstIndex = tempIndex;
-            else
+            } else {
                 firstIndex = tempIndex - 1;
+            }
             lastTime = timeSpanEnd;
         }
 //        speedList.size() 24*4
@@ -144,8 +147,11 @@ public class RealTimeDataService {
 
     private Double calSpeed(List<? extends RealTimePointEntity> realTimePointEntities) {
         TimeUtil timeUtil = new TimeUtil();
-        if (realTimePointEntities.size() == 0 || realTimePointEntities.size() == 1) return 0.0;
-        Double dist = 0.0; //km
+        if (realTimePointEntities.size() == 0 || realTimePointEntities.size() == 1) {
+            return 0.0;
+        }
+        // km
+        Double dist = 0.0;
         String startTime = realTimePointEntities.get(0).getRecordedTime();
         String endTime = realTimePointEntities.get(realTimePointEntities.size() - 1).getRecordedTime();
         for (Integer i = 0; i < realTimePointEntities.size() - 1; i++) {
@@ -155,9 +161,13 @@ public class RealTimeDataService {
         }
         Timestamp time1 = Timestamp.valueOf(startTime);
         Timestamp time2 = Timestamp.valueOf(endTime);
-        long span = (time2.getTime() - time1.getTime()) / 1000; //  s
-        if (span == 0) return 0.0;
-        else return dist * 3600 / span;
+        // s
+        long span = (time2.getTime() - time1.getTime()) / 1000;
+        if (span == 0) {
+            return 0.0;
+        } else {
+            return dist * 3600 / span;
+        }
     }
 
     public List<String> getRealTimeRouteOptionsByDate(Date date) {
@@ -234,8 +244,9 @@ public class RealTimeDataService {
             String vId = rtpt.getVehicleId();
             String tId = rtpt.getTripId();
             StringPair pair = new StringPair(vId, tId);
-            if (result.contains(pair) == false)
+            if (result.contains(pair) == false) {
                 result.add(pair);
+            }
         }
         return result;
     }
@@ -244,8 +255,9 @@ public class RealTimeDataService {
         List<String> result = new ArrayList<>();
         for (RealTimeDataEntity rtpt : routesPoints) {
             String vId = rtpt.getVehicleId();
-            if (result.contains(vId) == false)
+            if (result.contains(vId) == false) {
                 result.add(vId);
+            }
         }
         return result;
     }
@@ -264,8 +276,11 @@ public class RealTimeDataService {
             }
         }
         for (int i = 0; i < 96; i++) {
-            if (countList[i] == 0) resultSpeed.add(0.0);
-            else resultSpeed.add(speedList[i] / countList[i]);
+            if (countList[i] == 0) {
+                resultSpeed.add(0.0);
+            } else {
+                resultSpeed.add(speedList[i] / countList[i]);
+            }
         }
         return resultSpeed;
     }

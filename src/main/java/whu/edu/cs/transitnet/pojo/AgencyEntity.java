@@ -3,6 +3,9 @@ package whu.edu.cs.transitnet.pojo;
 import javax.persistence.*;
 import java.util.Objects;
 
+/**
+ * @author Ria
+ */
 @Entity
 @Table(name = "agency")
 public class AgencyEntity {
@@ -75,8 +78,12 @@ public class AgencyEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AgencyEntity that = (AgencyEntity) o;
         return Objects.equals(agencyId, that.agencyId) &&
                 Objects.equals(agencyName, that.agencyName) &&

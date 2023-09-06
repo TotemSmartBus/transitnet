@@ -75,8 +75,12 @@ public class TripsEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TripsEntity that = (TripsEntity) o;
         return Objects.equals(routeId, that.routeId) &&
                 Objects.equals(serviceId, that.serviceId) &&

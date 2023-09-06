@@ -32,8 +32,12 @@ public class ShapeId implements CharSequence, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ShapeId shapeId = (ShapeId) o;
         return Objects.equals(content, shapeId.content);
     }

@@ -28,14 +28,16 @@ public class GeoUtil {
 
     private static double distance(double lat1, double lat2, double lon1, double lon2, double el1, double el2) {
 
-        final int R = 6371; // Radius of the earth
+        // Radius of the earth
+        final int R = 6371;
 
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) + Math.cos(Math.toRadians(lat1))
                 * Math.cos(Math.toRadians(lat2)) * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = R * c * 1000; // convert to meters
+        // convert to meters
+        double distance = R * c * 1000;
 
         double height = el1 - el2;
 
@@ -55,8 +57,12 @@ public class GeoUtil {
         double ret;
         double coef = meters * 0.0000089;
         ret = lat + coef;
-        if (ret > 90) ret = 90;
-        if (ret < -90) ret = -90;
+        if (ret > 90) {
+            ret = 90;
+        }
+        if (ret < -90) {
+            ret = -90;
+        }
         return ret;
     }
 
@@ -75,8 +81,12 @@ public class GeoUtil {
         double ret;
         double coef = meters * 0.0000089;
         ret = lon + coef / Math.cos(lat * 0.018);
-        if (ret > 180) ret -= 360;
-        if (ret < -180) ret += 360;
+        if (ret > 180) {
+            ret -= 360;
+        }
+        if (ret < -180) {
+            ret += 360;
+        }
 
         return ret;
     }

@@ -43,8 +43,12 @@ public class ArrivalTimeEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ArrivalTimeEntity that = (ArrivalTimeEntity) o;
         return Objects.equals(timeSpan, that.timeSpan) &&
                 Objects.equals(allCount, that.allCount) &&

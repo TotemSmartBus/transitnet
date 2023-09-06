@@ -39,8 +39,12 @@ public class ShapesEntityPK implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ShapesEntityPK that = (ShapesEntityPK) o;
         return Objects.equals(shapeId, that.shapeId) &&
                 Objects.equals(shapePtSequence, that.shapePtSequence);

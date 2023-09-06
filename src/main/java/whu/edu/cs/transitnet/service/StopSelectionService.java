@@ -1,13 +1,5 @@
 package whu.edu.cs.transitnet.service;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.sql.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.google.transit.realtime.GtfsRealtime;
 import lombok.extern.slf4j.Slf4j;
 import org.gavaghan.geodesy.Ellipsoid;
@@ -19,7 +11,17 @@ import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.realtime.RealtimeService;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 import whu.edu.cs.transitnet.utils.GeoUtil;
-import whu.edu.cs.transitnet.vo.StopsVo;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -32,18 +34,15 @@ public class StopSelectionService {
     GeodeticCalculator geodeticCalculator;
 
     @Value("${transitnet.realtime.url}")
-    private URI _vehiclePositionsUri;
+    private URI vehiclePositionsUri;
 
     @Value("${transitnet.realtime.agency-name}")
     private String AgencyName = "Agency";
 
-    private final Map<String, String> _vehicleIdsByEntityIds = new HashMap<>();
+    private final Map<String, String> vehicleIdsByEntityIds = new HashMap<>();
 
-    private final Map<String, Vehicle> _vehiclesById = new ConcurrentHashMap<>();
+    private final Map<String, Vehicle> vehiclesById = new ConcurrentHashMap<>();
 
-//    public List<StopsVo> getStops(String routeId, Integer direction) {
-//
-//    }
     public void stopSelection() throws MalformedURLException {
 
         long startTime = System.currentTimeMillis();
@@ -77,18 +76,19 @@ public class StopSelectionService {
         // 连接sqlite数据库
         Connection c = null;
         // Statement stmt = null;
-        PreparedStatement pstmt = null; // 查询所有stop_ids
-        PreparedStatement pstmt1 = null; // 查询每个stop_id的stop_lat和stop_lon
-        PreparedStatement pstmt2 = null; // 查询route_id和direction下的trip_id，用于实时公交判断
+        // 查询所有stop_ids
+        PreparedStatement pstmt = null;
+        // 查询每个stop_id的stop_lat和stop_lon
+        PreparedStatement pstmt1 = null;
+        // 查询route_id和direction下的trip_id，用于实时公交判断
+        PreparedStatement pstmt2 = null;
         try {
             Class.forName("org.sqlite.JDBC");
             // 打开数据库；这一行要使用我们搭建SQLite时的url
             c = DriverManager.getConnection("jdbc:sqlite:C://Windows//System32//gtfsdb//bin//gtfs.db");
             System.out.println("Opened database successfully");
 
-            // stmt = c.createStatement();
             // 这里执行查询语句
-            // ResultSet rs = stmt.executeQuery( "SELECT stop_id FROM route_stops WHERE route_id = '%s', routeId;");
             pstmt = c.prepareStatement("SELECT stop_id FROM route_stops WHERE route_id = ? AND direction_id = ?;");
             pstmt.setString(1, routeId);
             pstmt.setInt(2, direction);
@@ -115,8 +115,6 @@ public class StopSelectionService {
                 ResultSet rs1 = pstmt1.executeQuery();
                 Double lat = rs1.getDouble("stop_lat");
                 Double lon = rs1.getDouble("stop_lon");
-                // System.out.println(lat);
-                // System.out.println(lon);
 
                 // 把stop_id - [lat, lon]存到哈希表里
                 ArrayList<Double> latAndLon = new ArrayList<>();
@@ -173,19 +171,14 @@ public class StopSelectionService {
             public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
                 Double t = o1.getValue() - o2.getValue();
                 int flag = 1;
-                if (t <= 0) flag = -1;
+                if (t <= 0) {
+                    flag = -1;
+                }
                 return flag;
             }
         });
-        //     3) 用迭代器对list中的键值对元素进行遍历
 
-//        Iterator<Map.Entry<String, Double>> iterator = arrayList.iterator();
-//        while (iterator.hasNext()) {
-//            Map.Entry<String, Double> ite = iterator.next();
-//            System.out.println(ite.getKey() + ": " + ite.getValue());
-//        }
-
-        //        取出离用户最近的两个站点
+        // 取出离用户最近的两个站点
         HashMap<String, Double> top2 = new HashMap<>();
         String key1 = arrayList.get(0).getKey();
         String key2 = arrayList.get(1).getKey();
@@ -274,7 +267,8 @@ public class StopSelectionService {
         Double waitingTime;
         Double walkingTime;
 
-        if (stopRFBusTime.isEmpty() && stopRSBusTime.isEmpty()) {            // 公交都过站了
+        // 公交都过站了
+        if (stopRFBusTime.isEmpty() && stopRSBusTime.isEmpty()) {
             System.out.println("公交都过站了");
             selectedBus = null;
             selectedStop = stopRFWalkTime <= stopRSWalkTime ? stopReachedFirst : stopReachedSecond;
@@ -285,15 +279,17 @@ public class StopSelectionService {
             System.out.println("步行至站点时间：" + walkingTime + "分钟");
             System.out.println("下一辆即将到站的公交id：" + selectedBus.getId());
             System.out.println("等待公交到站预计耗时：" + waitingTime / 60 + "分钟");
-        } else if (!stopRFBusTime.isEmpty() && stopRSBusTime.isEmpty()) {    // 公交要到第一个站点了，那么也会到第二个站点，所以这个elseif有问题
-
+        } else if (!stopRFBusTime.isEmpty() && stopRSBusTime.isEmpty()) {
+            // 公交要到第一个站点了，那么也会到第二个站点，所以这个elseif有问题
             HashMap<Vehicle, Double> stopRFWaitingTime = new HashMap<>();
 
             Iterator<Map.Entry<Vehicle, Double>> iterator1 = stopRFBusTime.entrySet().iterator();
             while (iterator1.hasNext()) {
                 Map.Entry<Vehicle, Double> entry = iterator1.next();
                 Double dvalue = entry.getValue() - stopRFWalkTime;
-                if (dvalue >= 0) stopRFWaitingTime.put(entry.getKey(), dvalue);
+                if (dvalue >= 0) {
+                    stopRFWaitingTime.put(entry.getKey(), dvalue);
+                }
             }
             // watingtime排序
             List<Map.Entry<Vehicle, Double>> list1 = new ArrayList<>(stopRFWaitingTime.entrySet());
@@ -311,15 +307,17 @@ public class StopSelectionService {
             System.out.println("下一辆即将到站的公交id：" + selectedBus.getId());
             System.out.println("等待公交到站预计耗时：" + waitingTime / 60 + "分钟");
 
-        } else if (stopRFBusTime.isEmpty() && !stopRSBusTime.isEmpty()) {    // 有公交要到第二个站点了，但是没有公交要到第一个站点
-
+        } else if (stopRFBusTime.isEmpty() && !stopRSBusTime.isEmpty()) {
+            // 有公交要到第二个站点了，但是没有公交要到第一个站点
             HashMap<Vehicle, Double> stopRSWaitingTime = new HashMap<>();
 
             Iterator<Map.Entry<Vehicle, Double>> iterator2 = stopRSBusTime.entrySet().iterator();
             while (iterator2.hasNext()) {
                 Map.Entry<Vehicle, Double> entry = iterator2.next();
                 Double dvalue = entry.getValue() - stopRSWalkTime;
-                if (dvalue >= 0) stopRSWaitingTime.put(entry.getKey(), dvalue);
+                if (dvalue >= 0) {
+                    stopRSWaitingTime.put(entry.getKey(), dvalue);
+                }
             }
             List<Map.Entry<Vehicle, Double>> list2 = new ArrayList<>(stopRSWaitingTime.entrySet());
             list2.sort(Map.Entry.comparingByValue());
@@ -346,7 +344,9 @@ public class StopSelectionService {
             while (iterator1.hasNext()) {
                 Map.Entry<Vehicle, Double> entry = iterator1.next();
                 Double dvalue = entry.getValue() - stopRFWalkTime;
-                if (dvalue >= 0) stopRFWaitingTime.put(entry.getKey(), dvalue);
+                if (dvalue >= 0) {
+                    stopRFWaitingTime.put(entry.getKey(), dvalue);
+                }
             }
             // waitingtime排序
             List<Map.Entry<Vehicle, Double>> list1 = new ArrayList<>(stopRFWaitingTime.entrySet());
@@ -359,7 +359,9 @@ public class StopSelectionService {
             while (iterator2.hasNext()) {
                 Map.Entry<Vehicle, Double> entry = iterator2.next();
                 Double dvalue = entry.getValue() - stopRSWalkTime;
-                if (dvalue >= 0) stopRSWaitingTime.put(entry.getKey(), dvalue);
+                if (dvalue >= 0) {
+                    stopRSWaitingTime.put(entry.getKey(), dvalue);
+                }
             }
             List<Map.Entry<Vehicle, Double>> list2 = new ArrayList<>(stopRSWaitingTime.entrySet());
             list2.sort(Map.Entry.comparingByValue());
@@ -413,7 +415,7 @@ public class StopSelectionService {
 
     public List<Vehicle> getRealtimeInfo(List<String> allTripIds) throws MalformedURLException {
         // 通过实时数据获取接口获取feed
-        URL url = _vehiclePositionsUri.toURL();
+        URL url = vehiclePositionsUri.toURL();
 //        boolean hadUpdate = false;
         GtfsRealtime.FeedMessage feed = null;
         try {
@@ -429,19 +431,18 @@ public class StopSelectionService {
         List<Vehicle> vehicles = new ArrayList<>();
         // 打印看看获得了多少车辆的信息
         System.out.println("=========================================");
-//        log.info(String.format("get %d vehicles info", feed.getEntityList().size()));
         System.out.println(String.format("get %d vehicles info", feed.getEntityList().size()));
 
         boolean update = false;
 
         for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
             if (entity.hasIsDeleted() && entity.getIsDeleted()) {
-                String vehicleId = _vehicleIdsByEntityIds.get(entity.getId());
+                String vehicleId = vehicleIdsByEntityIds.get(entity.getId());
                 if (vehicleId == null) {
                     log.warn("unknown entity id in deletion request: " + entity.getId());
                     continue;
                 }
-                _vehiclesById.remove(vehicleId);
+                vehiclesById.remove(vehicleId);
                 continue;
             }
             if (!entity.hasVehicle()) {
@@ -452,7 +453,7 @@ public class StopSelectionService {
             if (vehicleId == null) {
                 continue;
             }
-            _vehicleIdsByEntityIds.put(entity.getId(), vehicleId);
+            vehicleIdsByEntityIds.put(entity.getId(), vehicleId);
             if (!vehicle.hasPosition()) {
                 continue;
             }
@@ -469,15 +470,14 @@ public class StopSelectionService {
             v.setBearing(position.getBearing());
             v.setId(vehicleId);
 //            v.setLastUpdate(currentTime);
-            // TODO: 未知字段
             v.setNextStop("");
             v.setAimedArrivalTime(0L);
 
             v.setRecordedTime(vehicle.getTimestamp());
             // 计算速度
             if (position.getSpeed() == 0.0) {
-                if (_vehiclesById.containsKey(v.getId())) {
-                    Vehicle lastPoint = _vehiclesById.get(v.getId());
+                if (vehiclesById.containsKey(v.getId())) {
+                    Vehicle lastPoint = vehiclesById.get(v.getId());
                     GlobalCoordinates source = new GlobalCoordinates(lastPoint.getLat(), lastPoint.getLon());
                     GlobalCoordinates target = new GlobalCoordinates(v.getLat(), v.getLon());
                     // 默认应该都使用 WGS84 坐标系下计算距离
@@ -495,25 +495,25 @@ public class StopSelectionService {
                 v.setSpeed(position.getSpeed());
             }
 
-            Vehicle existing = _vehiclesById.get(vehicleId);
+            Vehicle existing = vehiclesById.get(vehicleId);
             if (existing == null || existing.getLat() != v.getLat()
                     || existing.getLon() != v.getLon()) {
-                _vehiclesById.put(vehicleId, v);
+                vehiclesById.put(vehicleId, v);
                 update = true;
             } else {
                 v.setLastUpdate(existing.getLastUpdate());
             }
-//            System.out.println(v.getTripID());
 
-//            vehicles.add(v);
-            if (allTripIds.contains(v.getTripID())) vehicles.add(v);
+            if (allTripIds.contains(v.getTripID())) {
+                vehicles.add(v);
+            }
         }
 
         System.out.println("=========================================");
         for (Vehicle v:vehicles) {
             System.out.println(v.getTripID());
         }
-//        System.out.println(vehicles);
+
         System.out.println("=========================================");
         System.out.println("get " + vehicles.size() + " vehicles info that meet the conditions");
         System.out.println("=========================================");

@@ -35,7 +35,8 @@ public class RealtimeKNNExpService {
 
     @Autowired
     ScheduleIndex scheduleIndex;
-    int kShape = 15; // 这个k指的是取前k个shape
+    // 这个k指的是取前k个shape
+    int kShape = 15;
 
 
     // trip_id - [start_time, end_time] 写个类
@@ -49,8 +50,15 @@ public class RealtimeKNNExpService {
 
     @Autowired
     TripsDao tripsDao;
-    // schedule 做筛选
-    // user: [start_time, end_time]
+
+    /**
+     * schedule 做筛选；user: [start_time, end_time]
+     * @param userTripId
+     * @param userGridList
+     * @param userStart
+     * @param userEnd
+     * @return
+     */
     public ArrayList<TripId> filterTripList(TripId userTripId, ArrayList<GridId> userGridList, Time userStart, Time userEnd) {
         ArrayList<TripId> filteredTripList = new ArrayList<>();
 
@@ -72,7 +80,9 @@ public class RealtimeKNNExpService {
         for (TripsEntity tripsEntity : tripsEntityList) {
             ArrayList<TripId> tripIds1 = shapeIndex.getTripIdsByShapeId(new ShapeId(tripsEntity.getShapeId()));
             for (TripId tripId : tripIds1) {
-                if(!tripIds.contains(tripId)) tripIds.add(tripId);
+                if(!tripIds.contains(tripId)) {
+                    tripIds.add(tripId);
+                }
             }
         }
 
@@ -96,11 +106,13 @@ public class RealtimeKNNExpService {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 
                 Date d1 = new Date();
-                d1.setTime(startToLong - 30 * 60 * 1000); // 往前推30分钟
+                // 往前推30分钟
+                d1.setTime(startToLong - 30 * 60 * 1000);
                 String startForward = sdf.format(d1);
 
                 Date d2 = new Date();
-                d2.setTime(endToLong + 30 * 60 * 1000); // 往后推30分钟
+                // 往后推30分钟
+                d2.setTime(endToLong + 30 * 60 * 1000);
                 String endBackward = sdf.format(d2);
 
                 if (Time.valueOf(startForward).before(userEnd) && Time.valueOf(endBackward).after(userStart)) {
@@ -115,8 +127,12 @@ public class RealtimeKNNExpService {
         return filteredTripList;
     }
 
-    // 不用 schedule 做筛选
-    // user: [start_time, end_time]
+    /**
+     * 不用 schedule 做筛选；user: [start_time, end_time]
+     * @param userTripId
+     * @param userGridList
+     * @return
+     */
     public ArrayList<TripId> filterTripList(TripId userTripId, ArrayList<GridId> userGridList) {
         ArrayList<TripId> filteredTripList = new ArrayList<>();
 
@@ -138,7 +154,9 @@ public class RealtimeKNNExpService {
         for (TripsEntity tripsEntity : tripsEntityList) {
             ArrayList<TripId> tripIds1 = shapeIndex.getTripIdsByShapeId(new ShapeId(tripsEntity.getShapeId()));
             for (TripId tripId : tripIds1) {
-                if(!tripIds.contains(tripId)) tripIds.add(tripId);
+                if(!tripIds.contains(tripId)) {
+                    tripIds.add(tripId);
+                }
             }
         }
 
@@ -148,13 +166,20 @@ public class RealtimeKNNExpService {
         return tripIds;
     }
 
-    // 使用 shape - trip - schedule 两层索引
-    // 取得所有轨迹
+    /**
+     * 使用 shape - trip - schedule 两层索引取得所有轨迹
+     * @param userTripId
+     * @param userGridList
+     * @param userStart
+     * @param userEnd
+     * @throws InterruptedException
+     */
     public void getTripIdCubeList(TripId userTripId, ArrayList<GridId> userGridList, Time userStart, Time userEnd) throws InterruptedException {
 
         tripCubeList = new HashMap<>();
 
-        ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList, userStart, userEnd); // 获取所有要判断的tripid
+        // 获取所有要判断的tripid
+        ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList, userStart, userEnd);
 
         if (filteredTripList.isEmpty()) {
             return;
@@ -184,18 +209,23 @@ public class RealtimeKNNExpService {
 
     }
 
-    // 使用 shape - trip 一层索引
+    /**
+     * 使用 shape - trip 一层索引
+     * @param userTripId
+     * @param userGridList
+     * @throws InterruptedException
+     */
     public void getTripIdCubeList(TripId userTripId, ArrayList<GridId> userGridList) throws InterruptedException {
         tripCubeList = new HashMap<>();
 
-        ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList); // 获取所有要判断的tripid
+        // 获取所有要判断的tripid
+        ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList);
 
         if (filteredTripList.isEmpty()) {
             return;
         }
 
         System.out.println("[REALTIMEKNNEXPSERVICE] " + "size of filtered trips: " + filteredTripList.size());
-//        Map<TripId, ArrayList<Vehicle>> vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
         System.out.println("[REALTIMEKNNEXPSERVICE] " + "if the filtered list contains usertripid: " + filteredTripList.contains(userTripId));
         for (TripId tripId : filteredTripList) {
             if (vehiclesByTripId.containsKey(tripId) && vehiclesByTripId.get(tripId) != null) {
@@ -210,7 +240,6 @@ public class RealtimeKNNExpService {
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
-//                    cubeIds.add(cubeId);
                 }
                 tripCubeList.put(tripId, cubeIds);
             }
@@ -218,7 +247,10 @@ public class RealtimeKNNExpService {
 
     }
 
-    // 无索引
+    /**
+     * 无索引
+     * @throws InterruptedException
+     */
     public void getTripIdCubeList() throws InterruptedException {
 
         tripCubeList = new HashMap<>();
@@ -257,15 +289,22 @@ public class RealtimeKNNExpService {
     HashMap<TripId, Double> tripSimListERP = new HashMap<>();
 
 
-    // 获取 Top-k trip （用户自己指定k，不是前面定义的变量k）
+    /**
+     * 获取 Top-k trip （用户自己指定k，不是前面定义的变量k）
+     * @param k
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void getTopKTrips(int k) throws IOException, InterruptedException {
 
-        int length = 10; // 轨迹长度
+        // 轨迹长度
+        int length = 10;
         int sleepTime = length * 30 * 1000;
-        Thread.sleep(sleepTime); // 50 * 30 * 1000 ms
+        // 50 * 30 * 1000 ms
+        Thread.sleep(sleepTime);
 
         // 实时的所有 tripId - vehicles 的 Hashmap
-        vehiclesByTripId  = realtimeService.get_vehiclesByTripId();
+        vehiclesByTripId  = realtimeService.getVehiclesByTripId();
         System.out.println("============================================");
         System.out.println("[REALTIMEKNNEXPSERVICE] " + "number of realtime vehicles: " + vehiclesByTripId.size());
 
@@ -280,7 +319,9 @@ public class RealtimeKNNExpService {
         // 对每一个 tripid 都进行一次 knn 查询
         for (TripId tripId : vehiclesByTripId.keySet()) {
             // 为空则 continue
-            if (vehiclesByTripId.get(tripId).isEmpty()) continue;
+            if (vehiclesByTripId.get(tripId).isEmpty()) {
+                continue;
+            }
 
 
             TripId userTripId = tripId;
@@ -388,8 +429,12 @@ public class RealtimeKNNExpService {
                 public int compare(TripId a, TripId b) { // 从大到小
                     Double t = tripSimListLOCS.get(a) - tripSimListLOCS.get(b);
                     int flag = -1;
-                    if (t < 0) flag = 1;
-                    if (t == 0) flag = 0;
+                    if (t < 0) {
+                        flag = 1;
+                    }
+                    if (t == 0) {
+                        flag = 0;
+                    }
                     return flag;
                 }
             });
@@ -409,6 +454,7 @@ public class RealtimeKNNExpService {
                 topkTripsLOC = topTripsLOC;
             }
 
+            // 请勿删除以下代码
 //            // topk DTW
 //            List<TripId> topTripsDTW = tripSimListDTW.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
 //            Collections.sort(topTripsDTW, new Comparator<TripId>() {
@@ -480,18 +526,7 @@ public class RealtimeKNNExpService {
             totalTime += running;
             totalNum++;
             System.out.println("[REALTIMEKNNEXPSERVICE] the number of scanned trips: " + totalNum);
-//            if (totalNum >= 1000) {
-//                break;
-//            }
-
-
-
-            // 写入文件
-//            fw.write((endTime - startTime) + "\r\n");
-
-
         }
-//        fw.close();
 
         System.out.println("[REALTIMEKNNEXPSERVICE] totalTime | totalNum: " + totalTime / totalNum);
         System.out.println("[REALTIMEKNNEXPSERVICE] partialTime | totalNum: " + partialTime / totalNum);
@@ -499,16 +534,26 @@ public class RealtimeKNNExpService {
     }
 
 
-    // LOCS
+    /**
+     * LOCS
+     * @param T1
+     * @param T2
+     * @param theta
+     * @return
+     */
     public double LongestOverlappedCubeSeries(ArrayList<CubeId> T1, ArrayList<CubeId> T2, int theta) {
         if (T1 == null || T2 == null || T1.size() == 0 || T2.size() == 0) {
             return 0;
         }
 
-        int[][] dp = new int[T1.size()][T2.size()]; // dp数组
-        int maxSimilarity = 0; // 相似度
+        // dp数组
+        int[][] dp = new int[T1.size()][T2.size()];
+        // 相似度
+        int maxSimilarity = 0;
 
-        if (T1.get(0).equals(T2.get(0))) dp[0][0] = 1;
+        if (T1.get(0).equals(T2.get(0))) {
+            dp[0][0] = 1;
+        }
 
         for (int i = 1; i < T1.size(); i++) {
             if (T1.get(i).equals(T2.get(0))) {
@@ -536,18 +581,19 @@ public class RealtimeKNNExpService {
                     }
                 }
 
-//                if (maxSimilarity < dp[i][j]) {
-//                    maxSimilarity = dp[i][j];
-//                }
             }
         }
 
         maxSimilarity = dp[T1.size() - 1][T2.size() - 1];
-//        System.out.println("两条轨迹的相似度为：" + maxSimilarity);
         return maxSimilarity;
     }
 
-    // DTW
+    /**
+     * DTW
+     * @param T1
+     * @param T2
+     * @return
+     */
     public double DynamicTimeWarping(ArrayList<CubeId> T1, ArrayList<CubeId> T2) {
         int resolution = hytraEngineManager.getParams().getResolution();
 
@@ -571,13 +617,8 @@ public class RealtimeKNNExpService {
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
-//                System.out.println(getDistances(xyz1[0], xyz1[2], xyz1[4], xyz1[1], xyz1[3], xyz1[5]));
-//                System.out.println((xyz1[0]-xyz1[1]) + " " + (xyz1[2] - xyz1[3]) + " " + (xyz1[4] - xyz1[5]));
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
-//                System.out.println(getDistances(xyz2[0], xyz2[2], xyz2[4], xyz2[1], xyz2[3], xyz2[5]));
-//                System.out.println((xyz2[0]-xyz2[1]) + " " + (xyz2[2] - xyz2[3]) + " " + (xyz2[4] - xyz2[5]));
-//                dpInts[i][j] = distFunc.apply(T1.get(i - 1), T2.get(j - 1)) + min(dpInts[i - 1][j - 1], dpInts[i - 1][j], dpInts[i][j - 1]);
+                int[] xyz1 = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+                int[] xyz2 = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
                 dpInts[i][j] = getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) + min(dpInts[i - 1][j - 1], dpInts[i - 1][j], dpInts[i][j - 1]);
             }
         }
@@ -585,7 +626,12 @@ public class RealtimeKNNExpService {
         return dpInts[T1.size()][T2.size()];
     }
 
-    // EDR
+    /**
+     * EDR
+     * @param T1
+     * @param T2
+     * @return
+     */
     public double EditDistanceonRealSequence(ArrayList<CubeId> T1, ArrayList<CubeId> T2) {
         int resolution = hytraEngineManager.getParams().getResolution();
 
@@ -613,8 +659,8 @@ public class RealtimeKNNExpService {
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
+                int[] xyz1 = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+                int[] xyz2 = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
                 int subCost = 1;
                 // TODO 确定阈值 根号3
 //                if (getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]) <= Double.MAX_VALUE) {
@@ -628,18 +674,23 @@ public class RealtimeKNNExpService {
         return dpInts[T1.size()][T2.size()] * 1.0;
     }
 
-    // ERP
-    // g: cube0
+    /**ERP
+     *
+     * @param T1
+     * @param T2
+     * @param g cube0
+     * @return
+     */
     public double EditDistanceWithRealPenalty(List<CubeId> T1, List<CubeId> T2, CubeId g) {
         int resolution = hytraEngineManager.getParams().getResolution();
 
-        int xyz[] = decodeService.decodeZ3(Integer.parseInt(g.toString()), 0);
+        int[] xyz = decodeService.decodeZ3(Integer.parseInt(g.toString()), 0);
 
         if (T1 == null || T1.size() == 0) {
             double res = 0.0;
             if (T2 != null) {
                 for (CubeId t : T2) {
-                    int xyz2[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
+                    int[] xyz2 = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
                     res += getDistances(xyz2[0], xyz2[2], xyz2[4], xyz[0], xyz[2], xyz[4]);
                 }
             }
@@ -649,7 +700,7 @@ public class RealtimeKNNExpService {
         if (T2 == null || T2.size() == 0) {
             double res = 0.0;
             for (CubeId t : T1) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
+                int[] xyz1 = decodeService.decodeZ3(Integer.parseInt(t.toString()), 0);
                 res += getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]);
             }
             return res;
@@ -658,19 +709,19 @@ public class RealtimeKNNExpService {
         double[][] dpInts = new double[T1.size() + 1][T2.size() + 1];
 
         for (int i = 1; i <= T1.size(); ++i) {
-            int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+            int[] xyz1 = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
             dpInts[i][0] = getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]) + dpInts[i - 1][0];
         }
 
         for (int j = 1; j <= T2.size(); ++j) {
-            int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
+            int[] xyz2 = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
             dpInts[0][j] = getDistances(xyz2[0], xyz2[2], xyz2[4], xyz[0], xyz[2], xyz[4]) + dpInts[0][j - 1];
         }
 
         for (int i = 1; i <= T1.size(); ++i) {
             for (int j = 1; j <= T2.size(); ++j) {
-                int xyz1[] = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
-                int xyz2[] = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
+                int[] xyz1 = decodeService.decodeZ3(Integer.parseInt(T1.get(i - 1).toString()), 0);
+                int[] xyz2 = decodeService.decodeZ3(Integer.parseInt(T2.get(j - 1).toString()), 0);
 
                 dpInts[i][j] = min(dpInts[i - 1][j - 1] + getDistances(xyz1[0], xyz1[2], xyz1[4], xyz2[0], xyz2[2], xyz2[4]),
                         dpInts[i - 1][j] + getDistances(xyz1[0], xyz1[2], xyz1[4], xyz[0], xyz[2], xyz[4]),
@@ -681,20 +732,37 @@ public class RealtimeKNNExpService {
         return dpInts[T1.size()][T2.size()] * 1.0 / Math.max(T1.size(), T2.size());
     }
 
-    // distance between two cubes
+    /**
+     * distance between two cubes
+     * @param x1
+     * @param y1
+     * @param z1
+     * @param x2
+     * @param y2
+     * @param z2
+     * @return
+     */
     public double getDistances(int x1, int y1, int z1, int x2, int y2, int z2) {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2));
     }
 
     public int min(int a, int b, int c) {
-        if (a > b) a = b;
-        if (a > c) a = c;
+        if (a > b) {
+            a = b;
+        }
+        if (a > c) {
+            a = c;
+        }
         return a;
     }
 
     public double min(double a, double b, double c) {
-        if (a > b) a = b;
-        if (a > c) a = c;
+        if (a > b) {
+            a = b;
+        }
+        if (a > c) {
+            a = c;
+        }
         return a;
     }
 

@@ -53,6 +53,8 @@ public class HistoricalTripIndex {
     @PostConstruct
     public void init() throws ParseException {
 
+        // 不要删除这段代码
+        // 是否注释掉等同于是否进行索引构建
 //        if(!indexEnable) {
 //            System.out.println("[HISTORICALTRIPINDEX] Index is not enabled, skipped.");
 //            return;
@@ -77,7 +79,6 @@ public class HistoricalTripIndex {
         // 2. 再根据 dateTime 和 tripId 筛选出每个 tripId 在 dateTime 当天的所有轨迹点 【按时间升序】
         System.out.println("=============================");
         System.out.println("[HISTORICALTRIPINDEX] number of tripIds: " + tripIdsByDate.size());
-//        int num = tripIdsByDate.size();
         int num = 11;
         for (int i = 0; i < num; i++) {
             System.out.println("[HISTORICALTRIPINDEX] number of scanned tripIds: " + (i + 1));
@@ -85,7 +86,6 @@ public class HistoricalTripIndex {
             String tripId = tripIdsByDate.get(i);
             ArrayList<CubeId> cubeIds = new ArrayList<>();
 
-//            List<RealTimeDataEntity> realTimeDataEntityList = realTimeDataDao.findAllPointsByTripIdByTimeSpan(tripId, startTime, endTime);
             List<RealTimePointEntity> realTimePointEntityList = realTimeDataDao.findAllSimplePointsByTripIdByTimeSpan(tripId, startTime, endTime);
 
             // List 转 ArrayList，构造 tripPointList
@@ -94,7 +94,6 @@ public class HistoricalTripIndex {
             System.out.println("[HISTORICALTRIPINDEX] number of points: " + realTimePointEntityList.size());
 
             for (int j = 0; j < realTimePointEntityList.size(); j++) {
-//                System.out.println("[HISTORICALTRIPINDEX] number of scanned points: " + (j + 1));
 
                 double lat = realTimePointEntityList.get(j).getLat();
                 double lon = realTimePointEntityList.get(j).getLon();
@@ -106,7 +105,9 @@ public class HistoricalTripIndex {
 
                 // 注意 encodecube 里面传的是年月日时分秒
                 CubeId cubeId = encodeService.encodeCube(lat, lon, time);
-                if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) cubeIds.add(cubeId);
+                if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
+                    cubeIds.add(cubeId);
+                }
             }
 
             // 构造 tripCubeList
@@ -397,22 +398,9 @@ public class HistoricalTripIndex {
         Set set = cubeTripList.entrySet();
         Iterator iterator = set.iterator();
 
-
-
-//        while (iterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry)iterator.next();
-//
-//            System.out.print("key : " + entry.getKey()
-//                    + " & Value : ");
-//            System.out.println(entry.getValue());
-//        }
-
         int n5 = 0, n10 = 0, n20 = 0, n30 = 0, n40 = 0, n = 0;
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry)iterator.next();
-
-//            System.out.print("key : " + entry.getKey()
-//                    + " & Value : ");
 
             int size = cubeTripList.get(entry.getKey()).size();
             if(size <= 5) {

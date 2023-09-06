@@ -1,7 +1,5 @@
 package whu.edu.cs.transitnet.service.index;
 
-import edu.whu.hytra.EngineFactory;
-import edu.whu.hytra.EngineParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +15,9 @@ import java.util.stream.Collectors;
 @Component
 public class RealtimeDataIndex {
 
-    // 查询只能得到 PointID，需要反向找到对应的 vehicle
+    /**
+     * 查询只能得到 PointID，需要反向找到对应的 vehicle
+     */
     private LinkedList<HashMap<Integer, Vehicle>> pointToVehicle = new LinkedList<>();
 
     @Autowired

@@ -54,8 +54,12 @@ public class ShapesEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ShapesEntity that = (ShapesEntity) o;
         return Objects.equals(shapeId, that.shapeId) &&
                 Objects.equals(shapePtLat, that.shapePtLat) &&

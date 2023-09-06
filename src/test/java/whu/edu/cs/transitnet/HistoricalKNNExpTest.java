@@ -20,7 +20,7 @@ public class HistoricalKNNExpTest {
 
     @Test
     public void kNNExpTest() throws InterruptedException, IOException, ParseException {
-        int k = 30;
+        int k = 10;
         historicalKNNExpService.getTopKTrips(k);
     }
 }

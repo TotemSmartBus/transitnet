@@ -43,8 +43,12 @@ public class CalendarDatesEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CalendarDatesEntity that = (CalendarDatesEntity) o;
         return Objects.equals(serviceId, that.serviceId) &&
                 Objects.equals(date, that.date) &&

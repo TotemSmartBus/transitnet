@@ -15,11 +15,14 @@ public class TimeUtil {
 
     public List<Double> CalculateVehicleStopArriveTimes(List<StopsVo> stopsVos, List<ShapePointVo> shapePointVos) {
         System.out.println("Calculating Route Time...");
-        List<Integer> nearestIdxs = new ArrayList<Integer>(); //closest List of shape points index for every stop
+
+        //closest List of shape points index for every stop
+        List<Integer> nearestIdxs = new ArrayList<Integer>();
         StopsVo lastStop = null;
         Integer cnt = 0;
         Double speed = 0.0;
-        List<Double> speeds = new ArrayList<Double>(); //List for the speed of the bus between each stop
+        //List for the speed of the bus between each stop
+        List<Double> speeds = new ArrayList<Double>();
         //Find the shape point closest to stop
         for (StopsVo stop: stopsVos) {
             double minDistance = Double.MAX_VALUE;

@@ -54,10 +54,13 @@ public class ShapeIndex {
     }
 
 
-    // resolution = 6 时创建 txt 文件的操作
+    /**
+     * resolution = 6 时创建 txt 文件的操作
+     */
     @PostConstruct
     public void init() {
 
+        // 勿删
 //        if(!indexEnable) {
 //            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
 //            return;
@@ -122,20 +125,6 @@ public class ShapeIndex {
             System.out.println("======================");
             System.out.println("[SHAPEINDEX] Deserializing HashMap DONE!");
             System.out.println("[SHAPEINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
-
-
-            // Displaying content in "newHashMap.txt" using
-            // Iterator
-//            Set set = shapeGridList.entrySet();
-//            Iterator iterator = set.iterator();
-//
-//            while (iterator.hasNext()) {
-//                Map.Entry entry = (Map.Entry)iterator.next();
-//
-//                System.out.print("key : " + entry.getKey()
-//                        + " & Value : ");
-//                System.out.println(entry.getValue());
-//            }
 
         } else {
             System.out.println("=============================");
@@ -254,15 +243,18 @@ public class ShapeIndex {
 
         HashMap<ShapeId, Double> shapeSimMap = new HashMap<>();
 
-//        List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).sorted((a, b) -> getGridSimilarity(a.getValue(), userPassedGrids) >= getGridSimilarity(b.getValue(), userPassedGrids) ? -1 : 1).limit(k).map(Map.Entry::getKey).collect(Collectors.toList());
         List<ShapeId> topShapes = shapeGridList.entrySet().stream().filter(entry -> shapeCandidates.contains(entry.getKey())).map(Map.Entry::getKey).collect(Collectors.toList());
         Collections.sort(topShapes, new Comparator<ShapeId>() {
             @Override
             public int compare(ShapeId a, ShapeId b) { // 从大到小
                 Double t = getGridSimilarity(shapeGridList.get(a), userPassedGrids) - getGridSimilarity(shapeGridList.get(b), userPassedGrids);
                 int flag = -1;
-                if (t < 0) flag = 1;
-                if (t == 0) flag = 0;
+                if (t < 0) {
+                    flag = 1;
+                }
+                if (t == 0) {
+                    flag = 0;
+                }
                 return flag;
             }
         });
@@ -285,16 +277,17 @@ public class ShapeIndex {
 
     }
 
-    //    public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2, int theta) {
     public double getGridSimilarity(ArrayList<GridId> grids1, ArrayList<GridId> grids2) {
         if (grids1 == null || grids2 == null || grids1.size() == 0 || grids2.size() == 0) {
             return 0;
         }
 
-        int[][] dp = new int[grids1.size()][grids2.size()]; // dp数组
-        int maxSimilarity = 0; // 相似度
+        int[][] dp = new int[grids1.size()][grids2.size()];
+        int maxSimilarity = 0;
 
-        if (grids1.get(0).equals(grids2.get(0))) dp[0][0] = 1;
+        if (grids1.get(0).equals(grids2.get(0))) {
+            dp[0][0] = 1;
+        }
 
         for (int i = 1; i < grids1.size(); i++) {
             if (grids1.get(i).equals(grids2.get(0))) {
@@ -330,7 +323,7 @@ public class ShapeIndex {
         }
 
         maxSimilarity = dp[grids1.size() - 1][grids2.size() - 1];
-//        System.out.println("两条轨迹的相似度为：" + maxSimilarity);
+
         return maxSimilarity;
     }
 

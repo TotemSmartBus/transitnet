@@ -19,15 +19,6 @@ import java.util.Arrays;
 @Controller
 public class QueryController {
 
-//    @CrossOrigin(origins = "*")
-//    @PostMapping("/api/query/line")
-//    @ResponseBody
-//    public SimilarityQueryResultVo queryLine(@RequestBody QueryPathParam params) {
-//        SimilarityQueryResultVo result = new SimilarityQueryResultVo();
-//        result.setRoutes(Arrays.asList("B1", "B2", "BX29"));
-//        return result;
-//    }
-
     @CrossOrigin(origins = "*")
     @PostMapping("/api/query/point")
     @ResponseBody

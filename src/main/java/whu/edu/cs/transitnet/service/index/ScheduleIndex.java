@@ -42,6 +42,8 @@ public class ScheduleIndex {
     @PostConstruct
     public void init() {
 
+        // 请勿删除
+        // 用于控制是否构建索引
 //        if(!indexEnable) {
 //            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
 //            return;
@@ -132,10 +134,7 @@ public class ScheduleIndex {
                     tripStartEndList.put(tripId, startEndTime);
                 }
             }
-//        List<StopTimesEntity> stopTimesEntities = stopTimesDao.FindAllByTridId("35671183-BPPB3-BP_B3-Weekday-02");
-//        System.out.println(stopTimesEntities);
 
-            // try catch block
             try {
                 FileOutputStream myFileOutStream1
                         = new FileOutputStream(tripScheduleFile);
@@ -145,8 +144,6 @@ public class ScheduleIndex {
 
                 myObjectOutStream1.writeObject(tripStartEndList);
 
-                // closing FileOutputStream and
-                // ObjectOutputStream
                 myObjectOutStream1.close();
                 myFileOutStream1.close();
             }

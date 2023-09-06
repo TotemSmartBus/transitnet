@@ -34,8 +34,12 @@ public class TripId implements CharSequence, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TripId tripId = (TripId) o;
         return Objects.equals(content, tripId.content);
     }

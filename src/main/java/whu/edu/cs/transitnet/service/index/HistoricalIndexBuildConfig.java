@@ -75,7 +75,6 @@ public class HistoricalIndexBuildConfig {
         // 3. 生成要插入的 KV
         long tBeforeIndexGenerate = System.currentTimeMillis();
         // 更改了 indexMap 的定义
-//        HashMap<String, HashSet<Integer>> indexMap = Generator.generateKV();
         HashMap<String, HashSet<Integer>> indexMap = Generator.generateRawKV();
         long tAfterIndexGenerate = System.currentTimeMillis();
         log.info("[cron]Generate Index for {}s", String.format("%.2f", (tAfterIndexGenerate - tBeforeIndexGenerate) / 1000.0));
@@ -91,16 +90,6 @@ public class HistoricalIndexBuildConfig {
             log.error("[cron]Error while get status of LSM-Tree", e);
         }
 
-//        // 5. 写入数据
-//        indexMap.forEach((key, value) -> {
-//                for(int i : value) {
-//                    try{
-//                        socketStorageManager.put(key, String.valueOf(i));
-//                    } catch (Exception e) {
-//                        log.error(String.format("[cron]Error while write index for [%s, %d]", key, i), e);
-//                    }
-//                }
-//        });
 
         // 写入数据测试
         String key = "2023-05-20@76672@0";

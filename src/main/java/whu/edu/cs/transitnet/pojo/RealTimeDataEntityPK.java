@@ -32,8 +32,12 @@ public class RealTimeDataEntityPK implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         RealTimeDataEntityPK that = (RealTimeDataEntityPK) o;
         return Objects.equals(vehicleId, that.vehicleId) &&
                 Objects.equals(recordedTime, that.recordedTime);

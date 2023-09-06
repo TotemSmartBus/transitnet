@@ -15,13 +15,19 @@ public class DecodeService {
     // decode grid
 
 
-    // decode cube
+    /**
+     * decode cube
+     * @param zorder
+     * @param level
+     * @return
+     */
     public int[] decodeZ3(int zorder, int level) {
         int resolution = hytraEngineManager.getParams().getResolution();
         int digits = 3 * resolution;
 
         String bits;
-        for(bits = Integer.toBinaryString(zorder); digits > bits.length(); bits = "0" + bits) {
+        String ZERO = "0";
+        for(bits = Integer.toBinaryString(zorder); digits > bits.length(); bits = ZERO + bits) {
         }
 
         String bitsI = "";
