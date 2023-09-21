@@ -267,9 +267,9 @@ public class ShapeIndex {
 
         System.out.println("=============================");
 
-        System.out.println("[SHAPEINDEX] " + shapeGridList.get(userShapeId));
-        System.out.println("[SHAPEINDEX] " + shapeSimMap);
-        System.out.println("[SHAPEINDEX] " + topShapes);
+        //System.out.println("[SHAPEINDEX] " + shapeGridList.get(userShapeId));
+        //System.out.println("[SHAPEINDEX] " + shapeSimMap);
+        //System.out.println("[SHAPEINDEX] " + topShapes);
         if (topShapes.size() >= k) {
             return Lists.newArrayList(topShapes.subList(0, k));
         } else {

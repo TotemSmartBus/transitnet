@@ -181,6 +181,12 @@ public class RealtimeService {
             vs.add(v);
             vehiclesByTripId.put(tripId, vs);
 
+            System.out.print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+            System.out.print("vehiclesByTripid updated, now has points:    ");
+            System.out.print(vehiclesByTripId.get(tripId).size());
+            System.out.print("\n");
+            System.out.print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+
 
             // 计算速度
             if (position.getSpeed() == 0.0) {
