@@ -66,10 +66,11 @@ public class ShapeIndex {
 //            return;
 //        }
 
+        String constructionDate = "20230918";
         int resolution = hytraEngineManager.getParams().getResolution();
-        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + ".txt");
-        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution + ".txt");
-        File shapeTripFile = new File("./src/main/" + "shape_trip"+ ".txt");
+        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + "_" + constructionDate + ".txt");
+        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution  + "_" + constructionDate + ".txt");
+        File shapeTripFile = new File("./src/main/" + "shape_trip"  + "_" + constructionDate + ".txt");
 
         if (shapeGridFile.exists() && gridShapeFile.exists() && shapeTripFile.exists()) {
             // 读取文件

@@ -49,7 +49,8 @@ public class ScheduleIndex {
 //            return;
 //        }
 
-        File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");
+        String constructionDate = "20230918";
+        File tripScheduleFile = new File("./src/main/" + "trip_schedule_"+ constructionDate + ".txt");
 
         if(tripScheduleFile.exists()) {
             // 读取文件
