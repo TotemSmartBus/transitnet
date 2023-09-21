@@ -65,11 +65,12 @@ public class ShapeIndex {
 //            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
 //            return;
 //        }
+        String constructionDate="20230918";
 
         int resolution = hytraEngineManager.getParams().getResolution();
-        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution + ".txt");
-        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution + ".txt");
-        File shapeTripFile = new File("./src/main/" + "shape_trip"+ ".txt");
+        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution +"_"+constructionDate + ".txt");
+        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution +"_"+constructionDate + ".txt");
+        File shapeTripFile = new File("./src/main/" + "shape_trip"+"_"+constructionDate + ".txt");
 
         if (shapeGridFile.exists() && gridShapeFile.exists() && shapeTripFile.exists()) {
             // 读取文件
@@ -266,9 +267,9 @@ public class ShapeIndex {
 
         System.out.println("=============================");
 
-        System.out.println("[SHAPEINDEX] " + shapeGridList.get(userShapeId));
-        System.out.println("[SHAPEINDEX] " + shapeSimMap);
-        System.out.println("[SHAPEINDEX] " + topShapes);
+        //System.out.println("[SHAPEINDEX] " + shapeGridList.get(userShapeId));
+        //System.out.println("[SHAPEINDEX] " + shapeSimMap);
+        //System.out.println("[SHAPEINDEX] " + topShapes);
         if (topShapes.size() >= k) {
             return Lists.newArrayList(topShapes.subList(0, k));
         } else {
@@ -334,6 +335,13 @@ public class ShapeIndex {
         for (ShapeId shapeId : topKShapes) {
             tripIds.addAll(shapeTripList.get(shapeId));
         }
+        //test use
+//        HashSet<TripId> all=new HashSet<>();
+//        for(ArrayList<TripId> idls:shapeTripList.values()){
+//            for(int i=0;i<idls.size();i++){
+//                all.add(idls.get(i));
+//            }
+//        }
 
         List<TripId> tripIds1 = tripIds.stream().distinct().collect(Collectors.toList());
         return Lists.newArrayList(tripIds1);

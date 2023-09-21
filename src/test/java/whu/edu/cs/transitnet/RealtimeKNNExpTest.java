@@ -6,7 +6,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import whu.edu.cs.transitnet.service.RealtimeKNNExpService;
+import whu.edu.cs.transitnet.service.RealtimeKNNExpServiceTEST;
 import whu.edu.cs.transitnet.service.index.ShapeIndex;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.io.IOException;
 public class RealtimeKNNExpTest {
 
     @Autowired
-    RealtimeKNNExpService realtimeKNNExpService;
+    RealtimeKNNExpServiceTEST realtimeKNNExpService;
 
     @Autowired
     ShapeIndex shapeIndex;
