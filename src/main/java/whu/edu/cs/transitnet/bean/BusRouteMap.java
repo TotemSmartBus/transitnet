@@ -16,10 +16,8 @@ import java.util.List;
 public class BusRouteMap implements Serializable {
     // 公交站点信息列表
     List<BusStop> busStops;
-    // 索引表：站点在列表中的位置 - 站点Id
-    HashMap<Integer, BusStop> orderStopIndex;
-    // 索引表：站点Id - 站点在列表中的位置
-    HashMap<String, Integer> stopIdOrderIndex;
+    // 索引表：StopId - Stop
+    HashMap<String, BusStop> idStopIndex;
 
     // trip 起始站和终点站
     List<BusTrip> busTrips;
@@ -40,20 +38,12 @@ public class BusRouteMap implements Serializable {
         this.busStops = busStops;
     }
 
-    public HashMap<Integer, BusStop> getOrderStopIndex() {
-        return orderStopIndex;
+    public HashMap<String, BusStop> getIdStopIndex() {
+        return idStopIndex;
     }
 
-    public void setOrderStopIndex(HashMap<Integer, BusStop> orderStopIndex) {
-        this.orderStopIndex = orderStopIndex;
-    }
-
-    public HashMap<String, Integer> getStopIdOrderIndex() {
-        return stopIdOrderIndex;
-    }
-
-    public void setStopIdOrderIndex(HashMap<String, Integer> stopIdOrderIndex) {
-        this.stopIdOrderIndex = stopIdOrderIndex;
+    public void setIdStopIndex(HashMap<String, BusStop> idStopIndex) {
+        this.idStopIndex = idStopIndex;
     }
 
     public List<BusTripEdge> getBusTripEdges() {

@@ -12,6 +12,7 @@ import whu.edu.cs.transitnet.service.index.BusStop;
 import whu.edu.cs.transitnet.service.index.BusTrip;
 import whu.edu.cs.transitnet.service.index.BusTripEdge;
 import whu.edu.cs.transitnet.service.index.TripId;
+import whu.edu.cs.transitnet.utils.GeoUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,17 +46,15 @@ public class BusRouteMapSerializationService {
         List<BusStop> busStops = stopsDao.findAllBusStops();
         busRouteMap.setBusStops(busStops);
 
+        HashMap<String, BusStop> idStopIndex = new HashMap<>();
+
         int busStopsSize = busStops.size();
         //    构建索引表
-        HashMap<Integer, BusStop> orderStopIndex = new HashMap<>();
-        HashMap<String, Integer> stopIdOrderIndex = new HashMap<>();
         for (int i = 0; i < busStopsSize; i++) {
-            String stopId = busStops.get(i).getStopId();
-            orderStopIndex.put(i, busStops.get(i));
-            stopIdOrderIndex.put(stopId, i);
+            BusStop busStop = busStops.get(i);
+            idStopIndex.put(busStop.getStopId(), busStop);
         }
-        busRouteMap.setOrderStopIndex(orderStopIndex);
-        busRouteMap.setStopIdOrderIndex(stopIdOrderIndex);
+        busRouteMap.setIdStopIndex(idStopIndex);
 
         // 2. 获取给定时间范围内的所有行程 [TripsEntity] -> 实际只需要用到 TripId 属性
         Date endDate = Date.valueOf("2023-10-01");
@@ -80,7 +79,7 @@ public class BusRouteMapSerializationService {
             if (stopsSize == 0) continue;
 
 
-            // 构建 busTrips
+            // 构建 busTrips；tripId + startStop + endStop
             busTrips.add(new BusTrip(tripId, stopTimesEntityList.get(0).getStopId(), stopTimesEntityList.get(stopsSize-1).getStopId(),
                     stopTimesEntityList.get(0).getDepartureTime(), stopTimesEntityList.get(stopsSize - 1).getArrivalTime()));
 
@@ -89,10 +88,13 @@ public class BusRouteMapSerializationService {
             for(int i = 0; i <= stopsSize - 2; i++) {
                 StopTimesEntity stopTimesEntity1 = stopTimesEntityList.get(i);
                 String stopId1 = stopTimesEntity1.getStopId();
+                BusStop busStop1 = idStopIndex.get(stopId1);
                 StopTimesEntity stopTimesEntity2 = stopTimesEntityList.get(i + 1);
                 String stopId2 = stopTimesEntity2.getStopId();
+                BusStop busStop2 = idStopIndex.get(stopId2);
+                Double distance = GeoUtil.distance(busStop1.getStopLat(), busStop2.getStopLat(), busStop1.getStopLon(), busStop2.getStopLon());
 
-                BusTripEdge busTripEdge = new BusTripEdge(stopId1, stopId2);
+                BusTripEdge busTripEdge = new BusTripEdge(stopId1, stopId2, distance);
 
                 if (stopEdgeIndex.containsKey(stopId1)) {
                     // 如果存在边

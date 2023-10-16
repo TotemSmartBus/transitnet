@@ -8,13 +8,14 @@ import java.util.Objects;
 public class BusTripEdge implements Serializable {
     private String firstStopId;
     private String secondStopId;
+    private Double distance;
     private List<TripId> tripIds;
-    // distance
-    // time
 
-    public BusTripEdge(String firstStopId, String secondStopId) {
+
+    public BusTripEdge(String firstStopId, String secondStopId, Double distance) {
         this.firstStopId = firstStopId;
         this.secondStopId = secondStopId;
+        this.distance = distance;
         this.tripIds = new ArrayList<>();
     }
 
@@ -36,6 +37,14 @@ public class BusTripEdge implements Serializable {
         this.secondStopId = secondStopId;
     }
 
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
+
     public List<TripId> getTripIds() {
         return tripIds;
     }
@@ -49,17 +58,18 @@ public class BusTripEdge implements Serializable {
             this.tripIds.add(tripId);
         }
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BusTripEdge that = (BusTripEdge) o;
-        return Objects.equals(firstStopId, that.firstStopId) && Objects.equals(secondStopId, that.secondStopId) && Objects.equals(tripIds, that.tripIds);
+        return Objects.equals(firstStopId, that.firstStopId) && Objects.equals(secondStopId, that.secondStopId) && Objects.equals(distance, that.distance) && Objects.equals(tripIds, that.tripIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(firstStopId, secondStopId, tripIds);
+        return Objects.hash(firstStopId, secondStopId, distance, tripIds);
     }
 }
 
