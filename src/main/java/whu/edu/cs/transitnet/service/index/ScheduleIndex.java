@@ -44,10 +44,10 @@ public class ScheduleIndex {
 
         // 请勿删除
         // 用于控制是否构建索引
-//        if(!indexEnable) {
-//            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
-//            return;
-//        }
+        if(!indexEnable) {
+            System.out.println("[SCHEDULEINDEX] Index is not enabled, skipped.");
+            return;
+        }
 
         String constructionDate = "20230918";
         File tripScheduleFile = new File("./src/main/" + "trip_schedule_"+ constructionDate + ".txt");
@@ -126,7 +126,7 @@ public class ScheduleIndex {
                 System.out.println("[SCHEDULEINDEX] Number of Scanned Trips: " + num);
 
                 // 取出该 trip_id 下的到站时间序列
-                List<TripTimesVo> tripTimesVos = stopTimesDao.findAllByTripId(trip);
+                List<TripTimesVo> tripTimesVos = stopTimesDao.findTripTimespanByTripId(trip);
                 if (tripTimesVos.size() >1) {
                     ArrayList<Time> startEndTime = new ArrayList<>();
                     startEndTime.add(tripTimesVos.get(0).getArrivalTime());

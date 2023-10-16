@@ -55,10 +55,10 @@ public class HistoricalTripIndex {
 
         // 不要删除这段代码
         // 是否注释掉等同于是否进行索引构建
-//        if(!indexEnable) {
-//            System.out.println("[HISTORICALTRIPINDEX] Index is not enabled, skipped.");
-//            return;
-//        }
+        if(!indexEnable) {
+            System.out.println("[HISTORICALTRIPINDEX] Index is not enabled, skipped.");
+            return;
+        }
 
         String startTime = "2023-05-20 00:00:00";
         String endTime = "2023-05-20 23:59:59";

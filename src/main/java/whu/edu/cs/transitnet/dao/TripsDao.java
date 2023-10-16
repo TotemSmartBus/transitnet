@@ -31,6 +31,11 @@ public interface TripsDao extends JpaRepository<TripsEntity, String> {
     List<TripsEntity> findAllTripsByTimeSpan(Date startDate, Date endDate);
 
     @Query(value = "SELECT * FROM trips WHERE service_id IN (SELECT service_id "
+            + "FROM calendar WHERE end_date >= ?1)  ",
+            nativeQuery = true)
+    List<TripsEntity> findAllTripsByEndDate(Date endDate);
+
+    @Query(value = "SELECT * FROM trips WHERE service_id IN (SELECT service_id "
             + "FROM calendar WHERE start_date <= ?2 and end_date >= ?3) "
             + " AND route_id = ?1", nativeQuery = true)
     List<TripsEntity> findAllTripsByRouteIdAndTimeSpan(String routeId, Date startDate, Date endDate);

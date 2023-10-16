@@ -61,10 +61,10 @@ public class ShapeIndex {
     public void init() {
 
         // 勿删
-//        if(!indexEnable) {
-//            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
-//            return;
-//        }
+        if(!indexEnable) {
+            System.out.println("[SHAPEINDEX] Index is not enabled, skipped.");
+            return;
+        }
 
         String constructionDate = "20230918";
         int resolution = hytraEngineManager.getParams().getResolution();
