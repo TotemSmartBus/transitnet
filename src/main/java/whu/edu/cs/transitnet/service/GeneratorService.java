@@ -67,8 +67,8 @@ public class GeneratorService {
 
         String time_s=date+" 00:00:00";
         String time_e=date+" 23:59:59";
-        historicalTripIndex.tripCubeListSerializationAndDeserilization(time_s,time_e);
-        TC_List_arr=historicalTripIndex.getTripCubeList();
+//        historicalTripIndex.tripCubeListSerializationAndDeserilization(time_s,time_e);
+//        TC_List_arr=historicalTripIndex.getTripCubeList();
 
         // 遍历 CT_List_arr 并将其转换为 HashSet 并存储到 CT_List 中
         for (CubeId cubeId : CT_List_arr.keySet()) {
@@ -171,27 +171,8 @@ public class GeneratorService {
         int zorder = Integer.parseInt(items[1]);    //0
         int level = Integer.parseInt(items[2]);     //6
 
-        //如果到了level 0，就直接写入本身
-//        if(level == 0){
-//            if(!bitMap.containsKey(day)){
-//                bitMap.put(day, new int[(int) (Math.pow(8,resolution+1) - 1) / 7]);
-//            }
-//            bitMap.get(day)[getOffset(zorder,level)] = 1;
-//            compactionMap.put(cid, cid);
-//            return;
-//        }
-//        if(shouldMerge(cid)) {
-//            if(!bitMap.containsKey(day)){
-//                bitMap.put(day, new int[(int) (Math.pow(8,resolution+1) - 1) / 7]);
-//            }
-//            bitMap.get(day)[getOffset(zorder,level)] = 1;
-//            writeMap(cid); return;} //如果应该合并，则写入merge map, bitmap置1
-//
-//        for(int z  = zorder * 8; z < zorder * 8 + 8; z++){ //否则考察下一层cube
-//            BFS(day+sep+z+sep+(level-1));
-//        }
         int[] no_merge_cubes=new int[(int) (Math.pow(8,resolution+1) - 1) / 7];
-        for(int i=0;i<no_merge_cubes.length;i++){
+        for(int i=0;i<Math.pow(8,resolution);i++){
             no_merge_cubes[i]=1;
         }
         bitMap.put(day, no_merge_cubes);
@@ -225,31 +206,6 @@ public class GeneratorService {
     }
 
     public void updateMergeCTandTC(){
-//        compactionMap.forEach((fromCid, toCid)->{
-//            //如果是没有执行合并的level 0 cube，直接写入
-//            if(fromCid.equals(toCid)){
-//                merge_CT_List.put(new CubeId(fromCid),CT_List.get(fromCid));
-//            }
-//            else {
-//                String ancestor = toCid;
-//                while (compactionMap.containsKey(ancestor)){
-//                    ancestor = compactionMap.get(ancestor);
-//                }
-//                HashSet<TripId> tidSet = merge_CT_List.getOrDefault(ancestor, new HashSet<>());
-//                tidSet.addAll(CT_List.getOrDefault(fromCid, new HashSet<>()));
-//                merge_CT_List.put(new CubeId(ancestor), tidSet);
-//            }
-//        });
-//
-//        merge_CT_List.forEach((cid, tidSet) ->{
-//            if(tidSet != null){
-//                for(TripId tid : tidSet){
-//                    ArrayList<CubeId> cidList =merge_TC_List_arr.getOrDefault(tid, new ArrayList<>());
-//                    cidList.add(cid);
-//                    merge_TC_List_arr.put(tid, cidList);
-//                }
-//            }
-//        });
         merge_CT_List=CT_List;
     }
 
