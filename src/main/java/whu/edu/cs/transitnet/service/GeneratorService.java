@@ -67,8 +67,6 @@ public class GeneratorService {
 
         String time_s=date+" 00:00:00";
         String time_e=date+" 23:59:59";
-//        historicalTripIndex.tripCubeListSerializationAndDeserilization(time_s,time_e);
-//        TC_List_arr=historicalTripIndex.getTripCubeList();
 
         // 遍历 CT_List_arr 并将其转换为 HashSet 并存储到 CT_List 中
         for (CubeId cubeId : CT_List_arr.keySet()) {

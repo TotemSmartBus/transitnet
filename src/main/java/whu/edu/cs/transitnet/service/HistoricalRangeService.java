@@ -51,6 +51,15 @@ public class HistoricalRangeService {
         //去掉了generateplanes，对于不合并的情况换了一种搜索方法
         return spatial_hytra();
     }
+    /* 根据时空范围进行轨迹搜索的函数
+    *  resolution 地图划分小cubes时分割的分辨率
+    *  ij_s 2D地图x，y两轴上的最小值，限定范围
+    *  ij_e 2D地图x，y两轴上的最大值，限定范围
+    *  k_s,k_e 第三维，时间坐标轴上的最小最大值
+    *  对于这三维确定出的一个由一系列小立方体堆叠成的大立方体，遍历每个小立方体
+    *  若CubeTripList包含该Cube，则查List，将包含该Cube的TripId全部加入结果集中
+    *  遍历完毕时，结果集则为所有经过查询范围的轨迹的ID
+    */
 
     public HashSet<TripId> spatial_hytra(){
         int resolution = 6;
