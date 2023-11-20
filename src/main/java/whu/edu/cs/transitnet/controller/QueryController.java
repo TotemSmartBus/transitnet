@@ -132,7 +132,7 @@ public class QueryController {
                 e.printStackTrace();
             }
         }
-        HistoricalKNNExpService.setup(params.getPoints(),params.getK());
+        HistoricalKNNExpService.setup(ListP,params.getK());
         HistoricalKNNExpService.getTopKTrips();
         List<RealtimeKNNExpService.resItem> res = HistoricalKNNExpService.get_res();
         System.out.println("==============================================================\n");
