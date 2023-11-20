@@ -22,6 +22,7 @@ import whu.edu.cs.transitnet.vo.*;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -115,6 +116,22 @@ public class QueryController {
     @PostMapping("/api/query/traj_knn_history")
     @ResponseBody
     public KnnHisQueryResultVo queryTraj_Knn_His(@RequestBody QueryKnnHisParam params) throws IOException, InterruptedException, ParseException {
+        //所有时间设置为2023-05-20 xx:xx:xx
+        List<QueryKnnHisParam.Point> ListP = new ArrayList<>();
+        ListP=params.getPoints();
+        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (QueryKnnHisParam.Point point : ListP) {
+            try {
+                // 解析原始的日期字符串
+                Date date;
+                // 设置日期为"2023-05-20"
+                date = outputFormat.parse("2023-05-20 " + point.getTime().substring(11));
+                // 将修改后的日期设置回点对象
+                point.setTime(outputFormat.format(date));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
         HistoricalKNNExpService.setup(params.getPoints(),params.getK());
         HistoricalKNNExpService.getTopKTrips();
         List<RealtimeKNNExpService.resItem> res = HistoricalKNNExpService.get_res();
@@ -143,7 +160,8 @@ public class QueryController {
                 params.getPoints().get(1).getLat(),
                 params.getPoints().get(1).getLng()};
         String day=params.getTimerange();
-        HistoricalRangeService.setup(temp, day);
+        //HistoricalRangeService.setup(temp, day);
+        HistoricalRangeService.setup(temp, "2023-05-20");
         HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
         RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res);
         return res_re;

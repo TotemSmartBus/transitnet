@@ -51,7 +51,11 @@ public class QueryKnnHisParam {
         }
         public String getTime() { return time;}
 
-        public Point(double a,double b){
+        public void setTime(String t) {
+            this.time = t;
+        }
+
+        public Point(double a, double b){
             lat=a;
             lng=b;
         }
