@@ -85,6 +85,8 @@ public class RealtimeKNNExpService {
 
 
     public void setup(List<QueryKnnRtParam.Point> points_in, int top_k_in, int backdate_in){
+        topkTripsLOC.clear();
+        tripSimListLOC.clear();
         points=points_in;
         top_k=top_k_in;
         backdate=backdate_in;

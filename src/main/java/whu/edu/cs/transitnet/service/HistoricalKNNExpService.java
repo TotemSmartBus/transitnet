@@ -90,6 +90,8 @@ public class HistoricalKNNExpService {
 
 
     public void setup(List<QueryKnnHisParam.Point> points_in, int top_k_in){
+        topkTripsLOC.clear();
+        tripSimListLOC.clear();
         points=points_in;
         top_k=top_k_in;
     }
