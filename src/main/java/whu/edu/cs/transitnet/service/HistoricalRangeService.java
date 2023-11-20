@@ -48,6 +48,7 @@ public class HistoricalRangeService {
         //师姐说先不考虑merge，那么去掉合并与更新索引这两步,下面两行的函数注释掉了主要内容，只做了最简单的工作
         generatorService.generateMap();
         generatorService.updateMergeCTandTC();
+        //去掉了generateplanes，对于不合并的情况换了一种搜索方法
         return spatial_hytra();
     }
 
@@ -61,7 +62,7 @@ public class HistoricalRangeService {
         int k_s = (int)(t_s/delta_t), k_e = (int) (t_e/delta_t);
 
         HashSet<TripId> res = new HashSet<>();
-
+        //原先是使用planes进行搜索，但是不合并的情况下不需要用planes，直接三成循环对i，j，k三个维度限定的方块们进行遍历
         for (int i = ij_s[0]; i <= ij_e[0]; i++) {
             for (int j = ij_s[1]; j <= ij_e[1]; j++) {
                 for (int k = k_s; k <= k_e; k++) {
