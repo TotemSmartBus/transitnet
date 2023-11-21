@@ -13,6 +13,9 @@ import whu.edu.cs.transitnet.service.index.*;
 import java.io.*;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -95,7 +98,7 @@ public class RealtimeKNNExpService {
 
 
     // trip - cube  map做操作 删掉list
-    private HashMap<TripId, ArrayList<GridId>> tripGridList = new HashMap<>();
+    private HashMap<TripId, ArrayList<CubeId>> tripCubeList = new HashMap<>();
     // 存 50 个值
     ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new ConcurrentHashMap<>();
 
@@ -122,7 +125,7 @@ public class RealtimeKNNExpService {
      * @throws InterruptedException
      */
     public void getTripIdCubeList(TripId userTripId, ArrayList<GridId> userGridList) throws InterruptedException {
-        tripGridList = new HashMap<>();
+        tripCubeList = new HashMap<>();
 
         // 首先根据形状过滤，得到top-k个形状最相似的车次的tripid
         ArrayList<TripId> filteredTripList = filterTripList(userTripId, userGridList);
@@ -155,12 +158,12 @@ public class RealtimeKNNExpService {
         }
 
         //对于过滤出的每个车次
-        for (TripId tripId : filteredTripList) {
+        for (TripId tripId : vehiclesByTripIdkeyList) {
             //在实时车次车辆信息hash表中取出这趟车次的位置信息
-            if (vehiclesByTripId.containsKey(tripId) && vehiclesByTripId.get(tripId) != null) {
+            if (vehiclesByTripId.get(tripId) != null) {
                 ArrayList<Vehicle> vehicles = new ArrayList<>();
                 vehicles = vehiclesByTripId.get(tripId);
-                ArrayList<GridId> gridIds = new ArrayList<>();
+                ArrayList<CubeId> cubeIds = new ArrayList<>();
 
                 // 只取最实时的 length 个采样点值
                 int size_l=0;
@@ -172,18 +175,17 @@ public class RealtimeKNNExpService {
 
                 for (int i = vehicles.size()-size_l; i <vehicles.size(); i++) {
                     Vehicle v= vehicles.get(i);
-                    GridId gridId = encodeService.getGridID(v.getLat(), v.getLon());
-                    if(gridIds.isEmpty() || gridIds.lastIndexOf(gridId) != (gridIds.size() - 1)) {
-                        gridIds.add(gridId);
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(),v.getRecordedTime());
+                    if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
+                        cubeIds.add(cubeId);
                     }
                 }
-                tripGridList.put(tripId, gridIds);
+                tripCubeList.put(tripId, cubeIds);
             }
         }
     }
 
     // trip_id - similarity
-    HashMap<TripId, Double> tripSimListLOCS = new HashMap<>();
     HashMap<TripId, Integer> tripSimListLOC = new HashMap<>();
 
 
@@ -205,12 +207,25 @@ public class RealtimeKNNExpService {
         //Thread.sleep(sleepTime);
 
         //将points转化为grids
+        // 设置纽约时区
+        ZoneId newYorkZone = ZoneId.of("America/New_York");
+
+        // 获取当前时间
+        Instant currentTime = Instant.now();
+        ArrayList<CubeId> userCubeList = new ArrayList<>();
         ArrayList<GridId> userGridList = new ArrayList<>();
         for(int i=0;i<points.size();i++){
             double lat=points.get(i).getLat();
             double lng=points.get(i).getLng();
-            GridId Grid=encodeService.getGridID(lat,lng);
-            userGridList.add(Grid);
+            Long time=currentTime.minusSeconds(30*(points.size()-1-i)).toEpochMilli()/1000;
+            GridId grid=encodeService.getGridID(lat,lng);
+            CubeId cube=encodeService.encodeCube(lat,lng,time);
+            if(userGridList.isEmpty() || userGridList.lastIndexOf(grid) != (userGridList.size() - 1)) {
+                userGridList.add(grid);
+            }
+            if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cube) != (userCubeList.size() - 1)) {
+                userCubeList.add(cube);
+            }
         }
 
         // 进行knn查询，先做筛选，实时knn----------先筛选
@@ -224,15 +239,15 @@ public class RealtimeKNNExpService {
                 break;
         }
 
-        System.out.println("[REALTIMEKNNEXPSERVICE] size of tripGridList: " + tripGridList.size());
-        Set<TripId> keySet = tripGridList.keySet();
+        System.out.println("[REALTIMEKNNEXPSERVICE] size of tripGridList: " + tripCubeList.size());
+        Set<TripId> keySet = tripCubeList.keySet();
 
         for (TripId tripId1 : keySet) {
-            List<GridId> intersection0 = new ArrayList<>(userGridList);
-            intersection0.retainAll(tripGridList.get(tripId1));
-            List<GridId> intersection1 = intersection0.stream().distinct().collect(Collectors.toList());
+            List<CubeId> intersection0 = new ArrayList<>(userCubeList);
+            intersection0.retainAll(tripCubeList.get(tripId1));
+            List<CubeId> intersection1 = intersection0.stream().distinct().collect(Collectors.toList());
             tripSimListLOC.put(tripId1, intersection1.size());
-            }
+        }
 
 
         // topk LOC
