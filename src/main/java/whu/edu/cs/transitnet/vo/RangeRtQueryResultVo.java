@@ -14,7 +14,13 @@ public class RangeRtQueryResultVo {
      * 查询到的BUS ID
      **/ private List<RangeRtQueryResultItem> buses;
 
-     public RangeRtQueryResultVo(List<RangeRtQueryResultItem> temp){
+    @Getter
+    @Setter
+    @SerializedName("trips")
+    private List<tripPoints> trips;
+
+     public RangeRtQueryResultVo(List<RangeRtQueryResultItem> temp,List<tripPoints> ts){
          buses=temp;
+         trips=ts;
      }
 }

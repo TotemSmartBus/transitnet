@@ -18,7 +18,12 @@ public class KnnHisQueryResultVo {
      * 查询到的公交
      **/ private List<SimilarityQueryResultItem> buses;
 
-    public KnnHisQueryResultVo(List<SimilarityQueryResultItem> temp) {
+    @Getter
+    @Setter
+    @SerializedName("trips")
+    private List<tripPoints> trips;
+    public KnnHisQueryResultVo(List<SimilarityQueryResultItem> temp,List<tripPoints> ts) {
         buses=temp;
+        trips=ts;
     }
 }

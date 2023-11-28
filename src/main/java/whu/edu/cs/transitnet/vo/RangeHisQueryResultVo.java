@@ -16,11 +16,16 @@ public class RangeHisQueryResultVo {
     /**
      * 查询到的公交
      **/ private List<RangeHisQueryResultItem> buses;
+    @Getter
+    @Setter
+    @SerializedName("trips")
+    private List<tripPoints> trips;
 
-    public RangeHisQueryResultVo(HashSet<TripId> temp) {
+    public RangeHisQueryResultVo(HashSet<TripId> temp,List<tripPoints> ts) {
         buses=new ArrayList<>();
         for(TripId item:temp){
             buses.add(new RangeHisQueryResultItem(item.toString()));
         }
+        trips=ts;
     }
 }

@@ -80,6 +80,9 @@ public class Vehicle {
     public String getId() {
         return id;
     }
+    public String gettId() {
+        return tripID;
+    }
 
     public void setId(String id) {
         this.id = id;

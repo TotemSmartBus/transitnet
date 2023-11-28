@@ -44,14 +44,16 @@ public class RealtimeRangeService {
 
     private double[] query_range = new double[4];
     public ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new ConcurrentHashMap<>();
-    public HashMap<GridId, HashSet<TripId>> GT_List=new HashMap<>();
-    public HashMap<TripId, Point> TlP_List=new HashMap<>();
+    public HashMap<GridId, HashSet<TripId>> GT_List;
+    public HashMap<TripId, Point> TlP_List;
     private int resolution=6;
 
     public RealtimeRangeService() {
     }
 
     public void setup(double[] ps) {
+        GT_List=new HashMap<>();
+        TlP_List=new HashMap<>();
         query_range = ps;
         vehiclesByTripId=realtimeService.getVehiclesByTripId();
         Set<Map.Entry<TripId, ArrayList<Vehicle>>> trips_points = vehiclesByTripId.entrySet();

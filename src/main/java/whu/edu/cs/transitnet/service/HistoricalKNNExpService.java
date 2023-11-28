@@ -90,6 +90,8 @@ public class HistoricalKNNExpService {
 
 
     public void setup(List<QueryKnnHisParam.Point> points_in, int top_k_in){
+        topkTripsLOC.clear();
+        tripSimListLOC.clear();
         points=points_in;
         top_k=top_k_in;
     }
@@ -174,8 +176,12 @@ public class HistoricalKNNExpService {
             String recordedTime = points.get(i).getTime();
             Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
             Long time = parse.getTime();
-
+            //下面这一行仅用于服务器
+            time=time-28800000;
+            System.out.println("==========现在为用户传入的轨迹进行cube编码==========");
+            System.out.println("params: "+points.get(i).getLat()+" "+points.get(i).getLng()+" "+time);
             CubeId cubeId = encodeService.encodeCube(points.get(i).getLat(), points.get(i).getLng(), time);
+            System.out.println("cubeId: "+cubeId.toString());
             cubes.add(cubeId);
             if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
                 userCubeList.add(cubeId);
@@ -204,15 +210,26 @@ public class HistoricalKNNExpService {
         // tripCubeList 为空则 continue
 
         Set<TripId> keySet = tripCubeList.keySet();
+        System.out.println("索引过滤完毕，tripcubelist大小："+tripCubeList.size()+"usercubelist大小："+userCubeList.size());
         for (TripId tripId1 : keySet) {
             if(tripCubeList.get(tripId1)==null) {
                 continue;
             }
-
+//            System.out.println("现在计算trip "+tripId1.toString()+" 和用户提交轨迹的相似度");
+//            System.out.println("用户提交的轨迹转化为cubes罗列如下：");
+//            for (CubeId c:userCubeList) {
+//                System.out.println(c.toString());
+//            }
+//            System.out.println("目前迭代到的用于计算相似度的轨迹转化为cubes罗列如下：");
+//            for (CubeId c1:tripCubeList.get(tripId1)) {
+//                System.out.println(c1.toString());
+//            }
             // 利用 LOC 计算出来的相似度
             List<CubeId> intersection0 = new ArrayList<>(userCubeList);
             intersection0.retainAll(tripCubeList.get(tripId1));
+//            System.out.println("usercubelist与本次迭代的trip交集结果： "+intersection0.size());
             List<CubeId> intersection1 = intersection0.stream().distinct().collect(Collectors.toList());
+//            System.out.println("相似度计算结果： "+tripId1.toString()+"  "+intersection1.size());
             tripSimListLOC.put(tripId1, intersection1.size());
         }
 
@@ -231,6 +248,7 @@ public class HistoricalKNNExpService {
         for(int i=0;i<top_k;i++){
             TripId temp_tid=topkTripsLOC.get(i);
             double s=tripSimListLOC.get(temp_tid);
+            System.out.println("trip: "+temp_tid.toString()+" sim: "+s);
             RealtimeKNNExpService.resItem temp=new RealtimeKNNExpService.resItem(i+1,temp_tid.toString(),s);
             output_query_res.add(temp);
         }
