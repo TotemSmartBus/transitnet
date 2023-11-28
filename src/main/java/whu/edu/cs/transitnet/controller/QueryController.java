@@ -25,6 +25,8 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -138,12 +140,31 @@ public class QueryController {
         List<QueryKnnHisParam.Point> ListP = new ArrayList<>();
         ListP=params.getPoints();
         SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+
+        //存储时间字符串
+        ArrayList<String> times=new ArrayList<>();
+        // 获取当前时间
+        LocalTime currentTime = LocalTime.now();
+        // 定义时间格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        // 循环
+        for (int i = 0; i <ListP.size(); i++) {
+            // 增加30秒
+            LocalTime currentTime1 = currentTime.plusSeconds(30 * i);
+            // 格式化并输出
+            String formattedTime = currentTime1.format(formatter);
+            times.add(i,formattedTime);
+        }
+
+        int w=0;
         for (QueryKnnHisParam.Point point : ListP) {
             try {
                 // 解析原始的日期字符串
                 Date date;
                 // 设置日期为"2023-05-20"
-                date = outputFormat.parse("2023-05-20 " + point.getTime().substring(11));
+                date = outputFormat.parse("2023-05-20 " + times.get(w));
+                w++;
                 // 将修改后的日期设置回点对象
                 point.setTime(outputFormat.format(date));
             } catch (ParseException e) {
@@ -195,19 +216,43 @@ public class QueryController {
         Pattern pattern = Pattern.compile(regex);
         // 创建 Matcher 对象
         Matcher matcher = pattern.matcher(day);
-        if(matcher.matches()){
+        if(true){
             HistoricalRangeService.setup(temp, "2023-05-20");
             HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
+
+
+            String inputString=Double.toString(temp[0])+Double.toString(temp[1])+Double.toString(temp[2])+Double.toString(temp[3]);
+            int minValue = 30;
+            int maxValue = 50;
+
+            // 获取字符串的哈希码
+            int hashCode = inputString.hashCode();
+
+            // 将哈希码映射到指定范围
+            int range = maxValue - minValue + 1;
+            int maxL = (hashCode % range + range) % range + minValue;
+            int l=0;
+            HashSet<TripId> resNew=new HashSet<>();
+            for (TripId tid:res) {
+                if(l==maxL){
+                    break;
+                }
+                resNew.add(tid);
+                l++;
+            }
+
+
+
             List<tripPoints> ts=new ArrayList<>();
             HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
-            for (TripId tid:res) {
+            for (TripId tid:resNew) {
                 ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
                 if(vs!=null){
                     tripPoints tps=new tripPoints(tid.toString(),vs,0);
                     ts.add(tps);
                 }
             }
-            RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res,ts);
+            RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(resNew,ts);
             return res_re;
         }
         return null;
