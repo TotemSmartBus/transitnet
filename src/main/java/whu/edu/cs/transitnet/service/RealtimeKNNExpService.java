@@ -100,7 +100,7 @@ public class RealtimeKNNExpService {
     // trip - cube  map做操作 删掉list
     private HashMap<TripId, ArrayList<CubeId>> tripCubeList = new HashMap<>();
     // 存 50 个值
-    ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new ConcurrentHashMap<>();
 
 
     @Autowired
@@ -268,7 +268,7 @@ public class RealtimeKNNExpService {
         for(int i=0;i<min;i++){
             TripId temp_tid=topkTripsLOC.get(i);
             ArrayList<Vehicle> temp_vl=vehiclesByTripId.get(temp_tid);
-            String busid=temp_vl.get(temp_vl.size()-1).getId();
+            String busid=temp_vl.get(temp_vl.size()-1).gettId();
             double s=tripSimListLOC.get(temp_tid);
             resItem temp=new resItem(i+1,busid,s);
             output_query_res.add(temp);

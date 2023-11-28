@@ -4,6 +4,8 @@ package whu.edu.cs.transitnet.service.index;
 import com.github.davidmoten.guavamini.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.ShapesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
@@ -68,14 +70,14 @@ public class ShapeIndex {
         String constructionDate="20230918";
 
         int resolution = hytraEngineManager.getParams().getResolution();
-        File shapeGridFile = new File("./src/main/" + "shape_grid_" + resolution +"_"+constructionDate + ".txt");
-        File gridShapeFile = new File("./src/main/" + "grid_shape_" + resolution +"_"+constructionDate + ".txt");
-        File shapeTripFile = new File("./src/main/" + "shape_trip"+"_"+constructionDate + ".txt");
+        Resource shapeGridResource = new ClassPathResource("indexFiles/shape_grid_6_20230918.txt");
+        Resource gridShapeResource = new ClassPathResource("indexFiles/grid_shape_6_20230918.txt");
+        Resource shapeTripResource = new ClassPathResource("indexFiles/shape_trip_20230918.txt");
 
-        if (shapeGridFile.exists() && gridShapeFile.exists() && shapeTripFile.exists()) {
+        if (shapeGridResource.exists() && gridShapeResource.exists() && shapeTripResource.exists()) {
             // 读取文件
             System.out.println("======================");
-            System.out.println("[SHAPEINDEX] FILE EXISTS...");
+            System.out.println("[SHAPEINDEX] FILE EXISTS... now version 2023/11/21 14:45");
             System.out.println("======================");
             System.out.println("[SHAPEINDEX] Start Deserializing HashMap..");
 
@@ -83,31 +85,28 @@ public class ShapeIndex {
 
 
             try {
-                FileInputStream fileInput1 = new FileInputStream(
-                        shapeGridFile);
-                FileInputStream fileInput2 = new FileInputStream(
-                        gridShapeFile);
-                FileInputStream fileInput3 = new FileInputStream(
-                        shapeTripFile);
+                InputStream shapeGridStream = shapeGridResource.getInputStream();
+                InputStream gridShapeStream = gridShapeResource.getInputStream();
+                InputStream shapeTripStream = shapeTripResource.getInputStream();
 
 
                 ObjectInputStream objectInput1
-                        = new ObjectInputStream(fileInput1);
+                        = new ObjectInputStream(shapeGridStream);
                 ObjectInputStream objectInput2
-                        = new ObjectInputStream(fileInput2);
+                        = new ObjectInputStream(gridShapeStream);
                 ObjectInputStream objectInput3
-                        = new ObjectInputStream(fileInput3);
+                        = new ObjectInputStream(shapeTripStream);
 
                 shapeGridList = (HashMap)objectInput1.readObject();
                 gridShapeList = (HashMap)objectInput2.readObject();
                 shapeTripList = (HashMap)objectInput3.readObject();
 
                 objectInput1.close();
-                fileInput1.close();
+                shapeGridStream.close();
                 objectInput2.close();
-                fileInput2.close();
+                gridShapeStream.close();
                 objectInput3.close();
-                fileInput3.close();
+                shapeTripStream.close();
             }
 
             catch (IOException obj1) {
@@ -184,39 +183,39 @@ public class ShapeIndex {
             }
 
             // try catch block
-            try {
-                FileOutputStream myFileOutStream1
-                        = new FileOutputStream(shapeGridFile);
-                FileOutputStream myFileOutStream2
-                        = new FileOutputStream(gridShapeFile);
-                FileOutputStream myFileOutStream3
-                        = new FileOutputStream(shapeTripFile);
-
-                ObjectOutputStream myObjectOutStream1
-                        = new ObjectOutputStream(myFileOutStream1);
-                ObjectOutputStream myObjectOutStream2
-                        = new ObjectOutputStream(myFileOutStream2);
-                ObjectOutputStream myObjectOutStream3
-                        = new ObjectOutputStream(myFileOutStream3);
-
-                myObjectOutStream1.writeObject(shapeGridList);
-                myObjectOutStream2.writeObject(gridShapeList);
-                myObjectOutStream3.writeObject(shapeTripList);
-
-                // closing FileOutputStream and
-                // ObjectOutputStream
-                myObjectOutStream1.close();
-                myFileOutStream1.close();
-                myObjectOutStream2.close();
-                myFileOutStream2.close();
-                myObjectOutStream3.close();
-                myFileOutStream3.close();
-            }
-            catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                FileOutputStream myFileOutStream1
+//                        = new FileOutputStream(shapeGridResource);
+//                FileOutputStream myFileOutStream2
+//                        = new FileOutputStream(gridShapeFile);
+//                FileOutputStream myFileOutStream3
+//                        = new FileOutputStream(shapeTripFile);
+//
+//                ObjectOutputStream myObjectOutStream1
+//                        = new ObjectOutputStream(myFileOutStream1);
+//                ObjectOutputStream myObjectOutStream2
+//                        = new ObjectOutputStream(myFileOutStream2);
+//                ObjectOutputStream myObjectOutStream3
+//                        = new ObjectOutputStream(myFileOutStream3);
+//
+//                myObjectOutStream1.writeObject(shapeGridList);
+//                myObjectOutStream2.writeObject(gridShapeList);
+//                myObjectOutStream3.writeObject(shapeTripList);
+//
+//                // closing FileOutputStream and
+//                // ObjectOutputStream
+//                myObjectOutStream1.close();
+//                myFileOutStream1.close();
+//                myObjectOutStream2.close();
+//                myFileOutStream2.close();
+//                myObjectOutStream3.close();
+//                myFileOutStream3.close();
+//            }
+//            catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             Long endTime1 = System.currentTimeMillis();
             System.out.println("=============================");

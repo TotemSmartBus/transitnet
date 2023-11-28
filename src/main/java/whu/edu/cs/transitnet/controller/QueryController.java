@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import whu.edu.cs.transitnet.param.*;
+import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 import whu.edu.cs.transitnet.service.HistoricalKNNExpService;
 import whu.edu.cs.transitnet.service.HistoricalRangeService;
 import whu.edu.cs.transitnet.service.RealtimeKNNExpService;
 import whu.edu.cs.transitnet.service.RealtimeRangeService;
+import whu.edu.cs.transitnet.service.index.HistoricalTripIndex;
 import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.vo.*;
 
@@ -24,6 +26,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Slf4j
@@ -38,6 +42,8 @@ public class QueryController {
     HistoricalRangeService HistoricalRangeService;
     @Resource
     RealtimeRangeService RealtimeRangeService;
+    @Resource
+    HistoricalTripIndex HistoricalTripIndex;
 
 
     @CrossOrigin(origins = "*")
@@ -80,14 +86,19 @@ public class QueryController {
         res=RealtimeRangeService.hytra();
 
         List<RangeRtQueryResultItem> list=new ArrayList<>();
+        List<tripPoints> ts=new ArrayList<>();
         for(TripId tid:res){
-            int size=RealtimeRangeService.vehiclesByTripId.get(tid).size();
-            Vehicle v = RealtimeRangeService.vehiclesByTripId.get(tid).get(size - 1);
+            ArrayList<Vehicle> vs = RealtimeRangeService.vehiclesByTripId.get(tid);
+            int size=vs.size();
+            Vehicle v=vs.get(size-1);
             double[] pos={v.getLat(),v.getLon()};
             RangeRtQueryResultItem item=new RangeRtQueryResultItem(tid.toString(),pos);
             list.add(item);
+
+            tripPoints tps=new tripPoints(tid.toString(),vs);
+            ts.add(tps);
         }
-        RangeRtQueryResultVo result=new RangeRtQueryResultVo(list);
+        RangeRtQueryResultVo result=new RangeRtQueryResultVo(list,ts);
         return result;
     }
 
@@ -107,7 +118,14 @@ public class QueryController {
             SimilarityQueryResultItem item=new SimilarityQueryResultItem(temp_l.get(i).getBusId(),temp_l.get(i).getSim());
             temp.add(item);
         }
-        KnnRtQueryResultVo res_conv=new KnnRtQueryResultVo(temp);
+        List<tripPoints> ts=new ArrayList<>();
+        for (SimilarityQueryResultItem it:temp) {
+            String tid=it.getId();
+            ArrayList<Vehicle> vs = RealtimeKNNExpService.vehiclesByTripId.get(new TripId(tid));
+            tripPoints tps=new tripPoints(tid,vs);
+            ts.add(tps);
+        }
+        KnnRtQueryResultVo res_conv=new KnnRtQueryResultVo(temp,ts);
         return res_conv;
     }
 
@@ -131,6 +149,7 @@ public class QueryController {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+            System.out.println("changed P data: "+point.getLat()+" "+point.getLng()+" "+point.getTime());
         }
         HistoricalKNNExpService.setup(ListP,params.getK());
         HistoricalKNNExpService.getTopKTrips();
@@ -147,7 +166,17 @@ public class QueryController {
             SimilarityQueryResultItem item=new SimilarityQueryResultItem(res.get(i).getBusId(),res.get(i).getSim());
             temp.add(item);
         }
-        KnnHisQueryResultVo convert_res=new KnnHisQueryResultVo(temp);
+        List<tripPoints> ts=new ArrayList<>();
+        HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
+        for (SimilarityQueryResultItem it:temp) {
+            String tid=it.getId();
+            ArrayList<RealTimePointEntity> vs = Tplist.get(new TripId(tid));
+            if(vs!=null){
+                tripPoints tps=new tripPoints(tid,vs,0);
+                ts.add(tps);
+            }
+        }
+        KnnHisQueryResultVo convert_res=new KnnHisQueryResultVo(temp,ts);
         return convert_res;
     }
 
@@ -161,10 +190,27 @@ public class QueryController {
                 params.getPoints().get(1).getLng()};
         String day=params.getTimerange();
         //HistoricalRangeService.setup(temp, day);
-        HistoricalRangeService.setup(temp, "2023-05-20");
-        HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
-        RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res);
-        return res_re;
+        String regex = "\\d{4}-\\d{2}-\\d{2}";
+        // 创建 Pattern 对象
+        Pattern pattern = Pattern.compile(regex);
+        // 创建 Matcher 对象
+        Matcher matcher = pattern.matcher(day);
+        if(matcher.matches()){
+            HistoricalRangeService.setup(temp, "2023-05-20");
+            HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
+            List<tripPoints> ts=new ArrayList<>();
+            HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
+            for (TripId tid:res) {
+                ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
+                if(vs!=null){
+                    tripPoints tps=new tripPoints(tid.toString(),vs,0);
+                    ts.add(tps);
+                }
+            }
+            RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res,ts);
+            return res_re;
+        }
+        return null;
     }
 
 

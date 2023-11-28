@@ -2,6 +2,8 @@ package whu.edu.cs.transitnet.service.index;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.StopTimesDao;
 import whu.edu.cs.transitnet.dao.TripsDao;
@@ -49,9 +51,9 @@ public class ScheduleIndex {
 //            return;
 //        }
 
-        File tripScheduleFile = new File("./src/main/" + "trip_schedule"+ ".txt");
+        Resource tripScheduleResource = new ClassPathResource("indexFiles/trip_schedule.txt");
 
-        if(tripScheduleFile.exists()) {
+        if(tripScheduleResource.exists()) {
             // 读取文件
             System.out.println("======================");
             System.out.println("[SCHEDULEINDEX] FILE EXISTS...");
@@ -61,17 +63,17 @@ public class ScheduleIndex {
 
 
             try {
-                FileInputStream fileInput1 = new FileInputStream(
-                        tripScheduleFile);
+
+                InputStream tripScheduleStream = tripScheduleResource.getInputStream();
 
 
                 ObjectInputStream objectInput1
-                        = new ObjectInputStream(fileInput1);
+                        = new ObjectInputStream(tripScheduleStream);
 
                 tripStartEndList = (HashMap)objectInput1.readObject();
 
                 objectInput1.close();
-                fileInput1.close();
+                tripScheduleStream.close();
             }
 
             catch (IOException obj1) {
@@ -122,7 +124,7 @@ public class ScheduleIndex {
                 TripId tripId = new TripId(trip);
 
                 num++;
-                System.out.println("[SCHEDULEINDEX] Number of Scanned Trips: " + num);
+                //System.out.println("[SCHEDULEINDEX] Number of Scanned Trips: " + num);
 
                 // 取出该 trip_id 下的到站时间序列
                 List<TripTimesVo> tripTimesVos = stopTimesDao.findAllByTripId(trip);
@@ -135,23 +137,23 @@ public class ScheduleIndex {
                 }
             }
 
-            try {
-                FileOutputStream myFileOutStream1
-                        = new FileOutputStream(tripScheduleFile);
-
-                ObjectOutputStream myObjectOutStream1
-                        = new ObjectOutputStream(myFileOutStream1);
-
-                myObjectOutStream1.writeObject(tripStartEndList);
-
-                myObjectOutStream1.close();
-                myFileOutStream1.close();
-            }
-            catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                FileOutputStream myFileOutStream1
+//                        = new FileOutputStream(tripScheduleFile);
+//
+//                ObjectOutputStream myObjectOutStream1
+//                        = new ObjectOutputStream(myFileOutStream1);
+//
+//                myObjectOutStream1.writeObject(tripStartEndList);
+//
+//                myObjectOutStream1.close();
+//                myFileOutStream1.close();
+//            }
+//            catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             Long endTime1 = System.currentTimeMillis();
             System.out.println("[SCHEDULEINDEX] index construction and serialization time: " + (endTime1 - startTime1) / 1000 / 60 + "min");
