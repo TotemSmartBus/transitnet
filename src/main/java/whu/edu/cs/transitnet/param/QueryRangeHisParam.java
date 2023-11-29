@@ -10,15 +10,19 @@ public class QueryRangeHisParam {
     @Getter
     @Setter
     private List<Point> points;
-    private String timerange;
+    private String timerange1;
+    private String timerange2;
 
 
     public List<Point> getPoints() {
         return points;
     }
 
-    public String getTimerange(){
-        return timerange;
+    public String getTimerange1(){
+        return timerange1;
+    }
+    public String getTimerange2(){
+        return timerange2;
     }
 
     public QueryRangeHisParam() {

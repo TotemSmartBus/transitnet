@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.service.index.*;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -33,14 +34,30 @@ public class HistoricalRangeService {
     @Autowired
     GeneratorService generatorService;
 
+
     private double[] spatial_range = new double[4];
     private String date="";
     private int resolution=6;
     private HashMap<Integer, HashSet<String>> planes=new HashMap<>();
+    private int start_time;
+    private int end_time;
 
-    public void setup(double[] ps, String d){
+    public void setup(double[] ps, String d,String st,String et){
         spatial_range=ps;
         date=d;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            Date dateOrigin=dateFormat.parse("2023-05-20 00:00:00");
+            long seconds0 = dateOrigin.getTime()/1000;
+            Date date1 = dateFormat.parse(st);
+            long seconds1 = date1.getTime()/1000;
+            start_time= (int) (seconds1-seconds0);
+            Date date2 = dateFormat.parse(et);
+            long seconds2 = date2.getTime()/1000;
+            end_time= (int) (seconds2-seconds0);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     public HashSet<TripId> historaical_range_search() throws ParseException {
@@ -68,14 +85,14 @@ public class HistoricalRangeService {
 
         int t_s = 3600 * 0, t_e = 3600 * 24;
         double delta_t = 86400 / Math.pow(2, resolution);
-        int k_s = (int)(t_s/delta_t), k_e = (int) (t_e/delta_t);
+        int k_s = (int)(start_time/delta_t), k_e = (int) (end_time/delta_t);
 
         HashSet<TripId> res = new HashSet<>();
         //原先是使用planes进行搜索，但是不合并的情况下不需要用planes，直接三成循环对i，j，k三个维度限定的方块们进行遍历
         for (int i = ij_s[0]; i <= ij_e[0]; i++) {
             for (int j = ij_s[1]; j <= ij_e[1]; j++) {
                 for (int k = k_s; k <= k_e; k++) {
-                    int zOrder = Encoder.combine3(i,j,k,6);
+                    int zOrder = encodeService.combine3(i,j,k,6);
                     if(generatorService.merge_CT_List.containsKey(new CubeId(Integer.toString(zOrder))))
                         res.addAll(generatorService.merge_CT_List.get(new CubeId(Integer.toString(zOrder))));
                 }

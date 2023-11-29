@@ -209,53 +209,23 @@ public class QueryController {
                 params.getPoints().get(3).getLng(),
                 params.getPoints().get(1).getLat(),
                 params.getPoints().get(1).getLng()};
-        String day=params.getTimerange();
+        String s_time=params.getTimerange1();
+        String e_time=params.getTimerange2();
         //HistoricalRangeService.setup(temp, day);
-        String regex = "\\d{4}-\\d{2}-\\d{2}";
-        // 创建 Pattern 对象
-        Pattern pattern = Pattern.compile(regex);
-        // 创建 Matcher 对象
-        Matcher matcher = pattern.matcher(day);
-        if(true){
-            HistoricalRangeService.setup(temp, "2023-05-20");
-            HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
+        HistoricalRangeService.setup(temp, "2023-05-20",s_time,e_time);
+        HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
 
-
-            String inputString=Double.toString(temp[0])+Double.toString(temp[1])+Double.toString(temp[2])+Double.toString(temp[3]);
-            int minValue = 30;
-            int maxValue = 50;
-
-            // 获取字符串的哈希码
-            int hashCode = inputString.hashCode();
-
-            // 将哈希码映射到指定范围
-            int range = maxValue - minValue + 1;
-            int maxL = (hashCode % range + range) % range + minValue;
-            int l=0;
-            HashSet<TripId> resNew=new HashSet<>();
-            for (TripId tid:res) {
-                if(l==maxL){
-                    break;
-                }
-                resNew.add(tid);
-                l++;
+        List<tripPoints> ts=new ArrayList<>();
+        HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
+        for (TripId tid:res) {
+            ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
+            if(vs!=null){
+                tripPoints tps=new tripPoints(tid.toString(),vs,0);
+                ts.add(tps);
             }
-
-
-
-            List<tripPoints> ts=new ArrayList<>();
-            HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
-            for (TripId tid:resNew) {
-                ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
-                if(vs!=null){
-                    tripPoints tps=new tripPoints(tid.toString(),vs,0);
-                    ts.add(tps);
-                }
-            }
-            RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(resNew,ts);
-            return res_re;
         }
-        return null;
+        RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res,ts);
+        return res_re;
     }
 
 
