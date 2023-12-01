@@ -44,39 +44,14 @@ public class RealtimeRangeService {
 
     private double[] query_range = new double[4];
     public ConcurrentHashMap<TripId, ArrayList<Vehicle>> vehiclesByTripId  = new ConcurrentHashMap<>();
-    public HashMap<GridId, HashSet<TripId>> GT_List;
-    public HashMap<TripId, Point> TlP_List;
     private int resolution=6;
 
     public RealtimeRangeService() {
     }
 
     public void setup(double[] ps) {
-        GT_List=new HashMap<>();
-        TlP_List=new HashMap<>();
         query_range = ps;
         vehiclesByTripId=realtimeService.getVehiclesByTripId();
-        Set<Map.Entry<TripId, ArrayList<Vehicle>>> trips_points = vehiclesByTripId.entrySet();
-
-        //取最新点生成GT List and TlP List
-        for(Map.Entry<TripId, ArrayList<Vehicle>> trip_points:trips_points){
-
-            TripId tid=trip_points.getKey();
-            ArrayList<Vehicle> points=trip_points.getValue();
-            Vehicle newest_point=points.get(points.size()-1);
-
-            TlP_List.put(tid,new Point(newest_point.getLat(),newest_point.getLon()));
-
-            GridId gid=encodeService.getGridID(newest_point.getLat(),newest_point.getLon());
-
-            if(!GT_List.containsKey(gid)){
-                HashSet<TripId> tid_set=new HashSet<>();
-                tid_set.add(tid);
-                GT_List.put(gid,tid_set);
-            }else{
-                GT_List.get(gid).add(tid);
-            }
-        }
     }
 
 
@@ -94,7 +69,7 @@ public class RealtimeRangeService {
         }
 
         HashSet<Integer> convert_G=new HashSet<>();
-        for(GridId g: GT_List.keySet()){
+        for(GridId g: realtimeService.GT_List.keySet()){
             convert_G.add(Integer.parseInt(g.toString()));
         }
         def_window.retainAll(convert_G);
@@ -103,7 +78,7 @@ public class RealtimeRangeService {
 
         while(var12.hasNext()) {
             Integer gid = (Integer)var12.next();
-            can.addAll((Collection)GT_List.get(new GridId(gid.toString())));
+            can.addAll((Collection)realtimeService.GT_List.get(new GridId(gid.toString())));
         }
 
         HashSet<Integer> indef_window = new HashSet();
@@ -123,7 +98,7 @@ public class RealtimeRangeService {
 
         while(var15.hasNext()) {
             Integer gid = (Integer)var15.next();
-            ((HashSet)GT_List.get(new GridId(gid.toString()))).forEach((tid) -> {
+            ((HashSet)realtimeService.GT_List.get(new GridId(gid.toString()))).forEach((tid) -> {
                 int size = vehiclesByTripId.get(tid).size();
                 Vehicle temp = vehiclesByTripId.get(tid).get(size - 1);
                 Point p = new Point(temp.getLat(),temp.getLon());

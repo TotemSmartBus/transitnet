@@ -1,6 +1,7 @@
 package whu.edu.cs.transitnet.realtime;
 
 import com.google.transit.realtime.GtfsRealtime.*;
+import edu.whu.hyk.model.Point;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.bean.RouteCache;
+import whu.edu.cs.transitnet.service.EncodeService;
+import whu.edu.cs.transitnet.service.index.GridId;
 import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
 import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
@@ -70,6 +73,9 @@ public class RealtimeService {
 
     private long mostRecentRefresh = -1;
 
+    public HashMap<GridId, HashSet<TripId>> GT_List=new HashMap<>();
+    public HashMap<TripId, Point> TlP_List=new HashMap<>();
+
     @Autowired
     RealtimeDataStore storeService;
 
@@ -81,6 +87,8 @@ public class RealtimeService {
 
     @Autowired
     RouteCache routeCache;
+    @Autowired
+    EncodeService encodeService;
 
     @PostConstruct
     public void start() {
@@ -106,6 +114,9 @@ public class RealtimeService {
     }
 
     private void refresh() throws IOException {
+        log.info("reset GT and TlP");
+        GT_List.clear();
+        TlP_List.clear();
 
         log.info("refreshing vehicle positions");
 
@@ -182,6 +193,10 @@ public class RealtimeService {
             vs.add(v);
             vehiclesByTripId.put(tripId, vs);
 
+            //更新TlP与GT
+            updateTlpAndGt(v);
+
+
             // 计算速度
             if (position.getSpeed() == 0.0) {
                 if (vehiclesById.containsKey(v.getId())) {
@@ -255,6 +270,24 @@ public class RealtimeService {
             log.info("refresh interval: " + refreshInterval + "s");
         }
         mostRecentRefresh = t;
+    }
+
+    private void updateTlpAndGt(Vehicle newest){
+        TripId tid=new TripId(newest.getTripID());
+        double lat=newest.getLat();
+        double lng=newest.getLon();
+
+        TlP_List.put(tid,new Point(lat, lng));
+
+        GridId gid=encodeService.getGridID(lat,lng);
+        if(!GT_List.containsKey(gid)){
+            HashSet<TripId> tid_set=new HashSet<>();
+            tid_set.add(tid);
+            GT_List.put(gid,tid_set);
+        }else{
+            GT_List.get(gid).add(tid);
+        }
+
     }
 
     private class RefreshTask implements Runnable {
