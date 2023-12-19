@@ -8,7 +8,6 @@ import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.vo.TripTimesVo;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.sql.Time;
 import java.util.*;
@@ -39,7 +38,7 @@ public class ScheduleIndex {
         tripStartEndList = new HashMap<>();
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
 
         // 请勿删除

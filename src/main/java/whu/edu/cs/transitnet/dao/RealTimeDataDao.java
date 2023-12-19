@@ -56,5 +56,10 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "WHERE rte.tripId = ?1 AND rte.recordedTime >= ?2 AND rte.recordedTime < ?3 ORDER BY rte.recordedTime")
     List<RealTimePointEntity> findAllSimplePointsByTripIdByTimeSpan(String tripId, String startTime, String endTime);
 
+    @Query(value = "SELECT new whu.edu.cs.transitnet.pojo.RealTimePointEntity(rte.tripId, rte.vehicleId, rte.lat, rte.lon, rte.recordedTime) " +
+            "FROM RealTimeDataEntity rte " +
+            "WHERE rte.tripId = ?1 ORDER BY rte.recordedTime")
+    List<RealTimePointEntity> findAllSimplePointsByTripId(String tripId);
+
     <S extends RealTimeDataEntity> List<S> saveAll(Iterable<S> list);
 }

@@ -21,6 +21,9 @@ public interface TripsDao extends JpaRepository<TripsEntity, String> {
     @Query(value = "SELECT * FROM trips WHERE shape_id = ?1", nativeQuery = true)
     List<TripsEntity> findAllByShapeId(String shapeId);
 
+    @Query(value = "SELECT * FROM trips WHERE route_id =?1 and direction_id =?2", nativeQuery = true)
+    List<TripsEntity> findAllByRouteIdAndDirectionId(String routeId, String directionId);
+
     @Query(value = "SELECT * FROM trips GROUP BY route_id", nativeQuery = true)
     List<TripsEntity> findOriginTrips();
 

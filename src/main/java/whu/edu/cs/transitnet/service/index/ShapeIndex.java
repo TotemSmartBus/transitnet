@@ -11,7 +11,6 @@ import whu.edu.cs.transitnet.pojo.TripsEntity;
 import whu.edu.cs.transitnet.service.EncodeService;
 import whu.edu.cs.transitnet.vo.ShapePointVo;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,7 +56,7 @@ public class ShapeIndex {
     /**
      * resolution = 6 时创建 txt 文件的操作
      */
-    @PostConstruct
+//    @PostConstruct
     public void init() {
 
         // 勿删

@@ -8,7 +8,6 @@ import whu.edu.cs.transitnet.dao.RealTimeDataDao;
 import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 import whu.edu.cs.transitnet.service.EncodeService;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -50,7 +49,7 @@ public class HistoricalTripIndex {
     // 新增 TPList 用于实验
     HashMap<TripId, ArrayList<RealTimePointEntity>> tripPointList = new HashMap<>();
 
-    @PostConstruct
+//    @PostConstruct
     public void init() throws ParseException {
 
         // 不要删除这段代码
