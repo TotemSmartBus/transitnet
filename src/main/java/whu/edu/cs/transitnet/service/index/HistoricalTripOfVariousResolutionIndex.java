@@ -8,9 +8,7 @@ import whu.edu.cs.transitnet.service.EncodeService;
 
 import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -84,15 +82,13 @@ public class HistoricalTripOfVariousResolutionIndex {
                 double lon = realTimePointEntityList.get(j).getLon();
 
                 String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
-                Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
-                Long time = parse.getTime();
 
                 // 注意 encodecube 里面传的是年月日时分秒
-                CubeId cubeId4 = encodeService.encodeCube(lat, lon, time, 4);
-                CubeId cubeId5 = encodeService.encodeCube(lat, lon, time, 5);
-                CubeId cubeId7 = encodeService.encodeCube(lat, lon, time, 7);
-                CubeId cubeId8 = encodeService.encodeCube(lat, lon, time, 8);
-                CubeId cubeId6 = encodeService.encodeCube(lat, lon, time, 6);
+                CubeId cubeId4 = encodeService.encodeCube(lat, lon, recordedTime, 4);
+                CubeId cubeId5 = encodeService.encodeCube(lat, lon, recordedTime, 5);
+                CubeId cubeId7 = encodeService.encodeCube(lat, lon, recordedTime, 7);
+                CubeId cubeId8 = encodeService.encodeCube(lat, lon, recordedTime, 8);
+                CubeId cubeId6 = encodeService.encodeCube(lat, lon, recordedTime, 6);
 
                 if(cubeIds4.isEmpty() || cubeIds4.lastIndexOf(cubeId4) != (cubeIds4.size() - 1)) {
                     cubeIds4.add(cubeId4);
@@ -358,14 +354,8 @@ public class HistoricalTripOfVariousResolutionIndex {
     }
 
     public String getDateFromTime(String startTime) throws ParseException {
-        Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startTime);
-        Long time = parse.getTime();
-
-        Date d = new Date();
-        d.setTime(time);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        String date = sdf.format(d);
+        String[] date_time = startTime.split(" ");
+        String date = date_time[0];
         return date;
     }
 }

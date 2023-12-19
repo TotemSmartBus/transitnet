@@ -14,9 +14,7 @@ import whu.edu.cs.transitnet.service.index.TripId;
 
 import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -83,12 +81,8 @@ public class HistoricalTripIndexTest {
 
                 // TODO:
                 String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
-                Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
-                Long time = parse.getTime();
 
-                // 注意 encodecube 里面传的是年月日时分秒
-
-                CubeId cubeId = encodeService.encodeCube(lat, lon, time);
+                CubeId cubeId = encodeService.encodeCube(lat, lon, recordedTime);
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) cubeIds.add(cubeId);
             }
 

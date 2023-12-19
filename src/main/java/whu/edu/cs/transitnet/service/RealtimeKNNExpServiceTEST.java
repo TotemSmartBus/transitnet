@@ -197,8 +197,16 @@ public class RealtimeKNNExpServiceTEST {
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
-                    // TODO: 是否要乘以1000；recordedTime 是不是秒？
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
+                    // NYC 时区
+                    long recordedTime = v.getRecordedTime();
+
+                    Date d = new Date();
+                    d.setTime(recordedTime * 1000);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                    String date_hour_min_sec  = sdf.format(d);
+
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), date_hour_min_sec);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -236,7 +244,17 @@ public class RealtimeKNNExpServiceTEST {
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (int i = 0; i < vehicles.size(); i++) {
                     Vehicle v= vehicles.get(i);
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
+
+                    // NYC 时区
+                    long recordedTime = v.getRecordedTime();
+
+                    Date d = new Date();
+                    d.setTime(recordedTime * 1000);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                    String date_hour_min_sec  = sdf.format(d);
+
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), date_hour_min_sec);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -268,7 +286,17 @@ public class RealtimeKNNExpServiceTEST {
             // arraylist 总是报错
             for (int i = 0; i < vehicles.size(); i++) {
                 Vehicle v= vehicles.get(i);
-                CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
+
+                // NYC 时区
+                long recordedTime = v.getRecordedTime();
+
+                Date d = new Date();
+                d.setTime(recordedTime * 1000);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                String date_hour_min_sec  = sdf.format(d);
+
+                CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), date_hour_min_sec);
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                     cubeIds.add(cubeId);
                 }
@@ -336,26 +364,34 @@ public class RealtimeKNNExpServiceTEST {
             ArrayList<GridId> grids = new ArrayList<>();
             ArrayList<CubeId> cubes = new ArrayList<>();
 
-            Date d = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-            sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-
             for (Vehicle vehicle : userVehicleList) {
                 GridId gridId = encodeService.getGridID(vehicle.getLat(), vehicle.getLon());
                 grids.add(gridId);
                 if(userGridList.isEmpty() || userGridList.lastIndexOf(gridId) != (userGridList.size() - 1)) {
                     userGridList.add(gridId);
                 }
-                CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime()*1000);
+
+                // NYC 时区
+                long recordedTime = vehicle.getRecordedTime();
+
+                Date d = new Date();
+                d.setTime(recordedTime * 1000);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                String date_hour_min_sec  = sdf.format(d);
+
+                CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), date_hour_min_sec);
                 cubes.add(cubeId);
                 if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
                     userCubeList.add(cubeId);
                 }
 
-                d.setTime(vehicle.getRecordedTime() * 1000);
-                String date_hour_min_sec  = sdf.format(d);
+                // 取的是当天日期
+                String[] date_time = date_hour_min_sec.split(" ");
+                // 取的是时分秒
+                String hour_min_sec = date_time[1];
 
-                times.add(date_hour_min_sec);
+                times.add(hour_min_sec);
             }
 
             Time userStart = Time.valueOf(times.get(0));

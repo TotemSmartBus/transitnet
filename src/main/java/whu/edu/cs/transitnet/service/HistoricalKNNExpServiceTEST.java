@@ -125,8 +125,6 @@ public class HistoricalKNNExpServiceTEST {
 
         }
 
-
-
         return filteredTripList;
     }
 
@@ -294,9 +292,10 @@ public class HistoricalKNNExpServiceTEST {
             ArrayList<GridId> grids = new ArrayList<>();
             ArrayList<CubeId> cubes = new ArrayList<>();
 
-            Date d = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-            sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+            // NYC 时区
+            // Date d = new Date();
+            // SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            // sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
 
             for (RealTimePointEntity realTimePointEntity : userPointList) {
                 GridId gridId = encodeService.getGridID(realTimePointEntity.getLat(), realTimePointEntity.getLon());
@@ -306,20 +305,19 @@ public class HistoricalKNNExpServiceTEST {
                 }
 
                 String recordedTime = realTimePointEntity.getRecordedTime();
-                Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
-                Long time = parse.getTime();
 
-                CubeId cubeId = encodeService.encodeCube(realTimePointEntity.getLat(), realTimePointEntity.getLon(), time);
+                CubeId cubeId = encodeService.encodeCube(realTimePointEntity.getLat(), realTimePointEntity.getLon(), recordedTime);
                 cubes.add(cubeId);
                 if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
                     userCubeList.add(cubeId);
                 }
 
-                // 这个实体中的 recordedTime 是个字符串
-                d.setTime(time);
-                String date_hour_min_sec  = sdf.format(d);
+                // 取的是当天日期
+                String[] date_time = recordedTime.split(" ");
+                // 取的是时分秒
+                String hour_min_sec = date_time[1];
 
-                times.add(date_hour_min_sec);
+                times.add(hour_min_sec);
             }
 
             Time userStart = Time.valueOf(times.get(0));

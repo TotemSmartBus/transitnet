@@ -38,38 +38,9 @@ public class RealtimeKNNService {
     // 这个k指的是取前k个shape
     int k = 5;
 
-
-    // TODO hashmap初始化
-
-//    public ArrayList<GridId> getUserGridList() {
-//        return userGridList;
-//    }
-//
-//    public ArrayList<CubeId> getUserCubeList() {
-//        return userCubeList;
-//    }
-
-
     TripId userTripId;
     // vehicle list
     ArrayList<Vehicle> userVehicleList = new ArrayList<>();
-    // user - grid
-//    ArrayList<GridId> userGridList = new ArrayList<>();
-//    // user - cube
-//    ArrayList<CubeId> userCubeList = new ArrayList<>();
-    // user - [start_time, end_time]
-//    Time userStartTime;
-//    Time userEndTime;
-    // 10 20 30 40 50
-//    ArrayList<Time> userStartTime = new ArrayList<>();
-//    ArrayList<Time> userEndTimes = new ArrayList<>();
-//
-//    // shape - grid
-//    private HashMap<ShapeId, ArrayList<GridId>> shapeGridList = new HashMap<>();
-//    // grid - shape 倒排索引
-//    private HashMap<GridId, ArrayList<ShapeId>> gridShapeList = new HashMap<>();
-//    // shape_id - trip_id
-//    private HashMap<ShapeId, ArrayList<TripId>> shapeTripList = new HashMap<>();
     // trip_id - [start_time, end_time] 写个类
     private HashMap<TripId, ArrayList<Time>> tripStartEndList = new HashMap<>();
     // trip - cube  map做操作 删掉list
@@ -135,7 +106,6 @@ public class RealtimeKNNService {
             }
         }
 
-
         tripStartEndList = scheduleIndex.getTripStartEndList();
         System.out.println("[REALTIMEKNNSERVICE] userStartTime: " + userStart);
         System.out.println("[REALTIMEKNNSERVICE] userEndTime: " + userEnd);
@@ -199,7 +169,17 @@ public class RealtimeKNNService {
 
                 ArrayList<CubeId> cubeIds = new ArrayList<>();
                 for (Vehicle v : vehicles) {
-                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), v.getRecordedTime()*1000);
+
+                    // NYC 时区
+                    long recordedTime = v.getRecordedTime();
+
+                    Date d = new Date();
+                    d.setTime(recordedTime * 1000);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                    String date_hour_min_sec  = sdf.format(d);
+
+                    CubeId cubeId = encodeService.encodeCube(v.getLat(), v.getLon(), date_hour_min_sec);
                     if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                         cubeIds.add(cubeId);
                     }
@@ -249,9 +229,6 @@ public class RealtimeKNNService {
         ArrayList<GridId> grids = new ArrayList<>();
         ArrayList<CubeId> cubes = new ArrayList<>();
 
-        Date d = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
 
         for (Vehicle vehicle : userPartialVehicleList) {
             GridId gridId = encodeService.getGridID(vehicle.getLat(), vehicle.getLon());
@@ -259,16 +236,28 @@ public class RealtimeKNNService {
             if(userPartialGridList.isEmpty() || userPartialGridList.lastIndexOf(gridId) != (userPartialGridList.size() - 1)) {
                 userPartialGridList.add(gridId);
             }
-            CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), vehicle.getRecordedTime()*1000);
+
+            // NYC 时区
+            long recordedTime = vehicle.getRecordedTime();
+
+            Date d = new Date();
+            d.setTime(recordedTime * 1000);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+            String date_hour_min_sec  = sdf.format(d);
+
+            CubeId cubeId = encodeService.encodeCube(vehicle.getLat(), vehicle.getLon(), date_hour_min_sec);
             cubes.add(cubeId);
             if(userPartialCubeList.isEmpty() || userPartialCubeList.lastIndexOf(cubeId) != (userPartialCubeList.size() - 1)) {
                 userPartialCubeList.add(cubeId);
             }
 
-            d.setTime(vehicle.getRecordedTime() * 1000);
-            String date_hour_min_sec  = sdf.format(d);
+            // 取的是当天日期
+            String[] date_time = date_hour_min_sec.split(" ");
+            // 取的是时分秒
+            String hour_min_sec = date_time[1];
 
-            times.add(date_hour_min_sec);
+            times.add(hour_min_sec);
         }
 
         Time userStart = Time.valueOf(times.get(0));
