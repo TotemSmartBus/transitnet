@@ -48,47 +48,40 @@ public class HistoricalRangeService {
         //师姐说先不考虑merge，那么去掉合并与更新索引这两步,下面两行的函数注释掉了主要内容，只做了最简单的工作
         generatorService.generateMap();
         generatorService.updateMergeCTandTC();
-        planes = generatorService.generatePlanes();
-        return spatial_hytra(planes);
+        //去掉了generateplanes，对于不合并的情况换了一种搜索方法
+        return spatial_hytra();
     }
+    /* 根据时空范围进行轨迹搜索的函数
+    *  resolution 地图划分小cubes时分割的分辨率
+    *  ij_s 2D地图x，y两轴上的最小值，限定范围
+    *  ij_e 2D地图x，y两轴上的最大值，限定范围
+    *  k_s,k_e 第三维，时间坐标轴上的最小最大值
+    *  对于这三维确定出的一个由一系列小立方体堆叠成的大立方体，遍历每个小立方体
+    *  若CubeTripList包含该Cube，则查List，将包含该Cube的TripId全部加入结果集中
+    *  遍历完毕时，结果集则为所有经过查询范围的轨迹的ID
+    */
 
-    public HashSet<TripId> spatial_hytra(HashMap<Integer, HashSet<String>> planes){
-        //decode spatial range
+    public HashSet<TripId> spatial_hytra(){
+        int resolution = 6;
         int[] ij_s = Decoder.decodeZ2(Encoder.encodeGrid(spatial_range[0],spatial_range[1]));
         int[] ij_e = Decoder.decodeZ2(Encoder.encodeGrid(spatial_range[2],spatial_range[3]));
 
-        //encode time range
-        int t_s = 3600 * 9, t_e = 3600 * 13;
+        int t_s = 3600 * 0, t_e = 3600 * 24;
         double delta_t = 86400 / Math.pow(2, resolution);
         int k_s = (int)(t_s/delta_t), k_e = (int) (t_e/delta_t);
 
-        //union
-        HashSet<String> planes_i = new HashSet<>(), planes_j = new HashSet<>(), planes_k = new HashSet<>();
-        for(int i = ij_s[0]; i <= ij_e[0]; i++) {
-            if(planes.containsKey(i))
-                planes_i.addAll(planes.get(i));
-        }
-        for(int j = ij_s[1] + (int) Math.pow(2,resolution); j <= ij_e[1] + (int) Math.pow(2,resolution); j++) {
-            if(planes.containsKey(j))
-                planes_j.addAll(planes.get(j));
-        }
-        for(int k = k_s + (int) Math.pow(2,resolution+1); k <= k_e + (int) Math.pow(2,resolution+1); k++) {
-            if(planes.containsKey(k))
-                planes_k.addAll(planes.get(k));
-        }
-
-        //intersection
-        planes_i.retainAll(planes_j);
-        planes_i.retainAll(planes_k);
-
         HashSet<TripId> res = new HashSet<>();
-        planes_i.forEach(cid -> {
-            String []items=cid.split("@");
-            CubeId cid_zorder=new CubeId(items[1]);
-            if(generatorService.merge_CT_List.containsKey(cid_zorder)){
-                res.addAll(generatorService.merge_CT_List.get(cid_zorder));
+        //原先是使用planes进行搜索，但是不合并的情况下不需要用planes，直接三成循环对i，j，k三个维度限定的方块们进行遍历
+        for (int i = ij_s[0]; i <= ij_e[0]; i++) {
+            for (int j = ij_s[1]; j <= ij_e[1]; j++) {
+                for (int k = k_s; k <= k_e; k++) {
+                    int zOrder = Encoder.combine3(i,j,k,6);
+                    if(generatorService.merge_CT_List.containsKey(new CubeId(Integer.toString(zOrder))))
+                        res.addAll(generatorService.merge_CT_List.get(new CubeId(Integer.toString(zOrder))));
+                }
             }
-        });
+        }
         return res;
+
     }
 }

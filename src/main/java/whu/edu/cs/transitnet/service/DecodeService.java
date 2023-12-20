@@ -52,12 +52,12 @@ public class DecodeService {
         i = encodeService.bitToint(bitsI);
         int J = encodeService.bitToint(bitsJ);
         int K = encodeService.bitToint(bitsK);
-        int i1 = i * (int)Math.pow(8.0D, (double)level);
-        int i2 = i1 + (int)Math.pow(8.0D, (double)level) - 1;
-        int j1 = J * (int)Math.pow(8.0D, (double)level);
-        int j2 = j1 + (int)Math.pow(8.0D, (double)level) - 1;
-        int k1 = K * (int)Math.pow(8.0D, (double)level);
-        int k2 = k1 + (int)Math.pow(8.0D, (double)level) - 1;
+        int i1 = i * (int)Math.pow(2.0D, (double)level);
+        int i2 = i1 + (int)Math.pow(2.0D, (double)level) - 1;
+        int j1 = J * (int)Math.pow(2.0D, (double)level);
+        int j2 = j1 + (int)Math.pow(2.0D, (double)level) - 1;
+        int k1 = K * (int)Math.pow(2.0D, (double)level);
+        int k2 = k1 + (int)Math.pow(2.0D, (double)level) - 1;
         return new int[]{i1, i2, j1, j2, k1, k2};
     }
 }
