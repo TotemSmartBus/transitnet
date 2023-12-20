@@ -11,7 +11,6 @@ import whu.edu.cs.transitnet.service.EncodeService;
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -98,13 +97,11 @@ public class HistoricalTripIndex {
                 double lat = realTimePointEntityList.get(j).getLat();
                 double lon = realTimePointEntityList.get(j).getLon();
 
-                // TODO:
+                // 数据库里存的轨迹点的时间为纽约时间
                 String recordedTime = realTimePointEntityList.get(j).getRecordedTime();
-                Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
-                Long time = parse.getTime();
 
                 // 注意 encodecube 里面传的是年月日时分秒
-                CubeId cubeId = encodeService.encodeCube(lat, lon, time);
+                CubeId cubeId = encodeService.encodeCube(lat, lon, recordedTime);
                 if(cubeIds.isEmpty() || cubeIds.lastIndexOf(cubeId) != (cubeIds.size() - 1)) {
                     cubeIds.add(cubeId);
                 }
@@ -193,18 +190,6 @@ public class HistoricalTripIndex {
         System.out.println("[HISTORICALTRIPINDEX] Deserializing HashMap DONE!");
         System.out.println("[HISTORICALTRIPINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
 
-//        Set set = tripPointList.entrySet();
-//        Iterator iterator = set.iterator();
-//
-//        while (iterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry)iterator.next();
-//
-//            System.out.print("key : " + entry.getKey()
-//                    + " & Value : ");
-//            System.out.println(entry.getValue());
-//        }
-
-
     }
 
     public void tripCubeListSerializationAndDeserilization(String startTime, String endTime) throws ParseException {
@@ -285,19 +270,6 @@ public class HistoricalTripIndex {
         System.out.println("======================");
         System.out.println("[HISTORICALTRIPINDEX] Deserializing HashMap DONE!");
         System.out.println("[HISTORICALTRIPINDEX] Deserializing time: " + (endtime - starttime) / 1000 + "s");
-
-//        Set set = tripCubeList.entrySet();
-//        Iterator iterator = set.iterator();
-//
-//
-//        while (iterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry)iterator.next();
-//
-//            System.out.print("key : " + entry.getKey()
-//                    + " & Value : ");
-//            System.out.println(entry.getValue());
-//                }
-
 
     }
 
@@ -493,14 +465,8 @@ public class HistoricalTripIndex {
     }
 
     public String getDateFromTime(String startTime) throws ParseException {
-        Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startTime);
-        Long time = parse.getTime();
-
-        Date d = new Date();
-        d.setTime(time);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        String date = sdf.format(d);
+        String[] date_time = startTime.split(" ");
+        String date = date_time[0];
         return date;
     }
 }

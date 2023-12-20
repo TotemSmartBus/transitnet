@@ -6,10 +6,6 @@ import whu.edu.cs.transitnet.service.index.CubeId;
 import whu.edu.cs.transitnet.service.index.GridId;
 import whu.edu.cs.transitnet.service.index.HytraEngineManager;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
 @Service
 public class EncodeService {
     @Autowired
@@ -104,21 +100,15 @@ public class EncodeService {
      * @param time
      * @return
      */
-    public CubeId encodeCube(double lat, double lon, Long time) {
+    public CubeId encodeCube(double lat, double lon, String time) {
         int resolution = hytraEngineManager.getParams().getResolution();
         double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
         double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double) resolution);
         double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double) resolution);
         double deltaT = 86400.0D / Math.pow(2.0D, (double)resolution);
 
-        Date d = new Date();
-        d.setTime(time);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        String date_hour_min_sec  = sdf.format(d);
-
         // 取的是当天日期
-        String[] date_time = date_hour_min_sec.split(" ");
+        String[] date_time = time.split(" ");
         // 取的是时分秒
         String[] hour_min_sec = date_time[1].split(":");
         // 转化成秒
@@ -130,20 +120,14 @@ public class EncodeService {
         return new CubeId(String.valueOf(zorder));
     }
 
-    public CubeId encodeCube(double lat, double lon, Long time, int resolution) {
+    public CubeId encodeCube(double lat, double lon, String time, int resolution) {
         double[] spatialDomain = hytraEngineManager.getParams().getSpatialDomain();
         double deltaX = (spatialDomain[2] - spatialDomain[0]) / Math.pow(2.0D, (double) resolution);
         double deltaY = (spatialDomain[3] - spatialDomain[1]) / Math.pow(2.0D, (double) resolution);
         double deltaT = 86400.0D / Math.pow(2.0D, (double)resolution);
 
-        Date d = new Date();
-        d.setTime(time);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        String date_hour_min_sec  = sdf.format(d);
-
         // 取的是当天日期
-        String[] date_time = date_hour_min_sec.split(" ");
+        String[] date_time = time.split(" ");
         // 取的是时分秒
         String[] hour_min_sec = date_time[1].split(":");
         // 转化成秒

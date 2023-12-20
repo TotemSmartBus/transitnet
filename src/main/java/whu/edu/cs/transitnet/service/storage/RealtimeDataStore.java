@@ -9,7 +9,9 @@ import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,7 +29,8 @@ public class RealtimeDataStore {
         t.start();
     }
 
-    private static final SimpleDateFormat FORMATER = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    // TODO: Vehicle.recordedTime is a Long type. Use timezone in NYC to transfer the recordedTime to a Date format.
+    private static final SimpleDateFormat FORMATER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     class RealtimeDataStoreRunner implements Runnable {
         private List<Vehicle> vehicleList;
@@ -44,7 +47,12 @@ public class RealtimeDataStore {
             }
             log.info(String.format("async saving %d vehicles' information.", vehicleList.size()));
 
+            FORMATER.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+
             List<RealTimeDataEntity> list = vehicleList.stream().map((Vehicle v) -> {
+                Date d = new Date();
+                d.setTime(v.getRecordedTime() * 1000);
+
                 RealTimeDataEntity entity = new RealTimeDataEntity();
                 entity.setRouteId(v.getRouteID());
                 entity.setDirection(v.getDirection());
@@ -61,7 +69,7 @@ public class RealtimeDataStore {
                 entity.setDistanceFromNextStop(String.valueOf(v.getDistanceFromNextStop()));
                 entity.setNextStop(v.getNextStop());
                 entity.setDistanceFromOrigin((double) v.getDistanceFromOrigin());
-                entity.setRecordedTime(FORMATER.format(v.getRecordedTime() * 1000));
+                entity.setRecordedTime(FORMATER.format(d));
                 return entity;
             }).collect(Collectors.toList());
             List<RealTimeDataEntity> result = realTimeDataDao.saveAll(list);

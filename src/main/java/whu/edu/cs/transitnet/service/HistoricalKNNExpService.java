@@ -5,12 +5,9 @@ import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.dao.TripsDao;
 import whu.edu.cs.transitnet.param.QueryKnnHisParam;
 import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
-import whu.edu.cs.transitnet.pojo.TripsEntity;
-import whu.edu.cs.transitnet.realtime.Vehicle;
 import whu.edu.cs.transitnet.service.index.*;
 
 import java.io.IOException;
-import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -171,22 +168,21 @@ public class HistoricalKNNExpService {
                 userGridList.add(gridId);
             }
 
+            // 这个实体中的 recordedTime 是个字符串
             String recordedTime = points.get(i).getTime();
-            Date parse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(recordedTime);
-            Long time = parse.getTime();
-
-            CubeId cubeId = encodeService.encodeCube(points.get(i).getLat(), points.get(i).getLng(), time);
+            CubeId cubeId = encodeService.encodeCube(points.get(i).getLat(), points.get(i).getLng(), recordedTime);
             cubes.add(cubeId);
             if(userCubeList.isEmpty() || userCubeList.lastIndexOf(cubeId) != (userCubeList.size() - 1)) {
                 userCubeList.add(cubeId);
             }
 
-            // 这个实体中的 recordedTime 是个字符串
-            d.setTime(time);
-            String date_hour_min_sec  = sdf.format(d);
+            // 取的是当天日期
+            String[] date_time = recordedTime.split(" ");
+            // 取的是时分秒
+            String hour_min_sec = date_time[1];
 
-            times.add(date_hour_min_sec);
-            }
+            times.add(hour_min_sec);
+        }
 
 
 
