@@ -112,7 +112,7 @@ public class EncodeService {
         double deltaT = 86400.0D / Math.pow(2.0D, (double)resolution);
 
         Date d = new Date();
-        d.setTime(time);
+        d.setTime(time*1000);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         String date_hour_min_sec  = sdf.format(d);

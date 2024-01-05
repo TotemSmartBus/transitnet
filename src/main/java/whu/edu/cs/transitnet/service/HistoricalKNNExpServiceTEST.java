@@ -251,10 +251,10 @@ public class HistoricalKNNExpServiceTEST {
      * @throws ParseException
      */
     public void getTopKTrips(int k) throws IOException, InterruptedException, ParseException {
-        allTripCubeList = historicalTripIndex.getTripCubeList();
+        allTripCubeList = historicalTripIndex.getTripCubeList("2023-05-20");
 
         // 获取 tripPointList，遍历每个 trip 做实验
-        HashMap<TripId, ArrayList<RealTimePointEntity>> partialTripPointList = historicalTripIndex.getTripPointList();
+        HashMap<TripId, ArrayList<RealTimePointEntity>> partialTripPointList = historicalTripIndex.getTripPointList("2023-05-20");
         int quantity  = partialTripPointList.keySet().size();
         // 0.2, 0.4, 0.6, 0.8 ,1.0
         double ratio = 1;

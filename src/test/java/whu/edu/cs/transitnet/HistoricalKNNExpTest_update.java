@@ -38,7 +38,7 @@ public class HistoricalKNNExpTest_update {
         range.add("2023-09-12T09:00:00.000Z");
         range.add("2023-09-12T17:00:00.000Z");
         QueryKnnHisParam param=new QueryKnnHisParam(ps,ts);
-        historicalKNNExpService.setup(param.getPoints(),k);
+//        historicalKNNExpService.setup(param.getPoints(),k);
         historicalKNNExpService.getTopKTrips();
         List<RealtimeKNNExpService.resItem> res = historicalKNNExpService.get_res();
         System.out.println("==============================================================\n");

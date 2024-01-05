@@ -13,9 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import whu.edu.cs.transitnet.bean.RouteCache;
 import whu.edu.cs.transitnet.service.EncodeService;
-import whu.edu.cs.transitnet.service.index.GridId;
-import whu.edu.cs.transitnet.service.index.RealtimeDataIndex;
-import whu.edu.cs.transitnet.service.index.TripId;
+import whu.edu.cs.transitnet.service.GeneratorService;
+import whu.edu.cs.transitnet.service.index.*;
 import whu.edu.cs.transitnet.service.storage.RealtimeDataStore;
 
 import javax.annotation.PostConstruct;
@@ -44,6 +43,7 @@ public class RealtimeService {
     private int timezone = 8;
     @Autowired
     private MeterRegistry meterRegistry;
+
     private ScheduledExecutorService executor;
 
     private final Map<String, String> vehicleIdsByEntityIds = new HashMap<>();
@@ -89,6 +89,9 @@ public class RealtimeService {
     RouteCache routeCache;
     @Autowired
     EncodeService encodeService;
+
+    @Autowired
+    HytraSerivce hytraSerivce;
 
     @PostConstruct
     public void start() {
@@ -195,6 +198,10 @@ public class RealtimeService {
 
             //更新TlP与GT
             updateTlpAndGt(v);
+            //更新日累积CTlist
+            updateOneDayCubeTripList(v);
+            //更新日积累TPList
+            updateOneDayTripPointList(v);
 
 
             // 计算速度
@@ -288,6 +295,14 @@ public class RealtimeService {
             GT_List.get(gid).add(tid);
         }
 
+    }
+
+    private void updateOneDayCubeTripList(Vehicle v){
+        hytraSerivce.updateCMap(v);
+    }
+
+    private void updateOneDayTripPointList(Vehicle v){
+        hytraSerivce.updatePList(v);
     }
 
     private class RefreshTask implements Runnable {

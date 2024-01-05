@@ -1,13 +1,10 @@
 package whu.edu.cs.transitnet.service;
 
-import edu.whu.hyk.encoding.Decoder;
+import whu.edu.cs.transitnet.lsm.LsmConfig;
 import edu.whu.hyk.model.PostingList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import whu.edu.cs.transitnet.service.index.CubeId;
-import whu.edu.cs.transitnet.service.index.HistoricalTripIndex;
-import whu.edu.cs.transitnet.service.index.HytraEngineManager;
-import whu.edu.cs.transitnet.service.index.TripId;
+import whu.edu.cs.transitnet.service.index.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Service
@@ -59,27 +57,87 @@ public class GeneratorService {
     public HashMap<TripId, ArrayList<CubeId>> merge_TC_List_arr=new HashMap<>();
     private String date;
 
-    public void setup(String date) throws ParseException {
+    public void setup(String date, ConcurrentHashMap h) throws ParseException {
         this.date=date;
-        //反序列化对应日期的txt文件，然后得到对应的cubetriplist...
-        historicalTripIndex.cubeTripListSerializationAndDeserilization(date);
-        CT_List_arr=historicalTripIndex.getCubeTripList();
+        CT_List=new HashMap<>(h);
+    }
 
-        String time_s=date+" 00:00:00";
-        String time_e=date+" 23:59:59";
+    public void setup(String date){
 
-        // 遍历 CT_List_arr 并将其转换为 HashSet 并存储到 CT_List 中
-        for (CubeId cubeId : CT_List_arr.keySet()) {
-            ArrayList<TripId> tidList = CT_List_arr.get(cubeId);
-            HashSet<TripId> tSet = new HashSet<>(tidList);
-            CT_List.put(cubeId, tSet);
+    }
+
+
+    public LsmConfig generateConfig() {
+        generateMap();
+        generatePlanes();
+        LsmConfig config = new LsmConfig();
+        config.setMergeMap(compactionMap);
+        HashMap<Integer, HashSet<String>> keysPerLevel = new HashMap();
+        bitMap.forEach((day, map) -> {
+            for(int i = 0; i < map.length; ++i) {
+                if (map[i] == 1) {
+                    int[] zl = offsetToZandL(i);
+                    String cid = day + sep + zl[0] + sep + zl[1];
+                    int level = zl[1];
+                    HashSet<String> cids = new HashSet();
+                    if (keysPerLevel.containsKey(level)) {
+                        cids = (HashSet)keysPerLevel.get(level);
+                    }
+
+                    cids.add(cid);
+                    keysPerLevel.put(zl[1], cids);
+                }
+            }
+
+        });
+        config.setKeysPerLevel(keysPerLevel);
+        List<Integer> thresholds = new ArrayList();
+
+        for(int i = 0; i <= resolution; ++i) {
+            thresholds.add((int)((double)epsilon * Math.pow(8.0, (double)i)));
+        }
+
+        config.setElementSizeThresholdPerLevel(thresholds);
+        int elementLength = 20;
+        config.setElementLengthPerLevel(Integer.valueOf(elementLength));
+        return config;
+    }
+
+    public HashMap<Integer, HashSet<TripId>> generateKV() {
+        HashMap<Integer, HashSet<TripId>> result = new HashMap();
+        Iterator CT_it = CT_List.entrySet().iterator();
+
+        while(true) {
+            while(CT_it.hasNext()) {
+                Map.Entry<CubeId, HashSet<TripId>> entry = (Map.Entry)CT_it.next();
+                String cid = entry.getKey().toString();
+                HashSet<TripId> idList = entry.getValue();
+
+                int z = Integer.parseInt(cid);
+                int l = 0;
+                if (((int[])bitMap.get(date))[getOffset(z, l)] == 1) {
+                    result.put(z, idList);
+                } else {
+                    String destination;
+                    for(destination = cid; compactionMap.containsKey(destination); destination = compactionMap.get(destination)) {
+                    }
+
+                    HashSet<TripId> newIdList = new HashSet();
+                    if (result.containsKey(destination)) {
+                        newIdList = result.get(destination);
+                    }
+
+                    newIdList.addAll(idList);
+                    result.put(Integer.parseInt(destination), newIdList);
+                }
+            }
+
+            return result;
         }
     }
 
+
     public void generateMap() {
-
-        //这里暂只做5.20号的数据且不考虑合并
-
         //计算cube volume
         CT_List.forEach((cid, idList) -> {
             int zorder = Integer.parseInt(cid.toString());
@@ -101,13 +159,21 @@ public class GeneratorService {
         });
 
         //生成compaction map
-        for(String day : cubeVol.keySet()) {
-            BFS(day+sep+0+sep+resolution);
-        }
+        setMap();
     }
 
 
-
+    public void setMap(){
+        int[] no_merge_cubes=new int[(int) (Math.pow(8,resolution+1) - 1) / 7];
+        CT_List.forEach((cid, idList) -> {
+            int zorder = Integer.parseInt(cid.toString());
+            int level = 0;
+            String fullCid=date+sep+zorder+sep+level;
+            compactionMap.put(fullCid,fullCid);
+            no_merge_cubes[zorder]=1;
+        });
+        bitMap.put(date, no_merge_cubes);
+    }
 
     public HashMap<Integer, HashSet<String>> generatePlanes() {
         bitMap.forEach((day, cubes) -> {
@@ -115,9 +181,10 @@ public class GeneratorService {
             for(int i = 0; i < size; i++){
                 if (cubes[i] == 1){
                     //将cube转换Planes
+                    //这个OFFSET的cube代表的是哪个（DZL）cube，根据ZL算出他的start-end的最小粒度的三维坐标（0-64）
                     int[] zl = offsetToZandL(i);
                     String cid = day+sep+zl[0]+sep+zl[1];
-                    int[] box = Decoder.decodeZ3(zl[0],zl[1]);
+                    int[] box = decodeZ3(zl[0],zl[1]);
                     for (int a = box[0]; a <= box[1]; a++){
                         if(!planes.containsKey(a)){planes.put(a, new HashSet<>());}
                         planes.get(a).add(cid);
@@ -131,76 +198,11 @@ public class GeneratorService {
                         int idx = c + (int) Math.pow(2, resolution+1);
                         if(!planes.containsKey(idx)){planes.put(idx, new HashSet<>());}
                         planes.get(idx).add(cid);
-                    }
+                    }//遍历所有不同level的cube，然后计算这个cube的最↙和最↗的投影到ijk上的坐标，然后计算每个轴的每个单元格上投了哪些cube
                 }
             }
         });
         return planes;
-    }
-
-    /*public void BFS(String cid) {
-        String[] items = cid.split(sep);
-        String day = items[0];
-        int zorder = Integer.parseInt(items[1]);
-        int level = Integer.parseInt(items[2]);
-
-        if(level == 0){
-            if(!bitMap.containsKey(day)){
-                bitMap.put(day, new int[(int) (Math.pow(8,resolution+1) - 1) / 7]);
-            }
-            bitMap.get(day)[getOffset(zorder,level)] = 1;
-            compactionMap.put(cid, cid); return;} //如果到了level 0，就直接写入本身
-        if(shouldMerge(cid)) {
-            if(!bitMap.containsKey(day)){
-                bitMap.put(day, new int[(int) (Math.pow(8,resolution+1) - 1) / 7]);
-            }
-            bitMap.get(day)[getOffset(zorder,level)] = 1;
-            writeMap(cid); return;} //如果应该合并，则写入merge map, bitmap置1
-        for(int z  = zorder * 8; z < zorder * 8 + 8; z++){ //否则考察下一层cube
-            BFS(day+sep+z+sep+(level-1));
-        }
-
-    }*/
-
-    //这个BFS实际上没有进行合并
-    public void BFS(String cid) {
-        String[] items = cid.split(sep);
-        String day = items[0];
-        int zorder = Integer.parseInt(items[1]);    //0
-        int level = Integer.parseInt(items[2]);     //6
-
-        int[] no_merge_cubes=new int[(int) (Math.pow(8,resolution+1) - 1) / 7];
-        for(int i=0;i<Math.pow(8,resolution);i++){
-            no_merge_cubes[i]=1;
-        }
-        bitMap.put(day, no_merge_cubes);
-
-    }
-
-    public boolean shouldMerge(String cid) {
-        String[] items = cid.split(sep);
-        String day = items[0];
-        int zorder = Integer.parseInt(items[1]);
-        int level = Integer.parseInt(items[2]);
-        int offset = getOffset(zorder, level);
-        return cubeVol.get(day)[offset] <= epsilon * Math.pow(5,level);
-    }
-
-    public void writeMap(String cid) {
-        String[] items = cid.split(sep);
-        String day = items[0];
-        int zorder = Integer.parseInt(items[1]);
-        int l = Integer.parseInt(items[2]);
-
-        if(l == 0){return;}
-        for(int z  = zorder * 8; z < zorder * 8 + 8; z++){
-            if (cubeVol.get(day)[getOffset(z,l-1)] != 0){
-                String ccid = day+sep+z+sep+(l-1);
-                compactionMap.put(ccid,cid);
-                writeMap(ccid);
-            }
-        }
-
     }
 
     public void updateMergeCTandTC(){
@@ -222,15 +224,16 @@ public class GeneratorService {
     }
 
     public int[] offsetToZandL(int offset) {
-        int reverse = (int) (Math.pow(8,resolution+1) - 1) / 7 - offset;
+        int reverse = (int) (Math.pow(8.0,(double) resolution+1) - 1.0) / 7 - (offset+1);
         int base = 1;
-        int level = resolution;
-        while( reverse / base > 0) {
-            reverse -= base;
-            base *= 8;
-            level--;
+
+
+        int level ;
+        for(level=resolution;reverse/base>0;--level){
+            reverse-=base;
+            base*=8;
         }
-        int z = (int) Math.pow(8,resolution-level) - reverse;
+        int z = (int) Math.pow(8.0,(double) resolution-level) - (reverse+1);
         return new int[]{z,level};
     }
 
@@ -244,19 +247,6 @@ public class GeneratorService {
         int[] offsets = new int[resolution];
         for(int i = 1; i <= resolution; i++){
             offsets[i-1] = getOffset(offset / (int) Math.pow(8,i), i);
-        }
-        return offsets;
-    }
-
-    /**
-     * 仅计算输入cube的<b>下一层</b>的cube的offset
-     * @param offset
-     * @return
-     */
-    public int[] getChildOffsets(int offset){
-        int[] offsets = new int[8];
-        for(int i = 0; i < 8; i++){
-            offsets[i] = getOffset(offset / (int) Math.pow(8,i), i);
         }
         return offsets;
     }
@@ -391,5 +381,66 @@ public class GeneratorService {
         }catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean testMap() {
+        for(int i=0;i<bitMap.get("2023-05-20").length;i++){
+            if(bitMap.get("2023-05-20")[i]==1){
+                int[] zl=offsetToZandL(i);
+                if(!merge_CT_List.containsKey(new CubeId("2023-05-20@"+zl[0]+"@"+zl[1]))){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public int[] decodeZ3(int zorder, int level) {
+        int digits = 3 * resolution;
+
+        String bits;
+        for(bits = Integer.toBinaryString(zorder); digits > bits.length(); bits = "0" + bits) {
+        }
+
+        String bitsI = "";
+        String bitsJ = "";
+        String bitsK = "";
+
+        int i;
+        for(i = 0; i < bits.length(); ++i) {
+            if (i % 3 == 0) {
+                bitsI = bitsI + bits.charAt(i);
+            }
+
+            if (i % 3 == 1) {
+                bitsJ = bitsJ + bits.charAt(i);
+            }
+
+            if (i % 3 == 2) {
+                bitsK = bitsK + bits.charAt(i);
+            }
+        }
+
+        i = bitToint(bitsI);
+        int J = bitToint(bitsJ);
+        int K = bitToint(bitsK);
+        int i1 = i * (int)Math.pow(2, (double)level);
+        int i2 = i1 + (int)Math.pow(2, (double)level) - 1;
+        int j1 = J * (int)Math.pow(2, (double)level);
+        int j2 = j1 + (int)Math.pow(2, (double)level) - 1;
+        int k1 = K * (int)Math.pow(2, (double)level);
+        int k2 = k1 + (int)Math.pow(2, (double)level) - 1;
+        return new int[]{i1, i2, j1, j2, k1, k2};
+    }
+
+    public int bitToint(String bits) {
+        int sum = 0;
+        int length = bits.length();
+
+        for(int i = 0; i < length; ++i) {
+            sum = (int)((double)sum + (double)Integer.parseInt(String.valueOf(bits.charAt(i))) * Math.pow(2.0, (double)(length - i - 1)));
+        }
+
+        return sum;
     }
 }

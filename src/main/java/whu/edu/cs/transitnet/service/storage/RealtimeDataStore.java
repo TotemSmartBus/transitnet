@@ -6,10 +6,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import whu.edu.cs.transitnet.dao.RealTimeDataDao;
 import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
+import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 import whu.edu.cs.transitnet.realtime.Vehicle;
 
 import java.text.SimpleDateFormat;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,7 +31,7 @@ public class RealtimeDataStore {
         t.start();
     }
 
-    private static final SimpleDateFormat FORMATER = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    private static final SimpleDateFormat FORMATER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     class RealtimeDataStoreRunner implements Runnable {
         private List<Vehicle> vehicleList;
@@ -42,6 +46,10 @@ public class RealtimeDataStore {
                 log.info("The storage process is disabled, skip for saving data.");
                 return;
             }
+
+            TimeZone nyTimeZone = TimeZone.getTimeZone("America/New_York"); // 纽约时区
+            FORMATER.setTimeZone(nyTimeZone);
+
             log.info(String.format("async saving %d vehicles' information.", vehicleList.size()));
 
             List<RealTimeDataEntity> list = vehicleList.stream().map((Vehicle v) -> {
@@ -64,6 +72,18 @@ public class RealtimeDataStore {
                 entity.setRecordedTime(FORMATER.format(v.getRecordedTime() * 1000));
                 return entity;
             }).collect(Collectors.toList());
+
+            Iterator<RealTimeDataEntity> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                RealTimeDataEntity point = iterator.next();
+                String r_time = point.getRecordedTime();
+                String v_id = point.getVehicleId();
+                Optional<RealTimeDataEntity> result = realTimeDataDao.findByRecordedTimeAndVehicleId(r_time, v_id);
+                if (result.isPresent()) {
+                    iterator.remove();
+                }
+            }
+
             List<RealTimeDataEntity> result = realTimeDataDao.saveAll(list);
             log.info(String.format("async saved %d vehicles' information.", result.size()));
         }

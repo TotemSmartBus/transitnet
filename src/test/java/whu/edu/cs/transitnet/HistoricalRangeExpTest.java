@@ -23,11 +23,11 @@ public class HistoricalRangeExpTest {
     HistoricalRangeService historicalrangeExpService;
 
     @Test
-    public void kNNExpTest() throws InterruptedException, IOException, ParseException {
+    public void kNNExpTest() throws Exception {
         double []ps={40.820032,-73.827494,
                 40.822107,-73.824386};
         String date="2023-05-20";
-        historicalrangeExpService.setup(ps,date);
+//        historicalrangeExpService.setup(ps,date);
         historicalrangeExpService.historaical_range_search();
         System.out.println("==============================================================\n");
         System.out.println("============================No Error==========================\n");

@@ -1,11 +1,12 @@
 package whu.edu.cs.transitnet.service.index;
 
 import edu.whu.hyk.merge.Generator;
-import edu.whu.hytra.core.SocketStorageManager;
+import whu.edu.cs.transitnet.lsm.SocketStorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import whu.edu.cs.transitnet.service.GeneratorService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +15,9 @@ import java.util.HashSet;
 
 @Component
 public class HistoricalIndexBuildConfig {
-//    @Autowired
+    @Autowired
+    GeneratorService generatorService;
+    @Autowired
     private SocketStorageManager socketStorageManager;
 
     @Autowired
@@ -29,7 +32,7 @@ public class HistoricalIndexBuildConfig {
         String seperator = hytraEngineManager.getParams().getSeperator();
 
         // CubeId 和 TripId 转化为普通的 String
-        HashMap<CubeId, ArrayList<TripId>> cubeTripList = historicalTripIndex.getCubeTripList();
+        HashMap<CubeId, ArrayList<TripId>> cubeTripList = historicalTripIndex.getCubeTripList(date);
         HashMap<String, ArrayList<String>> newCubeTripList = new HashMap<>();
         for (CubeId cubeId : cubeTripList.keySet()) {
             ArrayList<String> tripList = new ArrayList<>();
@@ -54,13 +57,13 @@ public class HistoricalIndexBuildConfig {
         long tBeforeConfigGenerate = System.currentTimeMillis();
         try {
             String path = System.getProperty("user.dir");
-            configPath = Generator.generateConfig().saveTo(path, date + ".index");
+            generatorService.setup(date);
+            configPath = generatorService.generateConfig().saveTo(path, date + ".index");
         } catch (IOException e) {
             log.error("[cron]Error while write config to file: " + configPath, e);
         }
         long tAfterConfigGenerate = System.currentTimeMillis();
         log.info("[cron]Generate config for {}s", String.format("%.2f", (tAfterConfigGenerate - tBeforeConfigGenerate) / 1000.0));
-
 
         long tBeforeConfigWrite = System.currentTimeMillis();
         try {

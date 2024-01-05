@@ -6,6 +6,7 @@ import whu.edu.cs.transitnet.pojo.RealTimeDataEntity;
 import whu.edu.cs.transitnet.pojo.RealTimePointEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, String> {
@@ -55,6 +56,10 @@ public interface RealTimeDataDao extends JpaRepository<RealTimeDataEntity, Strin
             "FROM RealTimeDataEntity rte " +
             "WHERE rte.tripId = ?1 AND rte.recordedTime >= ?2 AND rte.recordedTime < ?3 ORDER BY rte.recordedTime")
     List<RealTimePointEntity> findAllSimplePointsByTripIdByTimeSpan(String tripId, String startTime, String endTime);
+
+    // 在你的Repository接口中
+    @Query(value = "SELECT * FROM real_time_data_temp WHERE recorded_time = ?1 AND vehicle_id = ?2", nativeQuery = true)
+    Optional<RealTimeDataEntity> findByRecordedTimeAndVehicleId(String recordedTime, String vehicleId);
 
     <S extends RealTimeDataEntity> List<S> saveAll(Iterable<S> list);
 }

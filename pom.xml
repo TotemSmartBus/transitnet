@@ -21,6 +21,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
         <!-- OneBusAway 项目：增强 gtfs 实时数据的处理能力 api-->
         <dependency>
             <groupId>org.onebusaway</groupId>

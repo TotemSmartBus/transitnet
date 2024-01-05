@@ -18,6 +18,7 @@ import whu.edu.cs.transitnet.service.HistoricalRangeService;
 import whu.edu.cs.transitnet.service.RealtimeKNNExpService;
 import whu.edu.cs.transitnet.service.RealtimeRangeService;
 import whu.edu.cs.transitnet.service.index.HistoricalTripIndex;
+import whu.edu.cs.transitnet.service.index.HytraSerivce;
 import whu.edu.cs.transitnet.service.index.TripId;
 import whu.edu.cs.transitnet.vo.*;
 
@@ -46,6 +47,8 @@ public class QueryController {
     RealtimeRangeService RealtimeRangeService;
     @Resource
     HistoricalTripIndex HistoricalTripIndex;
+    @Resource
+    HytraSerivce hytraSerivce;
 
 
     @CrossOrigin(origins = "*")
@@ -136,51 +139,19 @@ public class QueryController {
     @PostMapping("/api/query/traj_knn_history")
     @ResponseBody
     public KnnHisQueryResultVo queryTraj_Knn_His(@RequestBody QueryKnnHisParam params) throws IOException, InterruptedException, ParseException {
-        //所有时间设置为2023-05-20 xx:xx:xx
-        List<QueryKnnHisParam.Point> ListP = new ArrayList<>();
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat outputFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+
+        List<QueryKnnHisParam.Point> ListP;
         ListP=params.getPoints();
-        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+        //获得日期
+        Date d=inputFormat.parse(ListP.get(0).getTime());
+        String dayPart=outputFormat1.format(d);
 
-        //存储时间字符串
-        ArrayList<String> times=new ArrayList<>();
-        // 获取当前时间
-        LocalTime currentTime = LocalTime.now();
-        // 定义时间格式
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        // 循环
-        for (int i = 0; i <ListP.size(); i++) {
-            // 增加30秒
-            LocalTime currentTime1 = currentTime.plusSeconds(30 * i);
-            // 格式化并输出
-            String formattedTime = currentTime1.format(formatter);
-            times.add(i,formattedTime);
-        }
-
-        int w=0;
-        for (QueryKnnHisParam.Point point : ListP) {
-            try {
-                // 解析原始的日期字符串
-                Date date;
-                // 设置日期为"2023-05-20"
-                date = outputFormat.parse("2023-05-20 " + times.get(w));
-                w++;
-                // 将修改后的日期设置回点对象
-                point.setTime(outputFormat.format(date));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            System.out.println("changed P data: "+point.getLat()+" "+point.getLng()+" "+point.getTime());
-        }
-        HistoricalKNNExpService.setup(ListP,params.getK());
+        HistoricalKNNExpService.setup(ListP,params.getK(),dayPart);
         HistoricalKNNExpService.getTopKTrips();
         List<RealtimeKNNExpService.resItem> res = HistoricalKNNExpService.get_res();
-        System.out.println("==============================================================\n");
-        System.out.println("Rank |                   TripID                   | Similarity\n");
-        for(int i=0;i<res.size();i++){
-            System.out.println(res.get(i).getRank()+"        "+res.get(i).getBusId()+"              "+res.get(i).getSim());
-        }
-        System.out.println("==============================================================\n");
 
         List<SimilarityQueryResultItem> temp=new ArrayList<>();
         for(int i=0;i<res.size();i++){
@@ -188,7 +159,7 @@ public class QueryController {
             temp.add(item);
         }
         List<tripPoints> ts=new ArrayList<>();
-        HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
+        HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList(dayPart);
         for (SimilarityQueryResultItem it:temp) {
             String tid=it.getId();
             ArrayList<RealTimePointEntity> vs = Tplist.get(new TripId(tid));
@@ -204,29 +175,44 @@ public class QueryController {
     @CrossOrigin(origins = "*")
     @PostMapping("/api/query/traj_range_history")
     @ResponseBody
-    public RangeHisQueryResultVo queryTraj_Range_His(@RequestBody QueryRangeHisParam params) throws IOException, InterruptedException, ParseException {
+    public RangeHisQueryResultVo queryTraj_Range_His(@RequestBody QueryRangeHisParam params) throws Exception {
         double[] temp={params.getPoints().get(3).getLat(),
                 params.getPoints().get(3).getLng(),
                 params.getPoints().get(1).getLat(),
                 params.getPoints().get(1).getLng()};
         String s_time=params.getTimerange1();
         String e_time=params.getTimerange2();
-        //HistoricalRangeService.setup(temp, day);
-        HistoricalRangeService.setup(temp, "2023-05-20",s_time,e_time);
-        HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
 
-        List<tripPoints> ts=new ArrayList<>();
-        HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=HistoricalTripIndex.getTripPointList();
-        for (TripId tid:res) {
-            ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
-            if(vs!=null){
-                tripPoints tps=new tripPoints(tid.toString(),vs,0);
-                ts.add(tps);
-            }
+        if ((s_time == null || s_time.length() != 19)||(e_time == null || e_time.length() != 19)) {
+            return null; // 输入不符合基本要求，返回空值
         }
-        RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res,ts);
-        return res_re;
+
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateTimeFormat.setLenient(false);
+        try {
+            dateTimeFormat.parse(s_time);
+            dateTimeFormat.parse(e_time);
+            // 日期时间格式正确，继续执行后续的控制流
+            String date=s_time.substring(0,10);
+
+            HistoricalRangeService.setup(temp,date,s_time,e_time);
+            HashSet<TripId> res = HistoricalRangeService.historaical_range_search();
+
+            List<tripPoints> ts=new ArrayList<>();
+            HashMap<TripId, ArrayList<RealTimePointEntity>> Tplist=hytraSerivce.findAllPointsForTripids(res,date);
+            for (TripId tid:res) {
+                ArrayList<RealTimePointEntity> vs = Tplist.get(tid);
+                if(vs!=null){
+                    tripPoints tps=new tripPoints(tid.toString(),vs,0);
+                    ts.add(tps);
+                }
+            }
+            RangeHisQueryResultVo res_re=new RangeHisQueryResultVo(res,ts);
+            return res_re;
+
+        } catch (ParseException e) {
+            // 日期时间格式不正确，返回空值
+            return null;
+        }
     }
-
-
 }
