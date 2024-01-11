@@ -488,7 +488,7 @@ public class StopSelectionService {
                     v.setSpeed((float) speedByKilometer);
                 } else {
                     // 无法得知速度，只能设置为 0
-                    // 呵呵 我要设置成30km/h 约等于8.3m/s
+                    // 设置成30km/h 约等于8.3m/s
                     v.setSpeed(8.3f);
                 }
             } else {

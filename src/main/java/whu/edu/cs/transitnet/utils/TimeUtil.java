@@ -13,6 +13,18 @@ public class TimeUtil {
     private static double EARTH_RADIUS = 6378.137;
     public static TimeUtil timeUtil;
 
+    public List<Integer> secondsToMinHourSecond(int seconds) {
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        int remainingSeconds = seconds % 60;
+
+        List<Integer> result = new ArrayList<>();
+        result.add(hours);
+        result.add(minutes);
+        result.add(remainingSeconds);
+
+        return result;
+    }
     public List<Double> CalculateVehicleStopArriveTimes(List<StopsVo> stopsVos, List<ShapePointVo> shapePointVos) {
         System.out.println("Calculating Route Time...");
 

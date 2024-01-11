@@ -3,6 +3,7 @@ package whu.edu.cs.transitnet.dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import whu.edu.cs.transitnet.pojo.StopsEntity;
+import whu.edu.cs.transitnet.pojo.StopsLocationEntity;
 import whu.edu.cs.transitnet.service.index.BusStop;
 import whu.edu.cs.transitnet.vo.StopsVo;
 
@@ -20,6 +21,10 @@ public interface StopsDao extends JpaRepository<StopsEntity, String> {
             + "se.stopLat, se.stopLon) FROM StopsEntity se ")
     List<BusStop> findAllBusStops();
 
+    @Query(value = "SELECT new whu.edu.cs.transitnet.pojo.StopsLocationEntity(se.stopId, se.stopLat, se.stopLon) " +
+            "FROM StopsEntity se " +
+            "WHERE se.stopId = ?1")
+    StopsLocationEntity findLatAndLonByStopId(String stopId);
     List<StopsEntity> findAll();
 
 
